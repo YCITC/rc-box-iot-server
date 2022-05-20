@@ -10,7 +10,7 @@ export class ReceivedLog {
   @PrimaryGeneratedColumn({
     unsigned: true,
   })
-  id: Number;
+  id: number;
 
   @Column({
     type: 'timestamp',

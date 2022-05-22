@@ -1,6 +1,0 @@
-export class ReceivedLog {
-  id: String;
-  time: Date;
-  device_id: String;
-}
-

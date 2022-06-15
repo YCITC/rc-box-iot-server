@@ -1,5 +1,5 @@
 export class ReceivedLogDto {
-  id: String;
+  id: string;
   time: Date;
-  deviceId: String;
+  deviceId: string;
 }

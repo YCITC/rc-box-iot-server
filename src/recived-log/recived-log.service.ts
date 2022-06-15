@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReceivedLog } from './recived-log.entity';
-import { ReceivedLogInterface } from './interfaces/recived_log.interface'
+import { ReceivedLogInterface } from './interfaces/recived_log.interface';
 import { ReceivedLogDto } from './dto/recived-log.dto';
 
 @Injectable()
@@ -28,7 +28,7 @@ export class ReceivedLogService {
   //   return this.receivedLogRepository.findBy({deviceId: deviceId});
   //   // return this.logs.filter(log=>log.deviceId == deviceId);
   // }
-
+  //
 
   // findOne(id: string): Promise<User> {
   // findByDeviceId_V2(deviceId: string): Promise<ReceivedLog> {
@@ -44,12 +44,6 @@ export class ReceivedLogService {
   // public async create(users: ReceivedLogInterface): Promise<Users> {
   //   return await this.receivedLogRepository.create<Users>(users);
   // }
-  
-  add(obj: ReceivedLogInterface) {
-    console.log('this.logs: ', this.logs);
-    console.log('input obj: ', obj);
-    this.logs.push(obj);
-  }
 
   // async remove(id: number): Promise<void> {
   //   await this.receivedLogRepository.delete(id);

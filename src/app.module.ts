@@ -6,7 +6,8 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-import { ReceivedLogModule } from './recived-log/recived-log.module'
+import { ReceivedLogModule } from './recived-log/recived-log.module';
+import { PushModule } from './push/push.module';
 
 @Module({
   imports: [
@@ -14,7 +15,9 @@ import { ReceivedLogModule } from './recived-log/recived-log.module'
       rootPath: join(__dirname, '..', 'client'),
     }),
     TypeOrmModule.forRoot(),
-    ReceivedLogModule],
+    ReceivedLogModule,
+    PushModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Req, Body } from '@nestjs/common';
+import { Controller, Get, Post, Req, Param, Body } from '@nestjs/common';
 import { Request } from 'express';
 import { PushService } from './push.service';
 import { PushKeysDto } from './dto/pushKeys.dto';
@@ -8,9 +8,9 @@ import { PushClient } from './interface/push.client.entity';
 export class PushController {
   constructor(private readonly pushService: PushService) {}
 
-  @Get('genVAPID')
-  genVapid() {
-    return this.pushService.genVapid();
+  @Get('genVAPID/:browserName')
+  genVapid(@Param() params) {
+    return this.pushService.genVapid(params.browserName);
   }
 
   @Post('subscribe')
@@ -19,12 +19,12 @@ export class PushController {
   }
 
   @Post('send')
-  send(@Req() req: Request): string {
+  send(@Req() req: Request): boolean {
     // console.log('request: ', req);
     console.log('headers: ', req.headers);
     console.log('body: ', req.body.deviceId);
     console.log('query: ', req.query);
     this.pushService.send(req.body.deviceId);
-    return 'This is test';
+    return true;
   }
 }

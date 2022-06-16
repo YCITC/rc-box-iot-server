@@ -48,10 +48,10 @@ async function multipleServers() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   await app.init();
 
-  http.createServer(server).listen(3000);
+  http.createServer(server).listen(80);
   https.createServer(httpsOptions, server).listen(443);
 }
 
 // bootstrap();
-httpsServer();
-// multipleServers();
+// httpsServer();
+multipleServers();

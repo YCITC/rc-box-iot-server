@@ -13,13 +13,24 @@ export class PushService {
     private PushClientRepository: Repository<PushClient>,
   ) {}
 
-  genVapid() {
+  genVapid(browserName) {
+    let key = '';
+    switch (browserName) {
+      case 'Chrom/prettier/eslint-plugin-prettiere':
+        // '<Your GCM API Key Here>'
+        key = `BM7Z_5aIzx78z_kKGWOTPcMPeGQSZovDbiF-3VWpJ2nnr93jh0KfOE-IXaxSwehQPIPKkhHP_r8XHd4opGY_-roBM7Z_5aIzx78z_kKGWOTPcMPeGQSZovDbiF-3VWpJ2nnr93jh0KfOE-IXaxSwehQPIPKkhHP_r8XHd4opGY_-ro`;
+        webpush.setGCMAPIKey(key);
+        break;
+      case 'Firefox':
+        key = '';
+        break;
+      case 'Safari':
+        key = '';
+        break;
+    }
+
     // VAPID keys should be generated only once.
     const vapidKeys = webpush.generateVAPIDKeys();
-
-    // '<Your GCM API Key Here>'
-    const key = `BM7Z_5aIzx78z_kKGWOTPcMPeGQSZovDbiF-3VWpJ2nnr93jh0KfOE-IXaxSwehQPIPKkhHP_r8XHd4opGY_-roBM7Z_5aIzx78z_kKGWOTPcMPeGQSZovDbiF-3VWpJ2nnr93jh0KfOE-IXaxSwehQPIPKkhHP_r8XHd4opGY_-ro`;
-    webpush.setGCMAPIKey(key);
 
     return vapidKeys;
   }
@@ -38,7 +49,7 @@ export class PushService {
       clientList.forEach((client) => {
         console.log(client);
         webpush.setVapidDetails(
-          'http://127.0.0.1:8080/',
+          'https://rc-box.yesseecity.com/',
           client.vapidPublicKey,
           client.vapidPrivateKey,
         );
@@ -50,7 +61,7 @@ export class PushService {
             p256dh: client.keysP256dh,
           },
         };
-        webpush.sendNotification(pushSubscription, 'Your Push Payload Text');
+        webpush.sendNotification(pushSubscription, 'Received A Box');
       });
     });
     return true;

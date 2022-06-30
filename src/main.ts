@@ -46,6 +46,7 @@ async function multipleServers() {
 
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+  app.enableCors();
   await app.init();
 
   http.createServer(server).listen(80);

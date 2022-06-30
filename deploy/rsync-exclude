@@ -1,0 +1,6 @@
+**.git
+.git*
+node_modules
+deploy/
+ssh/
+run-deploy.sh

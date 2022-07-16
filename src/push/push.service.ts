@@ -4,13 +4,16 @@ import { Repository } from 'typeorm';
 import * as webpush from 'web-push';
 
 import { PushClient } from './interface/push.client.entity';
-import { PushClientInterface } from './interface/push.client.interface';
+import { iOSClient } from './interface/ios.client.entity';
 
 @Injectable()
 export class PushService {
   constructor(
     @InjectRepository(PushClient)
     private PushClientRepository: Repository<PushClient>,
+
+    @InjectRepository(iOSClient)
+    private IOSClientRepository: Repository<iOSClient>,
   ) {}
 
   genVapid(browserName) {
@@ -35,8 +38,12 @@ export class PushService {
     return vapidKeys;
   }
 
-  subscribe(pushKeysDto): Promise<PushClient> {
-    return this.PushClientRepository.save(pushKeysDto);
+  broswerSubscribe(pushRegisterDto): Promise<PushClient> {
+    return this.PushClientRepository.save(pushRegisterDto);
+  }
+
+  iOSSubscribe(pushRegisterDto): Promise<iOSClient> {
+    return this.IOSClientRepository.save(pushRegisterDto);
   }
 
   // async send(deviceId): boolean {

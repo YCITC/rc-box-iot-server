@@ -14,7 +14,11 @@ export class ReceivedLogService {
   private logs: ReceivedLogInterface[] = [];
 
   async findAll(): Promise<ReceivedLog[]> {
-    return this.receivedLogRepository.find();
+    return this.receivedLogRepository.find({
+      order: {
+        id: 'DESC',
+      },
+    });
   }
 
   create(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {

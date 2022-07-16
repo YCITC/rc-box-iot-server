@@ -1,8 +1,9 @@
 import { Controller, Get, Post, Req, Param, Body } from '@nestjs/common';
 import { Request } from 'express';
 import { PushService } from './push.service';
-import { PushKeysDto } from './dto/pushKeys.dto';
+import { PushRegisterDto } from './dto/pushRegister.dto';
 import { PushClient } from './interface/push.client.entity';
+import { iOSClient } from './interface/ios.client.entity';
 
 @Controller('push')
 export class PushController {
@@ -14,8 +15,13 @@ export class PushController {
   }
 
   @Post('subscribe')
-  subscribe(@Body() pushKeysDto: PushKeysDto): Promise<PushClient> {
-    return this.pushService.subscribe(pushKeysDto);
+  subscribe(@Body() pushRegisterDto: PushRegisterDto): Promise<PushClient> {
+    return this.pushService.broswerSubscribe(pushRegisterDto);
+  }
+
+  @Post('subscribeIOS')
+  subscribeIOS(@Body() pushRegisterDto: PushRegisterDto): Promise<iOSClient> {
+    return this.pushService.iOSSubscribe(pushRegisterDto);
   }
 
   @Post('send')

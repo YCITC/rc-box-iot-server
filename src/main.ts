@@ -7,7 +7,7 @@ import * as express from 'express';
 import * as https from 'https';
 import * as http from 'http';
 
-async function bootstrap() {
+async function httpServer() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
   await app.listen(3000);
@@ -53,6 +53,6 @@ async function multipleServers() {
   https.createServer(httpsOptions, server).listen(443);
 }
 
-// bootstrap();
+// httpServer();
 // httpsServer();
 multipleServers();

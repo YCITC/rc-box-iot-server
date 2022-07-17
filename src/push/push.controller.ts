@@ -21,16 +21,18 @@ export class PushController {
 
   @Post('subscribeIOS')
   subscribeIOS(@Body() pushRegisterDto: PushRegisterDto): Promise<iOSClient> {
+    console.log('recived dto: \n', pushRegisterDto);
     return this.pushService.iOSSubscribe(pushRegisterDto);
   }
 
   @Post('send')
   send(@Req() req: Request): boolean {
     // console.log('request: ', req);
-    console.log('headers: ', req.headers);
-    console.log('body: ', req.body.deviceId);
-    console.log('query: ', req.query);
-    this.pushService.send(req.body.deviceId);
+    // console.log('headers: ', req.headers);
+    // console.log('body: ', req.body.deviceId);
+    // console.log('query: ', req.query);
+    this.pushService.sendWeb(req.body.deviceId);
+    this.pushService.sendiPhone(req.body.deviceId);
     return true;
   }
 }

@@ -1,6 +1,7 @@
 client/
 dist/
 secrets/
+assets/
 package.json
 yarn.lock
 ormconfig.json

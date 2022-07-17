@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as webpush from 'web-push';
+import * as apn from '@parse/node-apn';
 
 import { PushClient } from './interface/push.client.entity';
 import { iOSClient } from './interface/ios.client.entity';
@@ -47,14 +48,14 @@ export class PushService {
   }
 
   // async send(deviceId): boolean {
-  send(deviceId): boolean {
+  sendWeb(deviceId): any {
     this.PushClientRepository.find({
       where: {
         deviceId: deviceId,
       },
     }).then((clientList) => {
       clientList.forEach((client) => {
-        console.log(client);
+        // console.log(client);
         webpush.setVapidDetails(
           'https://rc-box.yesseecity.com/',
           client.vapidPublicKey,
@@ -71,9 +72,55 @@ export class PushService {
         webpush.sendNotification(pushSubscription, 'Received A Box');
       });
     });
-    return true;
+    return;
+  }
 
-    // // Get vapid keys for Database;
-    // console.log('send');
+  sendiPhone(deviceId): any {
+    const options = {
+      token: {
+        key: 'assets/ApplePushNotificationsAuthKey.p8',
+        keyId: 'ZWCH8DLT2N',
+        teamId: 'S8885JL4B8',
+      },
+      production: false,
+    };
+    const apnProvider = new apn.Provider(options);
+    const note = new apn.Notification();
+    note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+    note.badge = 3;
+    note.sound = 'ping.aiff';
+    note.alert = {
+      title: 'RC-Box',
+      // subtitle: 'You Got A Box',
+      body: 'You Got A Box',
+    };
+    note.topic = 'yesseecity.rc-box-app-dev';
+    // const a1 = new apn.NotificationAlertOptions;
+    // export interface NotificationAlertOptions {
+    //   title?: string;
+    //   subtitle?: string;
+    //   body: string;
+    //   "title-loc-key"?: string;
+    //   "title-loc-args"?: string[];
+    //   "action-loc-key"?: string;
+    //   "loc-key"?: string;
+    //   "loc-args"?: string[];
+    //   "launch-image"?: string;
+    // }
+
+    this.IOSClientRepository.find({
+      where: {
+        deviceId: deviceId,
+      },
+    }).then((clientList) => {
+      // console.log('clientList', clientList);
+      clientList.forEach((client) => {
+        note.topic = client.appId;
+        apnProvider.send(note, client.iPhoneToken).then((result) => {
+          console.log('sent to iPhone:', result.sent[0].device);
+        });
+      });
+    });
+    return;
   }
 }

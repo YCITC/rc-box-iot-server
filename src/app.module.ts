@@ -11,10 +11,19 @@ import { PushModule } from './push/push.module';
 
 @Module({
   imports: [
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'client'),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'client'),
+    // }),
+    TypeOrmModule.forRoot({
+      type: 'mariadb',
+      host: '34.80.129.4',
+      port: 3306,
+      username: 'root',
+      password: '12345',
+      database: 'rc-box',
+      entities: ['dist/**/*.entity{.ts,.js}'],
+      synchronize: true,
     }),
-    TypeOrmModule.forRoot(),
     ReceivedLogModule,
     PushModule,
   ],

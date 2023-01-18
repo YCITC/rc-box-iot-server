@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ReceivedLog } from './recived-log.entity';
-import { ReceivedLogInterface } from './interfaces/recived_log.interface';
+import { ReceivedLogInterface } from './interface/recived_log.interface';
 import { ReceivedLogDto } from './dto/recived-log.dto';
+import { ReceivedLog } from './entity/recived-log.entity';
 
 @Injectable()
 export class ReceivedLogService {
@@ -13,7 +13,7 @@ export class ReceivedLogService {
   ) {}
   private logs: ReceivedLogInterface[] = [];
 
-  async findAll(): Promise<ReceivedLog[]> {
+  async getAll(): Promise<ReceivedLog[]> {
     return this.receivedLogRepository.find({
       order: {
         id: 'DESC',
@@ -21,8 +21,18 @@ export class ReceivedLogService {
     });
   }
 
-  create(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
+  async findByDeviceId(deviceId: string): Promise<ReceivedLog[]> {
+    return this.receivedLogRepository.find({
+      order: {
+        id: 'DESC',
+      },
+      where: { deviceId },
+    });
+  }
+
+  async create(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
     const log = new ReceivedLog();
+    log.time = new Date();
     log.deviceId = receivedLogDto.deviceId;
     return this.receivedLogRepository.save(log);
   }

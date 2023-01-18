@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PushController } from './push.controller';
 import { PushService } from './push.service';
-import { PushClient } from './interface/push.client.entity';
-import { iOSClient } from './interface/ios.client.entity';
+import { WebClient } from './entity/web.client.entity';
+import { iOSClient } from './entity/ios.client.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([PushClient, iOSClient])],
+  imports: [TypeOrmModule.forFeature([WebClient, iOSClient])],
   exports: [TypeOrmModule],
   controllers: [PushController],
   providers: [PushService],

@@ -1,4 +1,4 @@
-export interface PushClientInterface {
+export interface WebClientInterface {
   id: number;
   deviceId: string;
   browserInfo: string;

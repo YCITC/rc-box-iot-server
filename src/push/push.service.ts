@@ -4,14 +4,14 @@ import { Repository } from 'typeorm';
 import * as webpush from 'web-push';
 import * as apn from '@parse/node-apn';
 
-import { PushClient } from './interface/push.client.entity';
-import { iOSClient } from './interface/ios.client.entity';
+import { WebClient } from './entity/web.client.entity';
+import { iOSClient } from './entity/ios.client.entity';
 
 @Injectable()
 export class PushService {
   constructor(
-    @InjectRepository(PushClient)
-    private PushClientRepository: Repository<PushClient>,
+    @InjectRepository(WebClient)
+    private WebClientRepository: Repository<WebClient>,
 
     @InjectRepository(iOSClient)
     private IOSClientRepository: Repository<iOSClient>,
@@ -39,8 +39,8 @@ export class PushService {
     return vapidKeys;
   }
 
-  broswerSubscribe(pushRegisterDto): Promise<PushClient> {
-    return this.PushClientRepository.save(pushRegisterDto);
+  broswerSubscribe(pushRegisterDto): Promise<WebClient> {
+    return this.WebClientRepository.save(pushRegisterDto);
   }
 
   iOSSubscribe(pushRegisterDto): Promise<iOSClient> {
@@ -49,7 +49,7 @@ export class PushService {
 
   // async send(deviceId): boolean {
   sendWeb(deviceId): any {
-    this.PushClientRepository.find({
+    this.WebClientRepository.find({
       where: {
         deviceId: deviceId,
       },

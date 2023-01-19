@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+// import { Repository } from 'typeorm';
 import { ReceivedLog } from './entity/recived-log.entity';
 import { ReceivedLogService } from './recived-log.service';
 
 describe('ReceivedLog class', () => {
   let service: ReceivedLogService;
-  let repo: Repository<ReceivedLog>;
+  // let repo: Repository<ReceivedLog>;
 
   const oneLog = new ReceivedLog('jest test 1');
   const logArray = [
@@ -30,7 +30,7 @@ describe('ReceivedLog class', () => {
     }).compile();
 
     service = module.get<ReceivedLogService>(ReceivedLogService);
-    repo = module.get<Repository<ReceivedLog>>(getRepositoryToken(ReceivedLog));
+    // repo = module.get<Repository<ReceivedLog>>(getRepositoryToken(ReceivedLog));
   });
 
   it('service should be defined', () => {

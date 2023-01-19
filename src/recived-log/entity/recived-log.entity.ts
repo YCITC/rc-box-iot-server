@@ -23,11 +23,15 @@ export class ReceivedLog {
   })
   deviceId: string;
 
-  constructor(deviceId: string);
-  constructor(deviceId?: string);
-  constructor(deviceId?: string) {
-    const now = new Date();
-    this.time = new Date(now.toLocaleDateString());
-    this.deviceId = deviceId || '';
+  constructor(deviceId: string, time?: Date, id?: number);
+  constructor(deviceId: string, time?: Date, id?: number) {
+    if (time) {
+      this.time = time;
+    } else {
+      const now = new Date();
+      this.time = new Date(now.toLocaleDateString());
+    }
+    this.id = id;
+    this.deviceId = deviceId;
   }
 }

@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Req, Param, Body} from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Body, Controller, Get, Post, Param } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 
 import { ReceivedLog } from './entity/recived-log.entity';
 import { ReceivedLogService } from './recived-log.service';
@@ -14,15 +14,19 @@ export class ReceivedLogController {
     return this.receiveService.getAll();
   }
 
-  @Get('get/*')
-  findByDeviceId(@Param() params: string): Promise<ReceivedLog[]> {
-    const deviceId = params[0];
-    console.log('deviceId:', deviceId);
+  @Get('get/:deviceId')
+  findByDeviceId(@Param('deviceId') deviceId: string): Promise<ReceivedLog[]> {
     return this.receiveService.findByDeviceId(deviceId);
   }
 
   @Post('add')
   create(@Body() receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
-    return this.receiveService.create(receivedLogDto);
+    if (receivedLogDto.deviceId.length > 0) {
+      return this.receiveService.create(receivedLogDto);
+    } else {
+      return Promise.reject(
+        new BadRequestException('deviceId length cannot be zero'),
+      );
+    }
   }
 }

@@ -73,7 +73,6 @@ export class WebClient {
     keysAuth: string,
     keysP256dh: string,
   );
-  // constructor(deviceId?: string);
   constructor(
     deviceId: string,
     browserName?: string,
@@ -85,17 +84,7 @@ export class WebClient {
     keysP256dh?: string,
   );
   constructor(
-    deviceId?: string,
-    browserName?: string,
-    browserVersion?: string,
-    vapidPublicKey?: string,
-    vapidPrivateKey?: string,
-    endpoint?: string,
-    keysAuth?: string,
-    keysP256dh?: string,
-  );
-  constructor(
-    deviceId?: string,
+    deviceId: string,
     browserName?: string,
     browserVersion?: string,
     vapidPublicKey?: string,
@@ -104,15 +93,37 @@ export class WebClient {
     keysAuth?: string,
     keysP256dh?: string,
   ) {
-    const now = new Date();
-    this.subscribeTime = new Date(now.toLocaleDateString());
+    this.subscribeTime = new Date();
+    if (deviceId == undefined || deviceId == '')
+      throw Error("Have no deviceId, it's length must > 0");
     this.deviceId = deviceId;
-    this.browserName = browserName || '';
-    this.browserVersion = browserVersion || '';
-    this.vapidPublicKey = vapidPublicKey || '';
-    this.vapidPrivateKey = vapidPrivateKey || '';
-    this.endpoint = endpoint || '';
-    this.keysAuth = keysAuth || '';
-    this.keysP256dh = keysP256dh || '';
+
+    if (browserName == undefined || browserName == '')
+      throw Error("Have no browserName, it's length must > 0");
+    this.browserName = browserName;
+
+    if (browserVersion == undefined || browserVersion == '')
+      throw Error("Have no browserVersion, it's length must > 0");
+    this.browserVersion = browserVersion;
+
+    if (vapidPublicKey == undefined || vapidPublicKey == '')
+      throw Error("Have no vapidPublicKey, it's length must > 0");
+    this.vapidPublicKey = vapidPublicKey;
+
+    if (vapidPrivateKey == undefined || vapidPrivateKey == '')
+      throw Error("Have no vapidPrivateKey, it's length must > 0");
+    this.vapidPrivateKey = vapidPrivateKey;
+
+    if (endpoint == undefined || endpoint == '')
+      throw Error("Have no endpoint, it's length must > 0");
+    this.endpoint = endpoint;
+
+    if (keysAuth == undefined || keysAuth == '')
+      throw Error("Have no keysAuth, it's length must > 0");
+    this.keysAuth = keysAuth;
+
+    if (keysP256dh == undefined || keysP256dh == '')
+      throw Error("Have no keysP256dh, it's length must > 0");
+    this.keysP256dh = keysP256dh;
   }
 }

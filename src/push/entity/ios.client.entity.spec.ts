@@ -2,19 +2,29 @@ import { iOSClient } from './ios.client.entity';
 
 describe('iOSClient class', () => {
   const nowLocaleDateString = new Date().toLocaleDateString();
-  it('should make a iosClient with no fields', () => {
-    const iosClient = new iOSClient();
-    expect(iosClient).toBeTruthy();
-    expect(iosClient.subscribeTime).toMatchObject(
-      new Date(nowLocaleDateString),
-    );
-    expect(iosClient.deviceId).toBeUndefined();
+
+  it('should throw Error when make a iosClient with no fields', () => {
+    try {
+      new iOSClient('');
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect(error).toEqual(Error("Have no deviceId, it's length must > 0"));
+    }
   });
   it('should make a iosClient with name only', () => {
-    const iosClient = new iOSClient('jest Test');
+    try {
+      new iOSClient('jest Test');
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect(error).toEqual(Error("Have no appId, it's length must > 0"));
+    }
+  });
+
+  it('should return a webClient', () => {
+    const iosClient = new iOSClient('jest Test', 'appId', 'iphone_token');
     expect(iosClient).toBeTruthy();
-    expect(iosClient.subscribeTime).toMatchObject(
-      new Date(nowLocaleDateString),
+    expect(iosClient.subscribeTime.toLocaleDateString()).toEqual(
+      nowLocaleDateString,
     );
     expect(iosClient.deviceId).toBe('jest Test');
   });

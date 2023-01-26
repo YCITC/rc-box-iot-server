@@ -42,8 +42,16 @@ export class iOSClient {
   constructor(deviceId?: string, appId?: string, iPhoneToken?: string) {
     const now = new Date();
     this.subscribeTime = new Date(now.toLocaleDateString());
+    if (deviceId == undefined || deviceId == '')
+      throw Error("Have no deviceId, it's length must > 0");
     this.deviceId = deviceId;
+
+    if (appId == undefined || appId == '')
+      throw Error("Have no appId, it's length must > 0");
     this.appId = appId;
+
+    if (iPhoneToken == undefined || iPhoneToken == '')
+      throw Error("Have no iPhoneToken, it's length must > 0");
     this.iPhoneToken = iPhoneToken;
   }
 }

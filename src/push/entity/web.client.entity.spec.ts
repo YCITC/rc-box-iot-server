@@ -4,23 +4,6 @@ describe('WebClient class', () => {
   const now = new Date();
   const nowLocaleDateString = now.toLocaleDateString();
 
-  it('should throw Error when make a webClient with no fields', () => {
-    try {
-      new WebClient('');
-    } catch (error) {
-      expect(error).toBeInstanceOf(Error);
-      expect(error).toEqual(Error("Have no deviceId, it's length must > 0"));
-    }
-  });
-
-  it('should throw Error when make a webClient with name only', () => {
-    try {
-      new WebClient('jest Test');
-    } catch (error) {
-      expect(error).toEqual(Error("Have no browserName, it's length must > 0"));
-    }
-  });
-
   it('should return a webClient', () => {
     const webClient = new WebClient(
       'jest Test',

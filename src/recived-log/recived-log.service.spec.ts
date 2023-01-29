@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-// import { Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+
 import { ReceivedLog } from './entity/recived-log.entity';
 import { ReceivedLogService } from './recived-log.service';
 
-describe('ReceivedLog class', () => {
+describe('ReceivedLogService', () => {
   let service: ReceivedLogService;
-  // let repo: Repository<ReceivedLog>;
+  let repo: Repository<ReceivedLog>;
 
   const oneLog = new ReceivedLog('jest test 1');
   const logArray = [
@@ -30,7 +31,7 @@ describe('ReceivedLog class', () => {
     }).compile();
 
     service = module.get<ReceivedLogService>(ReceivedLogService);
-    // repo = module.get<Repository<ReceivedLog>>(getRepositoryToken(ReceivedLog));
+    repo = module.get<Repository<ReceivedLog>>(getRepositoryToken(ReceivedLog));
   });
 
   it('service should be defined', () => {
@@ -39,15 +40,28 @@ describe('ReceivedLog class', () => {
 
   describe('getAll', () => {
     it('should return an array of logs', async () => {
+      const repoSpy = jest.spyOn(repo, 'find');
       const logs = await service.getAll();
       expect(logs).toEqual(logArray);
+      expect(repoSpy).toBeCalledWith({
+        order: {
+          id: 'DESC',
+        },
+      });
     });
   });
 
   describe('findByDeviceId', () => {
     it('should return an array of logs', async () => {
-      const logs = await service.findByDeviceId('jest test 1');
+      const repoSpy = jest.spyOn(repo, 'find');
+      const logs = await service.findByDeviceId('test_device_id');
       expect(logs).toEqual(logArray);
+      expect(repoSpy).toBeCalledWith({
+        order: {
+          id: 'DESC',
+        },
+        where: { deviceId: 'test_device_id' },
+      });
     });
   });
 

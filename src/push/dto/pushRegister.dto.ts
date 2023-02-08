@@ -4,7 +4,8 @@ export class PushRegisterDto {
   clientType: string;
 
   // for browser
-  browser: string;
+  browserName: string;
+  browserVersion: string;
   vapidPublicKey: string;
   vapidPrivateKey: string;
   endpoint: string;

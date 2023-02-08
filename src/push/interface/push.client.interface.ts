@@ -1,11 +1,9 @@
-export interface WebClientInterface {
-  id: number;
+export interface PushClientInterface {
+  uid: number;
   deviceId: string;
-  browserInfo: string;
-  browserVersion: string;
+  clientType: string;
+  state: boolean;
+  message: string;
   vapidPublicKey: string;
-  vapidPrivateKey: string;
-  endpoint: string;
-  keysAuth: string;
-  keysP256dh: string;
+  iPhoneToken: string;
 }

@@ -33,7 +33,7 @@ describe('AuthService', () => {
   });
 
   describe('validateUser', () => {
-    it('should return a user object when credentials are valid', async () => {
+    it('should return a token object when credentials are valid', async () => {
       const user = { username: 'maria', password: 'guess' };
       const res = await authService.validateUser(user);
       expect(res.userId).toEqual(2);

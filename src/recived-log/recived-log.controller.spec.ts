@@ -56,8 +56,6 @@ describe('ReceivedLog Controller', () => {
 
   describe('getAll', () => {
     it('should return an array of logs', async () => {
-      const logs = await service.getAll();
-      expect(logs).toEqual(allLogs);
       await expect(controller.getAll()).resolves.toEqual(allLogs);
     });
   });

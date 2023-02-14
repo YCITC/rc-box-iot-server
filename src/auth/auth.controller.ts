@@ -9,7 +9,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  async gotTokenById(@Body() userDto: UsersDto): Promise<any | undefined> {
+  async login(@Body() userDto: UsersDto): Promise<any | undefined> {
     try {
       const user = await this.authService.validateUser(userDto);
       return this.authService.createToken(user);

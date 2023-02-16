@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { ExampleAppController } from './example/example.controller';
 import { ExampleAppService } from './example/example.service';
@@ -16,15 +17,26 @@ import { UsersModule } from './users/users.module';
     // ServeStaticModule.forRoot({
     //   rootPath: join(__dirname, '..', 'client'),
     // }),
-    TypeOrmModule.forRoot({
-      type: 'mariadb',
-      host: '34.80.129.4',
-      port: 3306,
-      username: 'root',
-      password: '12345',
-      database: 'rc-box',
-      entities: ['dist/**/*.entity{.ts,.js}'],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        const dbInfo = {
+          type: configService.get('DB_type'),
+          host: configService.get('DB_host'),
+          port: configService.get('DB_port'),
+          username: configService.get('DB_username'),
+          password: configService.get('DB_password'),
+          database: configService.get('DB_database'),
+          entities: ['dist/**/*.entity{.ts,.js}'],
+          synchronize: true,
+        };
+        return dbInfo;
+      },
+      inject: [ConfigService],
+    }),
+    ConfigModule.forRoot({
+      isGlobal: false,
+      envFilePath: ['.development.env'],
     }),
     ReceivedLogModule,
     PushModule,

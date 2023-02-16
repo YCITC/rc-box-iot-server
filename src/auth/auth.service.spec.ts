@@ -1,4 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -22,7 +23,21 @@ describe('AuthService', () => {
           },
         }),
       ],
-      providers: [AuthService, JwtService],
+      providers: [
+        AuthService,
+        JwtService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              if (key === 'JWT_SECRET') {
+                return 'iOjE2NzU2OTUyOTQsImV4cC.';
+              }
+              return null;
+            }),
+          },
+        },
+      ],
     }).compile();
 
     authService = module.get<AuthService>(AuthService);

@@ -7,9 +7,11 @@ import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { jwtConstants } from './constants';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule,
     UsersModule,
     PassportModule,
     JwtModule.register({
@@ -19,6 +21,17 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         issuer: jwtConstants.issuer,
       },
       //* expires time refrence: https://github.com/vercel/ms
+    }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET'),
+        signOptions: {
+          expiresIn: `${configService.get('JWT_EXPIRATION_TIME')}`,
+          issuer: configService.get('JWT_ISSUER'),
+        },
+      }),
     }),
   ],
   providers: [AuthService, JwtStrategy],

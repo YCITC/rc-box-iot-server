@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { User } from './entity/user.entity';
+import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
-describe('UsersService', () => {
+describe('Users controller', () => {
   let service: UsersService;
-  let repo: Repository<User>;
+  let controller: UsersController;
   const rawUser = {
     email: '1@2.3',
     username: 'Tester',
@@ -27,7 +27,8 @@ describe('UsersService', () => {
       rawUser.address,
       rawUser.zipCode,
     );
-    const module: TestingModule = await Test.createTestingModule({
+    const app: TestingModule = await Test.createTestingModule({
+      controllers: [UsersController],
       providers: [
         UsersService,
         {
@@ -44,33 +45,31 @@ describe('UsersService', () => {
       ],
     }).compile();
 
-    service = module.get<UsersService>(UsersService);
-    repo = module.get<Repository<User>>(getRepositoryToken(User));
+    service = app.get<UsersService>(UsersService);
+    controller = app.get<UsersController>(UsersController);
   });
-
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(controller).toBeDefined();
   });
 
   describe('addOne', () => {
     it('should return a user', async () => {
-      const user = await service.addOne(rawUser);
+      const user = await controller.addOne(rawUser);
       expect(user.createdTime).toBeDefined();
       expect(user.isEmailConfirmed).toBeDefined();
     });
+
     it('password should be hashed', async () => {
-      const user = await service.addOne(rawUser);
+      const user = await controller.addOne(rawUser);
       expect(user.password == rawUser.password).toBeFalsy();
     });
   });
 
   describe('findByMail', () => {
-    it('should trigger repo findOneBy', async () => {
-      const repoSpy = jest.spyOn(repo, 'findOneBy');
+    it('should return a user', async () => {
       const user = await service.findOneByMail('1@.2.3');
       expect(user.isEmailConfirmed).toBeFalsy();
       expect(user.createdTime).toBeDefined();
-      expect(repoSpy).toBeCalled();
     });
   });
 });

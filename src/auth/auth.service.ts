@@ -1,9 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersDto } from '../users/dto/users.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcrypt';
+import { UserLoginDto } from '../users/dto/user.login.dto';
 import { UsersService } from '../users/users.service';
 import { jwtConstants } from './constants';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -13,15 +14,15 @@ export class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async validateUser(userDto: UsersDto): Promise<any> {
-    const user = await this.usersService.findOne(userDto.username);
-    const returnUser = { ...user };
-    if (user && user.password === userDto.password) {
-      delete returnUser.password;
-      return Promise.resolve(returnUser);
+  async validateUser(userDto: UserLoginDto): Promise<any> {
+    const user = await this.usersService.findOneByMail(userDto.email);
+    const result = await bcrypt.compare(userDto.password, user.password);
+    if (user && result == true) {
+      delete user.password;
+      return Promise.resolve(user);
     }
     return Promise.reject(
-      new UnauthorizedException('username or password incorrect'),
+      new UnauthorizedException('email or password incorrect'),
     );
   }
 
@@ -30,7 +31,9 @@ export class AuthService {
     const signOptions = {
       secret: this.configService.get('JWT_SECRET'),
     };
-    const token = this.jwtService.sign(user, signOptions);
+    // * Note: we choose a property name of sub to hold our userId value to be consistent with JWT standards.
+    const payload = { sub: user.id, username: user.username };
+    const token = this.jwtService.sign(payload, signOptions);
     return {
       access_token: token,
     };

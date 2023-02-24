@@ -9,7 +9,7 @@ export class WebClient {
   @PrimaryGeneratedColumn({
     unsigned: true,
   })
-  uid: number;
+  id: number;
 
   @Column({
     type: 'timestamp',

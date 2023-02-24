@@ -9,7 +9,7 @@ export class iOSClient {
   @PrimaryGeneratedColumn({
     unsigned: true,
   })
-  uid: number;
+  id: number;
 
   @Column({
     type: 'timestamp',

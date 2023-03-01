@@ -27,5 +27,4 @@ export class UsersController {
       return Promise.reject(new BadRequestException(errorMsg));
     }
   }
-
 }

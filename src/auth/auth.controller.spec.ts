@@ -3,6 +3,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+
+import { EmailService } from '../email/email.service';
 import { User } from '../users/entity/user.entity';
 import { UsersService } from '../users/users.service';
 import { AuthController } from './auth.controller';
@@ -62,6 +64,14 @@ describe('AuthController', () => {
                 return 'iOjE2NzU2OTUyOTQsImV4cC.';
               }
               return null;
+            }),
+          },
+        },
+        {
+          provide: EmailService,
+          useValue: {
+            sendVerificationEmail: jest.fn(() => {
+              return true;
             }),
           },
         },

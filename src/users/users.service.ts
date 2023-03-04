@@ -16,28 +16,32 @@ export class UsersService {
 
   async addOne(userRegisterDto: UserRegisterDto): Promise<User> {
     if (userRegisterDto.password === undefined) {
-      return Promise.reject(new BadRequestException('Require password'));
+      throw new BadRequestException('Require password');
     }
     if (userRegisterDto.email === undefined) {
-      return Promise.reject(new BadRequestException('Require email'));
+      throw new BadRequestException('Require email');
     }
     if (userRegisterDto.username === undefined) {
-      return Promise.reject(new BadRequestException('Require username'));
+      throw new BadRequestException('Require username');
     }
 
     const hashedPassword = await bcrypt.hash(userRegisterDto.password, 5);
-    return this.usersRepository
-      .save({
+    try {
+      const user = await this.usersRepository.save({
         ...userRegisterDto,
         password: hashedPassword,
-      })
-      .catch((error) => {
-        console.error('[Error] sqlMessage: ', error.sqlMessage);
-        // console.error('[Error] message: ', error.message);
-        if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
-          return Promise.reject('Email [' + userRegisterDto.email + '] exist');
-        }
       });
+      return Promise.resolve(user);
+    } catch (error) {
+      console.error('[Error] sqlMessage: ', error.sqlMessage);
+      // console.error('[Error] message: ', error.message);
+      if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
+        // return Promise.reject('Email [' + userRegisterDto.email + '] exist');
+        throw new BadRequestException(
+          'Email [' + userRegisterDto.email + '] exist',
+        );
+      }
+    }
   }
 
   async findOneById(id: number): Promise<User> {
@@ -46,7 +50,7 @@ export class UsersService {
       const returnUser = { ...userObj };
       return Promise.resolve(returnUser);
     }
-    return Promise.reject(new BadRequestException('Cannot find user'));
+    throw new BadRequestException('Cannot find user');
   }
 
   async findOneByMail(email: string): Promise<User> {
@@ -55,6 +59,33 @@ export class UsersService {
       const returnUser = { ...userObj };
       return Promise.resolve(returnUser);
     }
-    return Promise.reject(new BadRequestException('Cannot find user'));
+    throw new BadRequestException('Cannot find user');
+  }
+  async emailVerify(id: number): Promise<any> {
+    try {
+      const userObj = await this.usersRepository.findOneBy({ id });
+      /*
+      * 流程設計上，驗證過就在驗證過一次。
+      * 怕有人無聊一直點，就用token過期來處理。
+      // if (userObj.isEmailVerified) {
+      //   throw new BadRequestException('Email already Verified');
+      // }
+      */
+      userObj.isEmailVerified = true;
+      const updateResult = await this.usersRepository.update(id, userObj);
+      if (updateResult.affected == 1) {
+        return Promise.resolve(userObj);
+      } else {
+        throw new BadRequestException(
+          'Email Verify Failed, Cannot update user with id:' + id,
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      if (error.message.indexOf('Cannot set properties of null') > -1) {
+        throw new BadRequestException('Cannot find user with id:' + id);
+      }
+      throw new BadRequestException(error.message);
+    }
   }
 }

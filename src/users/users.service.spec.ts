@@ -8,6 +8,7 @@ describe('UsersService', () => {
   let service: UsersService;
   let repo: Repository<User>;
   const rawUser = {
+    id: 1,
     email: '1@2.3',
     username: 'Tester',
     fullName: 'Tester Jest',
@@ -36,9 +37,10 @@ describe('UsersService', () => {
             findOneBy: jest.fn().mockResolvedValue(testUser),
             save: (user) => {
               user.createdTime = new Date();
-              user.isEmailConfirmed = false;
+              user.isEmailVerified = false;
               return Promise.resolve(user);
             },
+            update: jest.fn().mockResolvedValue({ affected: 1 }),
           },
         },
       ],
@@ -56,7 +58,7 @@ describe('UsersService', () => {
     it('should return a user', async () => {
       const user = await service.addOne(rawUser);
       expect(user.createdTime).toBeDefined();
-      expect(user.isEmailConfirmed).toBeDefined();
+      expect(user.isEmailVerified).toBeDefined();
     });
     it('password should be hashed', async () => {
       const user = await service.addOne(rawUser);
@@ -64,13 +66,28 @@ describe('UsersService', () => {
     });
   });
 
+  describe('findOneById', () => {
+    it('should trigger repo findOneBy', async () => {
+      const repoSpy = jest.spyOn(repo, 'findOneBy');
+      await service.findOneById(1);
+      expect(repoSpy).toBeCalled();
+    });
+  });
   describe('findByMail', () => {
     it('should trigger repo findOneBy', async () => {
       const repoSpy = jest.spyOn(repo, 'findOneBy');
-      const user = await service.findOneByMail('1@.2.3');
-      expect(user.isEmailConfirmed).toBeFalsy();
-      expect(user.createdTime).toBeDefined();
+      await service.findOneByMail('1@.2.3');
       expect(repoSpy).toBeCalled();
+    });
+  });
+  describe('emailVerify', () => {
+    it('should trigger repo findOneBy & update', async () => {
+      const repoSpyFind = jest.spyOn(repo, 'findOneBy');
+      const updateSpy = jest.spyOn(repo, 'update');
+      await service.emailVerify(1);
+
+      expect(repoSpyFind).toBeCalled();
+      expect(updateSpy).toBeCalled();
     });
   });
 });

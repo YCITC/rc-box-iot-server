@@ -12,6 +12,7 @@ import { jwtConstants } from './constants';
 describe('AuthService', () => {
   let authService: AuthService;
   let usersService: UsersService;
+  let token: string;
   const rawUser = {
     email: '1@2.3',
     name: 'Tester',
@@ -90,14 +91,31 @@ describe('AuthService', () => {
       );
     });
   });
-
-  describe('validateLogin', () => {
+  describe('createToken', () => {
     it('should return JWT object when credentials are valid', async () => {
       const res = await authService.createToken({
         username: 'john',
-        userId: 1,
+        id: 1,
       });
-      expect(res.access_token).toBeDefined();
+      expect(res).toBeDefined();
     });
   });
+  describe('createOneDayToken', () => {
+    it('should return JWT object when credentials are valid', async () => {
+      token = await authService.createToken({
+        username: 'john',
+        id: 1,
+      });
+      expect(token.length).toBeGreaterThan(0);
+    });
+  });
+  describe('decodeToken', () => {
+    it('should return JWT object when credentials are valid', async () => {
+      const payload = await authService.decodeToken(token);
+      expect(payload.id).toBeDefined();
+      expect(payload.username).toBeDefined();
+      expect(payload.iat).toBeDefined();
+    });
+  });
+  
 });

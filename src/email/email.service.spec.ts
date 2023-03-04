@@ -17,7 +17,11 @@ describe('EmailService', () => {
         {
           provide: MailerService,
           useValue: {
-            sendMail: jest.fn().mockResolvedValue({ messageId: 'abc123' }),
+            sendMail: jest.fn().mockResolvedValue({
+              messageId: 'abc123',
+              resopnse: 'OK',
+              accepted: [mailTo],
+            }),
           },
         },
       ],

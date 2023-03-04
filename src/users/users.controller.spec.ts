@@ -37,7 +37,7 @@ describe('Users controller', () => {
             findOneBy: jest.fn().mockResolvedValue(testUser),
             save: (user) => {
               user.createdTime = new Date();
-              user.isEmailConfirmed = false;
+              user.isEmailVerified = false;
               return Promise.resolve(user);
             },
           },
@@ -56,7 +56,7 @@ describe('Users controller', () => {
     it('should return a user', async () => {
       const user = await controller.addOne(rawUser);
       expect(user.createdTime).toBeDefined();
-      expect(user.isEmailConfirmed).toBeDefined();
+      expect(user.isEmailVerified).toBeDefined();
     });
 
     it('password should be hashed', async () => {
@@ -68,7 +68,7 @@ describe('Users controller', () => {
   describe('findByMail', () => {
     it('should return a user', async () => {
       const user = await service.findOneByMail('1@.2.3');
-      expect(user.isEmailConfirmed).toBeFalsy();
+      expect(user.isEmailVerified).toBeFalsy();
       expect(user.createdTime).toBeDefined();
     });
   });

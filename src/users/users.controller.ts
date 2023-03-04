@@ -1,4 +1,4 @@
-import { BadRequestException, Controller } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { Body, Get, Param, Put } from '@nestjs/common';
 import { UserRegisterDto } from './dto/user.register.dto';
 import { User } from './entity/user.entity';
@@ -13,18 +13,13 @@ export class UsersController {
     return this.usersService.findOneByMail(email);
   }
 
-  @Get('findByUid/:id')
+  @Get('findById/:id')
   findByUid(@Param('id') id: number): Promise<User> {
     return this.usersService.findOneById(id);
   }
 
   @Put('create')
-  async addOne(@Body() userDto: UserRegisterDto): Promise<User> {
-    try {
-      const user = await this.usersService.addOne(userDto);
-      return Promise.resolve(user);
-    } catch (errorMsg) {
-      return Promise.reject(new BadRequestException(errorMsg));
-    }
+  addOne(@Body() userDto: UserRegisterDto): Promise<User> {
+    return this.usersService.addOne(userDto);
   }
 }

@@ -28,6 +28,8 @@ export class ExampleAppController {
     if (req.header) console.log('headers: ', req.headers);
     if (req.query) console.log('query: ', req.query);
     if (req.body) console.log('body: ', req.body);
+
+    console.log(Object.keys(res));
     returnObj = {
       success: true,
     };

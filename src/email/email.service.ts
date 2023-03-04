@@ -13,7 +13,7 @@ export class EmailService {
     });
   }
 
-  async sendVerificationEmail(to: string, verificationURL: string) {
+  sendVerificationEmail(to: string, verificationURL: string) {
     const subject = 'RC-Box Verification Mail';
     let content =
       'This is a verification email. Please click on the URL provided to verify your account.\n';

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, PrimaryColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity({
   name: 'users',
@@ -15,7 +15,7 @@ export class User {
   email: string;
 
   @Column({ default: false })
-  isEmailConfirmed: boolean;
+  isEmailVerified: boolean;
 
   @Column({
     type: 'varchar',
@@ -65,6 +65,7 @@ export class User {
     phoneNumber: string,
     address: string,
     zipCode: string,
+    id?: number,
   );
   constructor(
     email: string,
@@ -74,6 +75,7 @@ export class User {
     phoneNumber: string,
     address: string,
     zipCode: string,
+    id?: number,
   ) {
     this.email = email;
     this.username = username;
@@ -82,6 +84,7 @@ export class User {
     this.phoneNumber = phoneNumber;
     this.address = address;
     this.zipCode = zipCode;
+    if (id) this.id = id;
 
     const now = new Date();
     this.createdTime = new Date(now.toLocaleDateString());

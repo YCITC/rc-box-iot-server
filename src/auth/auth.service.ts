@@ -26,16 +26,32 @@ export class AuthService {
     );
   }
 
-  async createToken(user: any) {
+  createToken(user: any) {
     // const signOptions = { secret: jwtConstants.secret };
     const signOptions = {
       secret: this.configService.get('JWT_SECRET'),
     };
     // * Note: we choose a property name of sub to hold our userId value to be consistent with JWT standards.
-    const payload = { sub: user.id, username: user.username };
+    const payload = { id: user.id, username: user.username };
     const token = this.jwtService.sign(payload, signOptions);
-    return {
-      access_token: token,
+    return token;
+  }
+
+  createOneDayToken(user: any) {
+    const signOptions = {
+      expiresIn: '1d',
+      issuer: this.configService.get('JWT_ISSUER'),
+      secret: this.configService.get('JWT_SECRET'),
     };
+    const payload = { id: user.id, username: user.username };
+    const token = this.jwtService.sign(payload, signOptions);
+    return token;
+  }
+
+  async decodeToken(token: string) {
+    const payload = await this.jwtService.verify(token, {
+      secret: this.configService.get('JWT_SECRET'),
+    });
+    return Promise.resolve(payload);
   }
 }

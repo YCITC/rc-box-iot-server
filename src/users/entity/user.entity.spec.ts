@@ -21,7 +21,7 @@ describe('User class', () => {
     );
     expect(user).toBeTruthy();
     expect(user.createdTime).toBeDefined();
-    expect(user.isEmailConfirmed).toBeFalsy();
+    expect(user.isEmailVerified).toBeFalsy();
     expect(user.email).toBeDefined();
     expect(user.username).toBeDefined();
     expect(user.password).toBeDefined();

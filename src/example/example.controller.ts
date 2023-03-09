@@ -1,7 +1,9 @@
 import { Controller, Get, Post, Req, Res, HttpStatus } from '@nestjs/common';
 import { ExampleAppService } from './example.service';
 import { Request, Response } from 'express';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Example')
 @Controller('myRouter')
 export class ExampleAppController {
   constructor(private readonly appService: ExampleAppService) {}

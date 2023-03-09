@@ -1,10 +1,12 @@
 import { Body, Controller, Get, Post, Param } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { ReceivedLog } from './entity/recived-log.entity';
 import { ReceivedLogService } from './recived-log.service';
 import { ReceivedLogDto } from './dto/recived-log.dto';
 
+@ApiTags('Log')
 @Controller('log')
 export class ReceivedLogController {
   constructor(private readonly receiveService: ReceivedLogService) {}

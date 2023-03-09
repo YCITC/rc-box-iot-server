@@ -1,6 +1,10 @@
-import { Controller, Get, Post, Req, Param, Body } from '@nestjs/common';
-import { BadRequestException, ServiceUnavailableException } from '@nestjs/common';
-import { Request } from 'express';
+import { Controller } from '@nestjs/common';
+import { Get, Post, Req, Request, Param, Body } from '@nestjs/common';
+import {
+  BadRequestException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { PushService } from './push.service';
 import { PushRegisterDto } from './dto/pushRegister.dto';
@@ -8,6 +12,7 @@ import { WebClient } from './entity/web.client.entity';
 import { iOSClient } from './entity/ios.client.entity';
 import { PushClientInterface } from './interface/push.client.interface';
 
+@ApiTags('PushNotification')
 @Controller('push')
 export class PushController {
   constructor(private readonly pushService: PushService) {}
@@ -97,7 +102,7 @@ export class PushController {
   }
 
   @Post('send')
-  async send(@Req() req: Request): Promise<PushClientInterface[]> {
+  async send(@Req() req): Promise<PushClientInterface[]> {
     // console.log('request: ', req);
     // console.log('headers: ', req.headers);
     // console.log('body: ', req.body.deviceId);
@@ -111,7 +116,6 @@ export class PushController {
       const iPhoneClientList = await this.pushService.sendiPhone(
         req.body.deviceId,
       );
-      throw Error('Errrror');
       return Promise.resolve(browserClientList.concat(iPhoneClientList));
     } catch (error) {
       console.log('push send error: ', error);

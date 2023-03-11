@@ -24,7 +24,7 @@ async function buildDocument(app) {
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   };
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('document', app, document);
   return app;
 }
 

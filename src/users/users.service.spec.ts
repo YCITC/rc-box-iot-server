@@ -41,6 +41,7 @@ describe('UsersService', () => {
               return Promise.resolve(user);
             },
             update: jest.fn().mockResolvedValue({ affected: 1 }),
+            delete: jest.fn().mockResolvedValue({ affected: 1 }),
           },
         },
       ],
@@ -88,6 +89,13 @@ describe('UsersService', () => {
 
       expect(repoSpyFind).toBeCalled();
       expect(updateSpy).toBeCalled();
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete an user', async () => {
+      const response = await service.deleteOne(1);
+      expect(response).toBeTruthy();
     });
   });
 });

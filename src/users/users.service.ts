@@ -44,6 +44,18 @@ export class UsersService {
     }
   }
 
+  async deleteOne(id: number): Promise<any> {
+    const response = await this.usersRepository.delete({ id });
+    /*
+     * usersRepository response like this
+     * DeleteResult { raw: [], affected: 1 }
+     */
+    if (response.affected == 1) {
+      return Promise.resolve(true);
+    }
+    throw new BadRequestException('User not found');
+  }
+
   async findOneById(id: number): Promise<User> {
     const userObj = await this.usersRepository.findOneBy({ id });
     if (userObj) {

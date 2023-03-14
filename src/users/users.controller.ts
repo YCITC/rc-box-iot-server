@@ -1,5 +1,5 @@
-import { Controller } from '@nestjs/common';
-import { Body, Get, Param, Put } from '@nestjs/common';
+import { Controller, Body, Param } from '@nestjs/common';
+import { Get, Put, Delete } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { UserRegisterDto } from './dto/user.register.dto';
@@ -43,5 +43,16 @@ export class UsersController {
   @ApiResponse({ status: 400, description: 'Email [useremail] exist' })
   addOne(@Body() userDto: UserRegisterDto): Promise<User> {
     return this.usersService.addOne(userDto);
+  }
+
+  @Delete('delete/:id')
+  @ApiOperation({ summary: 'Delete User with id ' })
+  @ApiResponse({
+    status: 200,
+    description: 'Delete successed.',
+  })
+  @ApiResponse({ status: 400, description: 'User not found' })
+  deleteOne(@Param('id') id: number): Promise<any> {
+    return this.usersService.deleteOne(id);
   }
 }

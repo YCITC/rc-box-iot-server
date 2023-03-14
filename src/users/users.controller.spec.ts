@@ -40,6 +40,7 @@ describe('Users controller', () => {
               user.isEmailVerified = false;
               return Promise.resolve(user);
             },
+            delete: jest.fn().mockResolvedValue({ affected: 1 }),
           },
         },
       ],
@@ -67,9 +68,16 @@ describe('Users controller', () => {
 
   describe('findByMail', () => {
     it('should return a user', async () => {
-      const user = await service.findOneByMail('1@.2.3');
+      const user = await controller.findByMail('1@.2.3');
       expect(user.isEmailVerified).toBeFalsy();
       expect(user.createdTime).toBeDefined();
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete an user', async () => {
+      const response = await controller.deleteOne(1);
+      expect(response).toBeTruthy();
     });
   });
 });

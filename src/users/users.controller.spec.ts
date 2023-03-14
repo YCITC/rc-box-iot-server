@@ -5,7 +5,6 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
 describe('Users controller', () => {
-  let service: UsersService;
   let controller: UsersController;
   const rawUser = {
     email: '1@2.3',
@@ -46,7 +45,6 @@ describe('Users controller', () => {
       ],
     }).compile();
 
-    service = app.get<UsersService>(UsersService);
     controller = app.get<UsersController>(UsersController);
   });
   it('should be defined', () => {

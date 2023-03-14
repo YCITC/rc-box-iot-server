@@ -49,10 +49,18 @@ export class UsersController {
   @ApiOperation({ summary: 'Delete User with id ' })
   @ApiResponse({
     status: 200,
-    description: 'Delete successed.',
+    description:
+      'The user has been successfully deleted using the provided ID.',
   })
   @ApiResponse({ status: 400, description: 'User not found' })
-  deleteOne(@Param('id') id: number): Promise<any> {
-    return this.usersService.deleteOne(id);
+  async deleteOne(@Param('id') id: number): Promise<any> {
+    await this.usersService.deleteOne(id);
+    return Promise.resolve({
+      statusCode: 200,
+      message:
+        'The user has been successfully deleted using the provided ID ' +
+        id +
+        '.',
+    });
   }
 }

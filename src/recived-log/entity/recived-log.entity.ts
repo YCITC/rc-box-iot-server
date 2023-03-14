@@ -3,7 +3,6 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity({
   name: 'received_log',
   engine: 'MyISAM',
-  database: 'rc-box',
 })
 export class ReceivedLog {
   @PrimaryGeneratedColumn({

@@ -3,7 +3,6 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 @Entity({
   name: 'iOSClient',
   engine: 'MyISAM',
-  database: 'rc-box',
 })
 export class iOSClient {
   @PrimaryGeneratedColumn({

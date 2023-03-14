@@ -4,7 +4,6 @@ import { ApiProperty } from '@nestjs/swagger';
 @Entity({
   name: 'users',
   engine: 'MyISAM',
-  database: 'rc-box',
 })
 export class User {
   @ApiProperty({ example: 0 })

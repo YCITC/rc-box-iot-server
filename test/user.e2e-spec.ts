@@ -69,7 +69,7 @@ describe('UserController (e2e)', () => {
     expect(response.body.username).toBe(user.username);
   });
 
-  it('/users/findByMail/ (GET)', () => {
+  it('/users/findByMail/:email (GET)', () => {
     return request(app.getHttpServer())
       .get('/users/findByMail/' + userEmail)
       .expect(200)
@@ -78,14 +78,14 @@ describe('UserController (e2e)', () => {
       });
   });
 
-  it('/users/findById/ (GET)', async () => {
+  it('/users/findById/:userId (GET)', async () => {
     const response = await request(app.getHttpServer())
       .get('/users/findById/' + userId)
       .expect(200);
     expect(response.body.id).toEqual(userId);
   });
 
-  it('/users/delete/ (GET)', async () => {
+  it('/users/delete/:userId (GET)', async () => {
     const response = await request(app.getHttpServer())
       .delete('/users/delete/' + userId)
       .expect(200);

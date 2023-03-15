@@ -1,5 +1,6 @@
 import { SwaggerModule, SwaggerDocumentOptions } from '@nestjs/swagger';
 import { DocumentBuilder } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -10,7 +11,6 @@ import * as https from 'https';
 import * as http from 'http';
 
 async function buildDocument(app) {
-
   const config = new DocumentBuilder()
     .setTitle('RC-Box API documents')
     .setDescription('The cats API description')
@@ -31,7 +31,11 @@ async function buildDocument(app) {
 async function httpServer() {
   const app = await NestFactory.create(AppModule, { cors: true });
   // app.enableCors(); //enable CORS
-  buildDocument(app);
+
+  const configService = app.get(ConfigService);
+  if (configService.get('DOCUMENT_ENABLE') === 'true') {
+    buildDocument(app);
+  }
   await app.listen(3000);
 }
 

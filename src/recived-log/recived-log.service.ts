@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ReceivedLogInterface } from './interface/recived_log.interface';
@@ -33,5 +33,17 @@ export class ReceivedLogService {
   async create(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
     const log = new ReceivedLog(receivedLogDto.deviceId, new Date());
     return this.receivedLogRepository.save(log);
+  }
+
+  async clean(deviceId: string): Promise<any> {
+    const response = await this.receivedLogRepository.delete({ deviceId });
+    /*
+     * response like this
+     * DeleteResult { raw: [], affected: 1 }
+     */
+    if (response.affected != 0) {
+      return Promise.resolve(true);
+    }
+    throw new BadRequestException('User not found');
   }
 }

@@ -25,6 +25,7 @@ describe('ReceivedLogService', () => {
           useValue: {
             find: jest.fn().mockResolvedValue(logArray),
             save: jest.fn().mockReturnValue(oneLog),
+            delete: jest.fn().mockResolvedValue({ affected: 3 }),
           },
         },
       ],
@@ -75,6 +76,13 @@ describe('ReceivedLogService', () => {
       const log = await service.create(rawLog);
       expect(log).toMatchObject(oneLog);
       expect(log.deviceId).toEqual(log.deviceId);
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete logs', async () => {
+      const response = await service.clean('test_device_id');
+      expect(response).toBeTruthy();
     });
   });
 });

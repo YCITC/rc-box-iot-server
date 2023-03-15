@@ -41,6 +41,7 @@ describe('ReceivedLog Controller', () => {
                 return Promise.resolve(allLogs);
               }
             }),
+            delete: jest.fn().mockResolvedValue({ affected: 3 }),
           },
         },
       ],
@@ -126,6 +127,13 @@ describe('ReceivedLog Controller', () => {
     });
     it('toThrowError text', async () => {
       await expect(controller.create(dto)).rejects.toThrowError(errorText);
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete logs', async () => {
+      const response = await service.clean('test_device_id');
+      expect(response).toBeTruthy();
     });
   });
 });

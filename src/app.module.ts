@@ -29,8 +29,6 @@ import { AuthModule } from './auth/auth.module';
           entities: ['dist/**/*.entity{.ts,.js}'],
           synchronize: true,
         };
-        console.log('root')
-        console.log(configService.get('email'));
         return dbInfo;
       },
       inject: [ConfigService],
@@ -41,7 +39,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     ReceivedLogModule,
     PushModule,
-    // UsersModule,  //This module is already imported in the 'AuthModule'.
+    // UsersModule,  //UserModule is already imported in the 'AuthModule'.
     AuthModule,
   ],
   // 我們可以把單一個 Controller/Service 以下面方式放進來，或者用上面的方法把整個module import進來。

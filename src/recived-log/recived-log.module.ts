@@ -1,7 +1,6 @@
-
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ReceivedLog } from './recived-log.entity';
+import { ReceivedLog } from './entity/recived-log.entity';
 import { ReceivedLogService } from './recived-log.service';
 import { ReceivedLogController } from './recived-log.controller';
 

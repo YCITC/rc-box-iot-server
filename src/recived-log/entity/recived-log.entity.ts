@@ -1,16 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-// @Entity('received_log')
 @Entity({
   name: 'received_log',
   engine: 'MyISAM',
-  database: 'zing-rc-box',
 })
 export class ReceivedLog {
   @PrimaryGeneratedColumn({
     unsigned: true,
   })
-  id: Number;
+  id: number;
 
   @Column({
     type: 'timestamp',
@@ -22,5 +20,17 @@ export class ReceivedLog {
     type: 'varchar',
     length: 16,
   })
-  deviceId: String;
+  deviceId: string;
+
+  constructor(deviceId: string, time?: Date, id?: number);
+  constructor(deviceId: string, time?: Date, id?: number) {
+    if (time) {
+      this.time = time;
+    } else {
+      const now = new Date();
+      this.time = new Date(now.toLocaleDateString());
+    }
+    this.id = id;
+    this.deviceId = deviceId;
+  }
 }

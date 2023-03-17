@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ReceivedLog } from './recived-log.entity';
-import { ReceivedLogInterface } from './interfaces/recived_log.interface'
+import { ReceivedLogInterface } from './interface/recived_log.interface';
 import { ReceivedLogDto } from './dto/recived-log.dto';
+import { ReceivedLog } from './entity/recived-log.entity';
 
 @Injectable()
 export class ReceivedLogService {
@@ -13,45 +13,37 @@ export class ReceivedLogService {
   ) {}
   private logs: ReceivedLogInterface[] = [];
 
-  async findAll(): Promise<ReceivedLog[]> {
-    return this.receivedLogRepository.find();
+  async getAll(): Promise<ReceivedLog[]> {
+    return this.receivedLogRepository.find({
+      order: {
+        id: 'DESC',
+      },
+    });
   }
 
-  create(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
-    const log = new ReceivedLog();
-    log.deviceId = receivedLogDto.deviceId;
+  async findByDeviceId(deviceId: string): Promise<ReceivedLog[]> {
+    return this.receivedLogRepository.find({
+      order: {
+        id: 'DESC',
+      },
+      where: { deviceId },
+    });
+  }
+
+  async create(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
+    const log = new ReceivedLog(receivedLogDto.deviceId, new Date());
     return this.receivedLogRepository.save(log);
   }
 
-  // findByDevice(deviceId: string): Promise<ReceivedLog> {
-
-  //   return this.receivedLogRepository.findBy({deviceId: deviceId});
-  //   // return this.logs.filter(log=>log.deviceId == deviceId);
-  // }
-
-
-  // findOne(id: string): Promise<User> {
-  // findByDeviceId_V2(deviceId: string): Promise<ReceivedLog> {
-  //   return this.receivedLogRepository.findBy({'deviceId': deviceId});
-  // }
-
-  // async add_v2(obj: ReceivedLogInterface) :Promise<ReceivedLog> {
-  //   console.log('this.logs: ', this.logs);
-  //   console.log('input obj: ', obj);
-  //   return await this.receivedLogRepository.save<ReceivedLog>(obj);
-  //   // return await this.receivedLogRepository.create<ReceivedLog>(obj);
-  // }
-  // public async create(users: ReceivedLogInterface): Promise<Users> {
-  //   return await this.receivedLogRepository.create<Users>(users);
-  // }
-  
-  add(obj: ReceivedLogInterface) {
-    console.log('this.logs: ', this.logs);
-    console.log('input obj: ', obj);
-    this.logs.push(obj);
+  async clean(deviceId: string): Promise<any> {
+    const response = await this.receivedLogRepository.delete({ deviceId });
+    /*
+     * response like this
+     * DeleteResult { raw: [], affected: 1 }
+     */
+    if (response.affected != 0) {
+      return Promise.resolve(true);
+    }
+    throw new BadRequestException('User not found');
   }
-
-  // async remove(id: number): Promise<void> {
-  //   await this.receivedLogRepository.delete(id);
-  // }
 }

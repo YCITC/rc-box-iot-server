@@ -2,7 +2,7 @@ import { Controller, UseGuards } from '@nestjs/common';
 import { Body, Param, Get, Post, Put } from '@nestjs/common';
 import { Req, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
@@ -49,6 +49,8 @@ export class AuthController {
     }
   }
 
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary:
       'test jwtToken, Front-End must add "Authorization: Bearer ****token*****" in header',
@@ -57,13 +59,12 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized.',
   })
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
   getProfile(@Req() req) {
     // console.log('profile: ', req);
     return req.user;
   }
 
+  @Put('createUser')
   @ApiResponse({
     status: 200,
     description:
@@ -77,8 +78,7 @@ export class AuthController {
     status: 400,
     description: 'Email [ ****** ] exist',
   })
-  @Put('createUser')
-  async addOne(@Body() userDto: UserRegisterDto): Promise<User | any> {
+  async createUser(@Body() userDto: UserRegisterDto): Promise<User | any> {
     const user = await this.usersService.addOne(userDto);
     const token = this.authService.createOneDayToken(user);
     const url =
@@ -91,16 +91,16 @@ export class AuthController {
       user.email,
       url,
     );
-    if (result.accepted.length > 0) return Promise.resolve(true);
+    if (result.accepted.length > 0) return Promise.resolve({ ...user, token });
     return Promise.resolve(false);
   }
 
+  @Get('emailVerify/:token')
   @ApiResponse({
     status: 200,
     description:
       'If the token has no errors, redirect the user to a specific page, if the token has error, redirect the user to other page.',
   })
-  @Get('emailVerify/:token')
   async emailVerify(@Param('token') token: string, @Res() res) {
     try {
       const userInfo = await this.authService.decodeToken(token);

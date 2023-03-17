@@ -1,19 +1,21 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AuthService } from './auth.service';
 import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
-import { jwtConstants } from './constants';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EmailService } from '../email/email.service';
+import { EmailModule } from '../email/email.module';
+import { jwtConstants } from './constants';
 
 @Module({
   imports: [
-    ConfigModule,
     UsersModule,
+    EmailModule,
+    ConfigModule,
     PassportModule,
     JwtModule.register({
       secret: jwtConstants.secret,

@@ -107,7 +107,7 @@ describe('AuthController', () => {
     it('should send a mail and return true', async () => {
       const payload = { id: testUser.id, username: testUser.username };
       token = jwtService.sign(payload);
-      const success = await controller.addOne(rawUser);
+      const success = await controller.createUser(rawUser);
       expect(success).toBeTruthy();
     });
   });

@@ -10,10 +10,6 @@ import { ExampleAppService } from './example/example.service';
 import { ReceivedLogModule } from './recived-log/recived-log.module';
 import { PushModule } from './push/push.module';
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { EmailModule } from './email/email.module';
-import { MailerModule } from '@nestjs-modules/mailer';
-import emailConfig from './config/email.config';
 
 @Module({
   imports: [
@@ -33,6 +29,8 @@ import emailConfig from './config/email.config';
           entities: ['dist/**/*.entity{.ts,.js}'],
           synchronize: true,
         };
+        console.log('root')
+        console.log(configService.get('email'));
         return dbInfo;
       },
       inject: [ConfigService],
@@ -40,20 +38,11 @@ import emailConfig from './config/email.config';
     ConfigModule.forRoot({
       isGlobal: false,
       envFilePath: ['.development.env'],
-      load: [emailConfig],
-    }),
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => {
-        return configService.get('email');
-      },
-      inject: [ConfigService],
     }),
     ReceivedLogModule,
     PushModule,
+    // UsersModule,  //This module is already imported in the 'AuthModule'.
     AuthModule,
-    UsersModule,
-    EmailModule,
   ],
   // 我們可以把單一個 Controller/Service 以下面方式放進來，或者用上面的方法把整個module import進來。
   controllers: [ExampleAppController],

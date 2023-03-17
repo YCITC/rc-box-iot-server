@@ -48,7 +48,7 @@ describe('UserController (e2e)', () => {
     await app.close();
   });
 
-  it('/users/create/ (POST)', async () => {
+  it('/users/create/ (PUT)', async () => {
     const user = {
       email: userEmail,
       password: 'password123',

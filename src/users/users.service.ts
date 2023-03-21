@@ -33,13 +33,8 @@ export class UsersService {
       });
       return Promise.resolve(user);
     } catch (error) {
-      console.error('[Error] sqlMessage: ', error.sqlMessage);
-      // console.error('[Error] message: ', error.message);
       if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
-        // return Promise.reject('Email [' + userRegisterDto.email + '] exist');
-        throw new BadRequestException(
-          'Email [' + userRegisterDto.email + '] exist',
-        );
+        throw new BadRequestException(`Email [${userRegisterDto.email}] exist`);
       }
     }
   }

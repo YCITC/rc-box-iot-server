@@ -6,7 +6,7 @@ import { ApiProperty } from '@nestjs/swagger';
   engine: 'MyISAM',
 })
 export class User {
-  @ApiProperty({ example: 0 })
+  @ApiProperty({ example: 1 })
   @PrimaryGeneratedColumn({
     unsigned: true,
   })

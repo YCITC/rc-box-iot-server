@@ -72,19 +72,20 @@ export class ReceivedLogController {
   @ApiResponse({
     status: 200,
     description: 'Return a log',
-    schema: {
-      example: {
-        time: '2023-03-09T10:15:39.000Z',
-        id: 20,
-        deviceId: 'rc-box-JixujH$zf',
-      },
-      type: 'object',
-      properties: {
-        time: { type: 'string' },
-        id: { type: 'number' },
-        deviceId: { type: 'string' },
-      },
-    },
+    // schema: {
+    //   example: {
+    //     time: '2023-03-09T10:15:39.000Z',
+    //     id: 20,
+    //     deviceId: 'rc-box-JixujH$zf',
+    //   },
+    //   type: 'object',
+    //   properties: {
+    //     time: { type: 'string' },
+    //     id: { type: 'number' },
+    //     deviceId: { type: 'string' },
+    //   },
+    // },
+    type: ReceivedLog,
   })
   create(@Body() receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
     if (receivedLogDto.deviceId.length > 0) {

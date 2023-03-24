@@ -28,7 +28,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-rc-box-iot-server--
   unit-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - uses: actions/checkout@v3
@@ -44,3 +44,4 @@ jobs:
           key: ${{ runner.os }}-rc-box-iot-server--
       - run: yarn
       - run: yarn test
+      - run: yarn test:e2e

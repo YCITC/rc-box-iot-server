@@ -17,7 +17,7 @@ jobs:
           path: folder_to_catch
           key: ${{ runner.os }}-catch-tset-
       - run: echo $(/bin/date -u "+%Y-%m-%d %H:%m"); echo $(/bin/date -u "+%Y-%m-%d %H:%m") >> folder_to_catch/date.txt
-      - run: echo "4 rund "; cat folder_to_catch/date.txt
+      - run: echo "5 rund "; cat folder_to_catch/date.txt
       - name: Save Primes
         id: cache-save
         uses: actions/cache/save@v3

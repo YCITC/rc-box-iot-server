@@ -77,7 +77,7 @@ describe('DevicesController', () => {
 
   describe('unbind', () => {
     it('should return a devices', async () => {
-      const result = await controller.unbind(1);
+      const result = await controller.unbind(myDevice.id);
       expect(result).toBe(true);
     });
   });

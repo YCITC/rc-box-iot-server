@@ -42,7 +42,7 @@ export class DevicesController {
     return this.devicesService.findAllWithUserId(ownerUserId);
   }
 
-  @Delete(':id')
+  @Delete('unbind/:id')
   @ApiOperation({ summary: 'Unbind device' })
   @ApiResponse({
     status: 200,

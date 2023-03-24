@@ -10,6 +10,7 @@ import { ExampleAppService } from './example/example.service';
 import { ReceivedLogModule } from './recived-log/recived-log.module';
 import { PushModule } from './push/push.module';
 import { AuthModule } from './auth/auth.module';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AuthModule } from './auth/auth.module';
     PushModule,
     // UsersModule,  //UserModule is already imported in the 'AuthModule'.
     AuthModule,
+    DevicesModule,
   ],
   // 我們可以把單一個 Controller/Service 以下面方式放進來，或者用上面的方法把整個module import進來。
   controllers: [ExampleAppController],

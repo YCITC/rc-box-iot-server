@@ -11,7 +11,7 @@ export class DevicesService {
     @InjectRepository(Device)
     private devicesRepository: Repository<Device>,
   ) {}
-  async register(BindDeviceDto: BindDeviceDto): Promise<Device> {
+  async bind(BindDeviceDto: BindDeviceDto): Promise<Device> {
     try {
       const device = await this.devicesRepository.save(BindDeviceDto);
       return Promise.resolve(device);
@@ -19,7 +19,7 @@ export class DevicesService {
       if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
         const deviceId = BindDeviceDto.deviceId;
         throw new BadRequestException(
-          `The device [${deviceId}] has already been registered`,
+          `The device [${deviceId}] has already been bound`,
         );
       }
     }
@@ -46,7 +46,11 @@ export class DevicesService {
     });
   }
 
-  async unbind(id: number) {
-    return `This action removes a #${id} device`;
+  async unbind(id: number): Promise<boolean> {
+    const response = await this.devicesRepository.delete({ id });
+    if (response.affected == 1) {
+      return Promise.resolve(true);
+    }
+    throw new BadRequestException('device not found');
   }
 }

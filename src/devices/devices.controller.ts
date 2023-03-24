@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Body, Param } from '@nestjs/common';
+import { Get, Put, Delete, Patch } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DevicesService } from './devices.service';
 import { BindDeviceDto } from './dto/bind-device.dto';
@@ -10,14 +11,14 @@ import { Device } from './entities/device.entity';
 export class DevicesController {
   constructor(private devicesService: DevicesService) {}
 
-  @Put('register')
-  @ApiOperation({ summary: 'Register device' })
+  @Put('bind')
+  @ApiOperation({ summary: 'bind device' })
   @ApiResponse({
     status: 200,
-    description: 'Device registered successfully',
+    description: 'Device bound successfully',
   })
-  register(@Body() BindDeviceDto: BindDeviceDto): Promise<Device> {
-    return this.devicesService.register(BindDeviceDto);
+  bind(@Body() bindDeviceDto: BindDeviceDto): Promise<Device> {
+    return this.devicesService.bind(bindDeviceDto);
   }
 
   @Patch('update')
@@ -30,7 +31,7 @@ export class DevicesController {
     return this.devicesService.update(updateDeviceDto);
   }
 
-  @Get('users/:id')
+  @Get('findByUser/:id')
   @ApiOperation({ summary: "Find all of User's devices" })
   @ApiResponse({
     status: 200,
@@ -41,8 +42,13 @@ export class DevicesController {
     return this.devicesService.findAllWithUserId(ownerUserId);
   }
 
-  // @Delete(':id')
-  // unbind(@Param('id') id: string) {
-  //   return this.devicesService.remove(+id);
-  // }
+  @Delete(':id')
+  @ApiOperation({ summary: 'Unbind device' })
+  @ApiResponse({
+    status: 200,
+    description: 'Device unbound successfully',
+  })
+  unbind(@Param('id') id: number): Promise<any> {
+    return this.devicesService.unbind(id);
+  }
 }

@@ -74,6 +74,7 @@ describe('UsersService', () => {
       expect(repoSpy).toBeCalled();
     });
   });
+
   describe('findByMail', () => {
     it('should trigger repo findOneBy', async () => {
       const repoSpy = jest.spyOn(repo, 'findOneBy');
@@ -81,6 +82,7 @@ describe('UsersService', () => {
       expect(repoSpy).toBeCalled();
     });
   });
+
   describe('emailVerify', () => {
     it('should trigger repo findOneBy & update', async () => {
       const repoSpyFind = jest.spyOn(repo, 'findOneBy');

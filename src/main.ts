@@ -15,7 +15,6 @@ async function buildDocument(app) {
     .setTitle('RC-Box API documents')
     .setDescription('The cats API description')
     .setVersion('1.0')
-    .addTag('RC-Box')
     .build();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -33,7 +32,7 @@ async function httpServer() {
   // app.enableCors(); //enable CORS
 
   const configService = app.get(ConfigService);
-  if (configService.get('DOCUMENT_ENABLE') === 'true') {
+  if (configService.get('common.DOCUMENT_ENABLE') === true) {
     buildDocument(app);
   }
   await app.listen(3000);
@@ -41,8 +40,6 @@ async function httpServer() {
 
 async function httpsServer() {
   const httpsOptions = {
-    // key: fs.readFileSync('./secrets/private-key.pem'),
-    // cert: fs.readFileSync('./secrets/public-certificate.pem'),
     key: fs.readFileSync('./secrets/sslforfree/private.key'),
     cert: fs.readFileSync('./secrets/sslforfree/certificate.crt'),
   };
@@ -64,15 +61,20 @@ async function httpsServer() {
 
 async function multipleServers() {
   const httpsOptions = {
-    // key: fs.readFileSync('./secrets/private-key.pem'),
-    // cert: fs.readFileSync('./secrets/public-certificate.pem'),
     key: fs.readFileSync('./secrets/sslforfree/private.key'),
     cert: fs.readFileSync('./secrets/sslforfree/certificate.crt'),
   };
 
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
-  app.enableCors();
+  app.enableCors(); //enable CORS
+  // TODO enable CORS need white list.
+
+  const configService = app.get(ConfigService);
+  if (configService.get('common.DOCUMENT_ENABLE') === true) {
+    buildDocument(app);
+  }
+
   await app.init();
 
   http.createServer(server).listen(80);

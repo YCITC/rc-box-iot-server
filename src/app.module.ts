@@ -4,6 +4,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
+import commonConfig from './config/common.config';
+import dbConfig from './config/db.config';
 import { ExampleAppController } from './example/example.controller';
 import { ExampleAppService } from './example/example.service';
 
@@ -14,6 +16,12 @@ import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.production.env'], //['.development.env'],
+    }),
+    ConfigModule.forFeature(commonConfig),
+    ConfigModule.forFeature(dbConfig),
     // ServeStaticModule.forRoot({
     //   rootPath: join(__dirname, '..', 'client'),
     // }),
@@ -21,22 +29,18 @@ import { DevicesModule } from './devices/devices.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const dbInfo = {
-          type: configService.get('DB_type'),
+          type: configService.get('DB.type'),
           host: configService.get('DB_host'),
-          port: configService.get('DB_port'),
-          username: configService.get('DB_username'),
-          password: configService.get('DB_password'),
-          database: configService.get('DB_database'),
+          port: configService.get('DB.port'),
+          username: configService.get('DB.username'),
+          password: configService.get('DB.password'),
+          database: configService.get('DB.database'),
           entities: ['dist/**/*.entity{.ts,.js}'],
           synchronize: true,
         };
         return dbInfo;
       },
       inject: [ConfigService],
-    }),
-    ConfigModule.forRoot({
-      isGlobal: false,
-      envFilePath: ['.development.env'],
     }),
     ReceivedLogModule,
     PushModule,

@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { UserLoginDto } from '../users/dto/user.login.dto';
 import { UsersService } from '../users/users.service';
-import { jwtConstants } from './constants';
 
 @Injectable()
 export class AuthService {
@@ -27,9 +26,8 @@ export class AuthService {
   }
 
   createToken(user: any) {
-    // const signOptions = { secret: jwtConstants.secret };
     const signOptions = {
-      secret: this.configService.get('JWT_SECRET'),
+      secret: this.configService.get('JWT.SECRET'),
     };
     // * Note: we choose a property name of sub to hold our userId value to be consistent with JWT standards.
     const payload = { id: user.id, username: user.username };
@@ -40,8 +38,8 @@ export class AuthService {
   createOneDayToken(user: any) {
     const signOptions = {
       expiresIn: '1d',
-      issuer: this.configService.get('JWT_ISSUER'),
-      secret: this.configService.get('JWT_SECRET'),
+      issuer: this.configService.get('JWT.ISSUER'),
+      secret: this.configService.get('JWT.SECRET'),
     };
     const payload = { id: user.id, username: user.username };
     const token = this.jwtService.sign(payload, signOptions);
@@ -50,7 +48,7 @@ export class AuthService {
 
   async decodeToken(token: string) {
     const payload = await this.jwtService.verify(token, {
-      secret: this.configService.get('JWT_SECRET'),
+      secret: this.configService.get('JWT.SECRET'),
     });
     return Promise.resolve(payload);
   }

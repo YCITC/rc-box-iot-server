@@ -5,6 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as request from 'supertest';
 import { Repository } from 'typeorm';
 
+import commonConfig from '../src/config/common.config';
+import dbConfig from '../src/config/db.config';
 import { ReceivedLog } from '../src/recived-log/entity/recived-log.entity';
 import { ReceivedLogModule } from '../src/recived-log/recived-log.module';
 
@@ -22,15 +24,17 @@ describe('UserController (e2e)', () => {
           isGlobal: false,
           envFilePath: ['.development.env'],
         }),
+        ConfigModule.forFeature(commonConfig),
+        ConfigModule.forFeature(dbConfig),
         TypeOrmModule.forRootAsync({
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
-              type: configService.get('DB_type'),
+              type: configService.get('DB.type'),
               host: configService.get('DB_host'),
-              port: configService.get('DB_port'),
-              username: configService.get('DB_username'),
-              password: configService.get('DB_password'),
+              port: configService.get('DB.port'),
+              username: configService.get('DB.username'),
+              password: configService.get('DB.password'),
               database: 'rc-box-test',
               // entities: ['dist/**/*.entity{.ts,.js}'],
               entities: [ReceivedLog],

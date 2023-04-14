@@ -6,10 +6,11 @@ import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { PassportModule } from '@nestjs/passport';
 
+import commonConfig from '../src/config/common.config';
+import dbConfig from '../src/config/db.config';
 import { AuthModule } from '../src/auth/auth.module';
 import { User } from '../src/users/entity/user.entity';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { jwtConstants } from '../src/auth/constants';
+import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../src/users/users.service';
 import { UsersModule } from '../src/users/users.module';
 
@@ -37,29 +38,24 @@ describe('AuthController (e2e)', () => {
         AuthModule,
         UsersModule,
         PassportModule,
-        JwtModule.register({
-          secret: jwtConstants.secret,
-          signOptions: {
-            expiresIn: '1d',
-            issuer: jwtConstants.issuer,
-          },
-        }),
         ConfigModule.forRoot({
           envFilePath: ['.development.env'],
         }),
+        ConfigModule.forFeature(commonConfig),
+        ConfigModule.forFeature(dbConfig),
         TypeOrmModule.forRootAsync({
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
-              type: configService.get('DB_type'),
+              type: configService.get('DB.type'),
               host: configService.get('DB_host'),
-              port: configService.get('DB_port'),
-              username: configService.get('DB_username'),
-              password: configService.get('DB_password'),
+              port: configService.get('DB.port'),
+              username: configService.get('DB.username'),
+              password: configService.get('DB.password'),
               database: 'rc-box-test',
               // entities: ['dist/**/*.entity{.ts,.js}'],
               entities: [User],
-              synchronize: false,
+              synchronize: true,
             };
             return dbInfo;
           },
@@ -68,7 +64,7 @@ describe('AuthController (e2e)', () => {
       ],
       providers: [
         UsersService,
-        // 
+        //
         JwtService,
       ],
     }).compile();
@@ -76,6 +72,7 @@ describe('AuthController (e2e)', () => {
     config = moduleFixture.get<ConfigService>(ConfigService);
     app = moduleFixture.createNestApplication();
     repo = app.get<Repository<User>>(getRepositoryToken(User));
+    // await repo.clear();
 
     await app.init();
   });
@@ -93,7 +90,6 @@ describe('AuthController (e2e)', () => {
     userId = response.body.id;
     expect(response.body.token).toBeDefined();
     expect(response.body.id).toBeDefined();
-    expect(true).toEqual(true);
   });
 
   it('/auth/emailVerify/ (GET)', async () => {
@@ -101,7 +97,11 @@ describe('AuthController (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get('/auth/emailVerify/' + emailVerifyToken)
       .expect(302);
-    expect(response.header.location).toEqual(config.get('VERIFY_SUCCESS_URL'));
+    expect(response.header.location).toEqual(
+      config.get('common.VERIFY_SUCCESS_URL'),
+    );
+
+    // await repo.clear();
   });
 
   it('/auth/login/ (post)', async () => {

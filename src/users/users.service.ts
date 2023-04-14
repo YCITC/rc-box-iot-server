@@ -36,6 +36,7 @@ export class UsersService {
       if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
         throw new BadRequestException(`Email [${userRegisterDto.email}] exist`);
       }
+      console.log(error);
     }
   }
 

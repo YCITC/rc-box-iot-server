@@ -1,20 +1,19 @@
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Response } from '@nestjs/common';
 
+import commonConfig from '../config/common.config';
+import dbConfig from '../config/db.config';
 import { EmailService } from '../email/email.service';
 import { User } from '../users/entity/user.entity';
 import { UsersService } from '../users/users.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { jwtConstants } from './constants';
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let authService: AuthService;
   let jwtService: JwtService;
   let token: string;
 
@@ -41,14 +40,14 @@ describe('AuthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        PassportModule,
         JwtModule.register({
-          secret: jwtConstants.secret,
+          secret: 'iOjE2NzU2OTUyOTQsImV4cC.',
           signOptions: {
             expiresIn: '1d',
-            issuer: jwtConstants.issuer,
+            issuer: 'YesseeCity',
           },
         }),
+        PassportModule,
       ],
       controllers: [AuthController],
       providers: [
@@ -67,10 +66,11 @@ describe('AuthController', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn((key: string) => {
-              if (key === 'JWT_SECRET') return 'iOjE2NzU2OTUyOTQsImV4cC.';
-              if (key === 'JWT_ISSUER') return 'YesseeCity';
+              if (key === 'JWT.SECRET') return 'iOjE2NzU2OTUyOTQsImV4cC.';
+              if (key === 'JWT.ISSUER') return 'YesseeCity';
+              if (key === 'JWT.EXPIRATION_TIME') return '30d';
               if (key === 'SERVER_HOSTNAME') return 'localhost:3000';
-              if (key === 'VERIFY_SUCCESS_URL') return 'localhost:3000';
+              if (key === 'common.VERIFY_SUCCESS_URL') return 'localhost:3000';
               return null;
             }),
           },
@@ -88,7 +88,6 @@ describe('AuthController', () => {
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
-    authService = module.get<AuthService>(AuthService);
     jwtService = module.get<JwtService>(JwtService);
   });
 
@@ -113,7 +112,6 @@ describe('AuthController', () => {
   });
   describe('emailVerify', () => {
     it('should redirect to other page', async () => {
-      // TODO
       let redirectUrl: string;
       const mockResponse = {
         redirect: jest.fn((url) => {

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Req, Res, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Req, Res, HttpStatus, Ip } from '@nestjs/common';
 import { ExampleAppService } from './example.service';
 import { Request, Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
@@ -36,5 +36,11 @@ export class ExampleAppController {
       success: true,
     };
     return res.status(HttpStatus.OK).json(returnObj);
+  }
+
+  @Get('myEndpoint')
+  async myEndpointFunc(@Ip() ip) {
+    console.log(ip);
+    return ip;
   }
 }

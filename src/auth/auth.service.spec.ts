@@ -1,13 +1,15 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
+
+import commonConfig from '../../src/config/common.config';
+import dbConfig from '../../src/config/db.config';
 import { User } from '../users/entity/user.entity';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
-import { jwtConstants } from './constants';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -35,14 +37,14 @@ describe('AuthService', () => {
     );
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        PassportModule,
         JwtModule.register({
-          secret: jwtConstants.secret,
+          secret: 'iOjE2NzU2OTUyOTQsImV4cC.',
           signOptions: {
             expiresIn: '1d',
-            issuer: jwtConstants.issuer,
+            issuer: 'YesseeCity',
           },
         }),
+        PassportModule,
       ],
       providers: [
         AuthService,
@@ -51,9 +53,11 @@ describe('AuthService', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn((key: string) => {
-              if (key === 'JWT_SECRET') {
-                return 'iOjE2NzU2OTUyOTQsImV4cC.';
-              }
+              if (key === 'JWT.SECRET') return 'iOjE2NzU2OTUyOTQsImV4cC.';
+              if (key === 'JWT.ISSUER') return 'YesseeCity';
+              if (key === 'JWT.EXPIRATION_TIME') return '30d';
+              if (key === 'SERVER_HOSTNAME') return 'localhost:3000';
+              if (key === 'common.VERIFY_SUCCESS_URL') return 'localhost:3000';
               return null;
             }),
           },
@@ -117,5 +121,4 @@ describe('AuthService', () => {
       expect(payload.iat).toBeDefined();
     });
   });
-  
 });

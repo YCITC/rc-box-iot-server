@@ -79,20 +79,26 @@ export class AuthController {
     description: 'Email [ ****** ] exist',
   })
   async createUser(@Body() userDto: UserRegisterDto): Promise<User | any> {
-    const user = await this.usersService.addOne(userDto);
-    const token = this.authService.createOneDayToken(user);
-    const url =
-      'http://' +
-      this.configService.get('SERVER_HOSTNAME') +
-      '/auth/emailVerify/' +
-      token;
+    try {
+      const user = await this.usersService.addOne(userDto);
+      const token = this.authService.createOneDayToken(user);
+      const url =
+        'http://' +
+        this.configService.get('SERVER_HOSTNAME') +
+        '/auth/emailVerify/' +
+        token;
 
-    const result = await this.emailService.sendVerificationEmail(
-      user.email,
-      url,
-    );
-    if (result.accepted.length > 0) return Promise.resolve({ ...user, token });
-    return Promise.resolve(false);
+      const result = await this.emailService.sendVerificationEmail(
+        user.email,
+        url,
+      );
+      if (result.accepted.length > 0)
+        return Promise.resolve({ ...user, token });
+      return Promise.resolve(false);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 
   @Get('emailVerify/:token')
@@ -106,18 +112,18 @@ export class AuthController {
       const userInfo = await this.authService.decodeToken(token);
       await this.usersService.emailVerify(userInfo.id);
       // return res.status(200).json();
-      return res.redirect(this.configService.get('VERIFY_SUCCESS_URL'));
+      return res.redirect(this.configService.get('common.VERIFY_SUCCESS_URL'));
     } catch (error) {
       if (error.name == 'TokenExpiredError') {
         const url =
-          this.configService.get('VERIFY_FAILED_URL') +
+          this.configService.get('common.VERIFY_FAILED_URL') +
           '?error=TokenExpiredError';
         return res.redirect(url);
       }
 
       if (error.name == 'JsonWebTokenError') {
         const url =
-          this.configService.get('VERIFY_FAILED_URL') +
+          this.configService.get('common.VERIFY_FAILED_URL') +
           '?error=JsonWebTokenError';
         return res.redirect(url);
       }

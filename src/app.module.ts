@@ -8,6 +8,7 @@ import commonConfig from './config/common.config';
 import dbConfig from './config/db.config';
 import { ExampleAppController } from './example/example.controller';
 import { ExampleAppService } from './example/example.service';
+import { VersionController } from './example/version.controller';
 
 import { ReceivedLogModule } from './recived-log/recived-log.module';
 import { PushModule } from './push/push.module';
@@ -49,7 +50,7 @@ import { DevicesModule } from './devices/devices.module';
     DevicesModule,
   ],
   // 我們可以把單一個 Controller/Service 以下面方式放進來，或者用上面的方法把整個module import進來。
-  controllers: [ExampleAppController],
+  controllers: [VersionController, ExampleAppController],
   providers: [ExampleAppService],
 })
 export class AppModule {}

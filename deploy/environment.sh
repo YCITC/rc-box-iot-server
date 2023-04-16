@@ -10,7 +10,6 @@ export DEPLOY_DEST_DIR=/home/tid/RC-Box/iot-server/
 export DEPLOY_SERVER=34.80.129.4
 export DEPLOY_ACCOUNT=tid
 
-export DEPLOY_KEY=/home/tid/.ssh/id_rsa
+export DEPLOY_KEY=$HOME/.ssh/id_rsa
 export SSH_PORT=22
 export WWW_RIGHTFUL_OWNER=tid
-

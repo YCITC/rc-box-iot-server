@@ -18,10 +18,10 @@ while false; do
     esac
 done
 
-echo -e "\e[00;33mDeploying as          \e[00;31m$DEPLOY_ACCOUNT\e[00m\e[00m"
-echo -e "\e[00;33mDeploying from        \e[00;31m$DEPLOY_SOURCE_DIR\e[00m\e[00m"
-echo -e "\e[00;33mDeploying to          \e[00;31m$DEPLOY_SERVER:$DEPLOY_DEST_DIR\e[00m\e[00m"
-echo -e
+printf "\e[00;33mDeploying as          \e[00;31m$DEPLOY_ACCOUNT\e[00m\e[00m \n"
+printf "\e[00;33mDeploying from        \e[00;31m$DEPLOY_SOURCE_DIR\e[00m\e[00m \n"
+printf "\e[00;33mDeploying to          \e[00;31m$DEPLOY_SERVER:$DEPLOY_DEST_DIR\e[00m\e[00m \n"
+echo  -e
 
 
 # Deploy test with rsync.
@@ -34,7 +34,7 @@ while true; do
             # echo -e "\e[00;33mChanging directory permission to $DEPLOY_ACCOUNT:$DEPLOY_ACCOUNT...\e[00m"
             # ssh -i $DEPLOY_KEY -t $DEPLOY_ACCOUNT@$DEPLOY_SERVER "sudo chown -R $DEPLOY_ACCOUNT:$DEPLOY_ACCOUNT $DEPLOY_DEST_DIR"
 
-            echo -e "\e[00;33mBegin rsync...\e[00m"
+            printf "\e[00;33mBegin rsync...\e[00m"
             if [ "$DEPLOY_KEY" == "" ]; then
                 # Access by tediously typing a password over and again
                 rsync --chmod=ug=rwX -e ssh -axv -r -files-from=$DIR/deploy/rsync-include --exclude-from=$DIR/deploy/rsync-exclude  --dry-run \
@@ -53,11 +53,11 @@ while true; do
             break;;
 
         [Nn] )
-            echo -e "\e[00;31mSkipping deploy test...\e[00m"
+            printf "\e[00;31mSkipping deploy test...\e[00m"
             break;;
 
         * )
-            echo -e "\e[00;31mPlease type Y or N\e[00m"
+            printf "\e[00;31mPlease type Y or N\e[00m"
     esac
 done
 
@@ -71,7 +71,7 @@ while true; do
             # echo -e "\e[00;33mChanging directory permission to $DEPLOY_ACCOUNT:$DEPLOY_ACCOUNT...\e[00m"
             # ssh -i $DEPLOY_KEY -t $DEPLOY_ACCOUNT@$DEPLOY_SERVER "sudo chown -R $DEPLOY_ACCOUNT:$DEPLOY_ACCOUNT $DEPLOY_DEST_DIR"
 
-            echo -e "\e[00;33mBegin rsync...\e[00m"
+            printf "\e[00;33mBegin rsync...\e[00m"
             if [ "$DEPLOY_KEY" == "" ]; then
                 # Access by tediously typing a password over and again
                 rsync --chmod=ug=rwX -e ssh -axv -r -files-from=$DIR/deploy/rsync-include --exclude-from=$DIR/deploy/rsync-exclude \
@@ -90,11 +90,11 @@ while true; do
             break;;
 
         [Nn] )
-            echo -e "\e[00;31mSkipping deploy...\e[00m"
+            printf "\e[00;31mSkipping deploy...\e[00m"
             break;;
 
         * )
-            echo -e "\e[00;31mPlease type Y or N\e[00m"
+            printf "\e[00;31mPlease type Y or N\e[00m"
     esac
 done
 
@@ -104,7 +104,7 @@ done
 
 # Saying good-bye.
 echo -e
-echo -e "\e[00;31mDeploy complete, you're responsible now.\e[00m"
+printf "\e[34m Deploy complete, you're responsible now.\e[00m \n"
 exit 1
 
 

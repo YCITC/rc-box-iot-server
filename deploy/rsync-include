@@ -4,6 +4,5 @@ secrets/
 assets/
 package.json
 yarn.lock
-ormconfig.json
 .development.env
 .production.env

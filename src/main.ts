@@ -11,10 +11,12 @@ import * as https from 'https';
 import * as http from 'http';
 
 async function buildDocument(app) {
+  const configService = app.get(ConfigService);
+
   const config = new DocumentBuilder()
     .setTitle('RC-Box API documents')
     .setDescription('The cats API description')
-    .setVersion('1.0')
+    .setVersion(configService.get('common.VERSION'))
     .build();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

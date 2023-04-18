@@ -4,7 +4,7 @@ concurrency:
   cancel-in-progress: true
 run-name: Deployment - ${{ github.actor }}
 on: 
-  create:
+  push:
     branches:
       - 'release/*'
 jobs:

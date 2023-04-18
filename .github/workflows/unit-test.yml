@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - 'feature/*'
+concurrency: 
+  group: development
+  cancel-in-progress: true
 jobs:
-  unit-test:
+  build-and-test:
     runs-on: ubuntu-22.04
+    environment: production 
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

@@ -1,0 +1,14 @@
+name: Deployment
+concurrency: production
+run-name: Deployment - ${{ github.actor }}
+on: 
+  push:
+    branches:
+      - 'release/*'
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    environment: production
+    concurrency: production
+    steps:
+      - run: echo ${{secrets.DO_GITHUB_PRIVATE_KEY}}

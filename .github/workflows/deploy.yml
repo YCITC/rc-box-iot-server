@@ -1,0 +1,70 @@
+name: Deployment
+concurrency:
+  group: production
+  cancel-in-progress: true
+run-name: Deployment - ${{ github.actor }}
+on: 
+  create:
+    branches:
+      - 'release/*'
+jobs:
+  test-code:
+    runs-on: ubuntu-22.04
+    environment: production 
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Restore node_modules
+        id: cache-restore-node-modules
+        uses: actions/cache/restore@v3
+        with:
+          fail-on-cache-miss: 'false'
+          path: node_modules
+          key: ${{ runner.os }}-rc-box-iot-server--
+      - run: yarn
+      - uses: actions/cache@v3
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-rc-box-iot-server--${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rc-box-iot-server--
+      - run: yarn
+      - run: yarn test
+      - run: yarn test:e2e
+  deploy:
+    needs: test-code
+    runs-on: ubuntu-22.04
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Restore node_modules
+        id: cache-restore-node-modules
+        uses: actions/cache/restore@v3
+        with:
+          fail-on-cache-miss: 'false'
+          path: node_modules
+          key: ${{ runner.os }}-rc-box-iot-server--
+      - name: Build
+        run: |
+          yarn
+          yarn build
+      - name: Create SSH key
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          sudo chmod 600  ~/.ssh/id_ed25519
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
+      - name: Deploy
+        run: |
+          bash auto-deploy.sh
+          echo "Deploy completed"

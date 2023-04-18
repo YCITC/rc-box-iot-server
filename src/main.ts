@@ -15,7 +15,7 @@ async function buildDocument(app) {
 
   const config = new DocumentBuilder()
     .setTitle('RC-Box API documents')
-    .setDescription('The cats API description')
+    // .setDescription('')
     .setVersion(configService.get('common.VERSION'))
     .build();
 

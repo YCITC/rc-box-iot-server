@@ -12,4 +12,19 @@ jobs:
     runs-on: ubuntu-22.04
     environment: production
     steps:
-      - run: echo ${{secrets.DO_GITHUB_PRIVATE_KEY}}
+      - name: Create SSH key
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          sudo chmod 600  ~/.ssh/id_ed25519
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
+      - name: scp test
+        run: |
+          echo 'workspace ${{ github.workspace }}'
+          echo $PWD
+          touch zz.txt
+          scp ./zz.txt tid@34.80.129.4:~/zz.txt

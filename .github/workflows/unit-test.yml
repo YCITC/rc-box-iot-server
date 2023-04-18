@@ -10,7 +10,7 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-22.04
-    environment: production 
+    environment: development 
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

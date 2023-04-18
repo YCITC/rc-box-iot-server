@@ -7,13 +7,15 @@ source $DIR/deploy/environment.sh
 
 echo 'Deploy test with rsync'
 rsync --verbose --chmod=ug=rwX -axv -r --files-from=$DIR/deploy/rsync-include --exclude-from=$DIR/deploy/rsync-exclude --dry-run \
-    -e "ssh -i $DEPLOY_KEY" $DEPLOY_SOURCE_DIR $DEPLOY_ACCOUNT@$DEPLOY_SERVER:$DEPLOY_DEST_DIR
+    -e "ssh " $DEPLOY_SOURCE_DIR $DEPLOY_ACCOUNT@$DEPLOY_SERVER:$DEPLOY_DEST_DIR
 
 
 echo -e 
 
 echo 'Deploy with rsync.'
 rsync --verbose --chmod=ug=rwX -axv -r --files-from=$DIR/deploy/rsync-include --exclude-from=$DIR/deploy/rsync-exclude \
-    -e "ssh -i $DEPLOY_KEY" $DEPLOY_SOURCE_DIR $DEPLOY_ACCOUNT@$DEPLOY_SERVER:$DEPLOY_DEST_DIR
+    -e "ssh " $DEPLOY_SOURCE_DIR $DEPLOY_ACCOUNT@$DEPLOY_SERVER:$DEPLOY_DEST_DIR
 
-
+echo -e
+echo 'Docker Restart rc-box-iot-serer-1'
+ssh $DEPLOY_ACCOUNT@$DEPLOY_SERVER docker restart rc-box-iot-serer-1

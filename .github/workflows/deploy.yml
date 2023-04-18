@@ -8,10 +8,50 @@ on:
     branches:
       - 'release/*'
 jobs:
+  unit-test:
+    runs-on: ubuntu-22.04s
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Restore node_modules
+        id: cache-restore-node-modules
+        uses: actions/cache/restore@v3
+        with:
+          fail-on-cache-miss: 'false'
+          path: node_modules
+          key: ${{ runner.os }}-rc-box-iot-server--
+      - run: yarn
+      - uses: actions/cache@v3
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-rc-box-iot-server--${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-rc-box-iot-server--
+      - run: yarn
+      - run: yarn test
+      - run: yarn test:e2e
   deploy:
     runs-on: ubuntu-22.04
-    environment: production
+    needs: unit-test
     steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Restore node_modules
+        id: cache-restore-node-modules
+        uses: actions/cache/restore@v3
+        with:
+          fail-on-cache-miss: 'false'
+          path: node_modules
+          key: ${{ runner.os }}-rc-box-iot-server--
+      - name: Build
+        run: |
+          yarn
+          yarn build
       - name: Create SSH key
         run: |
           mkdir -p ~/.ssh/
@@ -22,9 +62,7 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
           SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
-      - name: scp test
+      - name: Deploy
         run: |
-          echo 'workspace ${{ github.workspace }}'
-          echo $PWD
-          touch zz.txt
-          scp ./zz.txt tid@34.80.129.4:~/zz.txt
+          bash auto-deploy.sh
+          echo "Deploy completed"

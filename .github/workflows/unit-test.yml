@@ -1,4 +1,4 @@
-name: unit-test
+name: Unit-test
 run-name: unit-test - ${{ github.actor }}
 on: 
   push:

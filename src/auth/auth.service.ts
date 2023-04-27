@@ -46,7 +46,7 @@ export class AuthService {
     return token;
   }
 
-  async decodeToken(token: string) {
+  async verifyToken(token: string): Promise<any> {
     const payload = await this.jwtService.verify(token, {
       secret: this.configService.get('JWT.SECRET'),
     });

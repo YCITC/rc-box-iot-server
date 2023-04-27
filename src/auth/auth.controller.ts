@@ -64,6 +64,23 @@ export class AuthController {
     return req.user;
   }
 
+  @Get('updateToken')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary:
+      'Update jwtToken, Front-End must add "Authorization: Bearer ****token*****" in header',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized.',
+  })
+  async updateToken(@Req() req): Promise<any | undefined> {
+    const token = this.authService.createToken(req.user);
+    return Promise.resolve({
+      access_token: token,
+    });
+  }
+
   @Put('createUser')
   @ApiResponse({
     status: 200,
@@ -109,7 +126,7 @@ export class AuthController {
   })
   async emailVerify(@Param('token') token: string, @Res() res) {
     try {
-      const userInfo = await this.authService.decodeToken(token);
+      const userInfo = await this.authService.verifyToken(token);
       await this.usersService.emailVerify(userInfo.id);
       // return res.status(200).json();
       return res.redirect(this.configService.get('common.VERIFY_SUCCESS_URL'));

@@ -110,6 +110,15 @@ describe('AuthController', () => {
       expect(success).toBeTruthy();
     });
   });
+  describe('updateToken', () => {
+    it('should return a token', async () => {
+      expect(controller).toBeDefined();
+      const newToekn = await controller.updateToken({
+        user: { id: 1, username: 'testUser' },
+      });
+      expect(newToekn).toBeDefined();
+    });
+  });
   describe('emailVerify', () => {
     it('should redirect to other page', async () => {
       let redirectUrl: string;
@@ -127,7 +136,6 @@ describe('AuthController', () => {
       expect(mockResponse.redirect).toHaveBeenCalledWith('localhost:3000');
       expect(spy).toHaveBeenCalledWith('localhost:3000');
       expect(redirectUrl).toBe('localhost:3000');
-
     });
   });
 });

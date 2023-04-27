@@ -113,9 +113,9 @@ describe('AuthService', () => {
       expect(token.length).toBeGreaterThan(0);
     });
   });
-  describe('decodeToken', () => {
+  describe('verifyToken', () => {
     it('should return JWT object when credentials are valid', async () => {
-      const payload = await authService.decodeToken(token);
+      const payload = await authService.verifyToken(token);
       expect(payload.id).toBeDefined();
       expect(payload.username).toBeDefined();
       expect(payload.iat).toBeDefined();

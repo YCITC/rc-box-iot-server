@@ -1,11 +1,9 @@
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
-import commonConfig from '../config/common.config';
-import dbConfig from '../config/db.config';
 import { EmailService } from '../email/email.service';
 import { User } from '../users/entity/user.entity';
 import { UsersService } from '../users/users.service';

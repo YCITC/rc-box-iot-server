@@ -29,7 +29,6 @@ export class AuthService {
     const signOptions = {
       secret: this.configService.get('JWT.SECRET'),
     };
-    // * Note: we choose a property name of sub to hold our userId value to be consistent with JWT standards.
     const payload = { id: user.id, username: user.username };
     const token = this.jwtService.sign(payload, signOptions);
     return token;

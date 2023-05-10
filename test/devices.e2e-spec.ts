@@ -4,19 +4,28 @@ import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as request from 'supertest';
 import { Repository } from 'typeorm';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 
-import commonConfig from '../src/config/common.config';
-import dbConfig from '../src/config/db.config';
 import { DevicesModule } from '../src/devices/devices.module';
 import { Device } from '../src/devices/entities/device.entity';
+import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
+import commonConfig from '../src/config/common.config';
+import dbConfig from '../src/config/db.config';
+import jwtConfig from '../src/config/jwt.config';
+import rawUser from './raw-uer';
 
 describe('DeviceController (e2e)', () => {
   let app: INestApplication;
   let repo: Repository<Device>;
+  let jwtService: JwtService;
   let myDevice: Device;
+  let accessToken: string;
   const ownerUserId = 1;
+  const deviceId1 = 'rc-box-test-12301';
+  const deviceId2 = 'rc-box-test-53104';
+  const deviceId3 = 'rc-box-test-b2a61';
   const rawDevices = {
-    deviceId: 'rc-box-v1-a12301',
+    deviceId: deviceId1,
     ownerUserId: ownerUserId,
     alias: 'tsutaya',
   };
@@ -31,6 +40,7 @@ describe('DeviceController (e2e)', () => {
         }),
         ConfigModule.forFeature(commonConfig),
         ConfigModule.forFeature(dbConfig),
+        ConfigModule.forFeature(jwtConfig),
         TypeOrmModule.forRootAsync({
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
@@ -49,12 +59,31 @@ describe('DeviceController (e2e)', () => {
           },
           inject: [ConfigService],
         }),
+        JwtModule.registerAsync({
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: async (configService: ConfigService) => {
+            const obj = {
+              secret: configService.get('JWT.SECRET'),
+              signOptions: {
+                expiresIn: `${configService.get('JWT.EXPIRATION_TIME')}`,
+                issuer: configService.get('JWT.ISSUER'),
+              },
+            };
+            return obj;
+          },
+        }),
       ],
+      providers: [JwtService, JwtStrategy],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     repo = app.get<Repository<Device>>(getRepositoryToken(Device));
+    jwtService = moduleFixture.get<JwtService>(JwtService);
     await app.init();
+
+    const payload = { id: 1, username: rawUser.username };
+    accessToken = jwtService.sign(payload);
   });
 
   afterEach(async () => {
@@ -62,13 +91,25 @@ describe('DeviceController (e2e)', () => {
   });
 
   it('/devices/bind (PUT)', async () => {
+    await repo.clear();
+
     const response = await request(app.getHttpServer())
       .put('/devices/bind')
+      .set('Authorization', 'Bearer ' + accessToken)
       .send(rawDevices)
+      .expect(200);
+    await request(app.getHttpServer())
+      .put('/devices/bind')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({ ...rawDevices, deviceId: deviceId2, alias: '' })
+      .expect(200);
+    await request(app.getHttpServer())
+      .put('/devices/bind')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send({ ...rawDevices, deviceId: deviceId3, alias: '' })
       .expect(200);
 
     myDevice = response.body;
-    expect(myDevice.id).toBeDefined;
     expect(myDevice.createdTime).toBeDefined;
   });
 
@@ -76,6 +117,7 @@ describe('DeviceController (e2e)', () => {
     const newDevice = { ...myDevice, alias: 'lounge' };
     return request(app.getHttpServer())
       .patch('/devices/update')
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(200)
       .send(newDevice)
       .then((response) => {
@@ -83,18 +125,27 @@ describe('DeviceController (e2e)', () => {
       });
   });
 
-  it('/devices/findByUser/:ownerUserId (GET)', async () => {
+  it('/devices/findAllByUser/ (GET)', async () => {
     const response = await request(app.getHttpServer())
-      .get('/devices/findByUser/' + ownerUserId)
+      .get('/devices/findAllByUser/')
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(200);
     expect(Array.isArray(response.body)).toEqual(true);
   });
 
-  it('/devices/unbind/:id (DELETE)', async () => {
+  it('/devices/checkDeviceWithUser/:deviceId (GET)', async () => {
     const response = await request(app.getHttpServer())
-      .delete('/devices/unbind/' + myDevice.id)
+      .get('/devices/checkDeviceWithUser/' + rawDevices.deviceId)
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(200);
     expect(response.text).toBe('true');
-    await repo.clear();
+  });
+
+  it('/devices/unbind/:deviceId (DELETE)', async () => {
+    const response = await request(app.getHttpServer())
+      .delete('/devices/unbind/' + deviceId3)
+      .set('Authorization', 'Bearer ' + accessToken)
+      .expect(200);
+    expect(response.text).toBe('true');
   });
 });

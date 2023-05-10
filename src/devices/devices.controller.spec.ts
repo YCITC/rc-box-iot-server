@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DevicesController } from './devices.controller';
 import { DevicesService } from './devices.service';
@@ -6,6 +7,7 @@ import { Device } from './entities/device.entity';
 
 describe('DevicesController', () => {
   let controller: DevicesController;
+  let mockDeviceInDB: Device;
   let myDevice: Device;
   const ownerUserId = 1;
   const rawDevices = {
@@ -25,19 +27,14 @@ describe('DevicesController', () => {
             save: (device) => {
               device.id = 1;
               device.createdTime = new Date();
+              mockDeviceInDB = { ...device };
               return Promise.resolve(device);
             },
-            update: jest.fn().mockImplementation((id, obj) => {
-              if (id === myDevice.id) {
-                myDevice.alias = obj.alias;
-              }
+            update: jest.fn().mockImplementation((deviceId, obj) => {
+              mockDeviceInDB.alias = obj.alias;
               return Promise.resolve({ raw: [], affected: 1 });
             }),
-            findOneBy: jest.fn().mockImplementation((obj) => {
-              if (obj.id === myDevice.id) {
-                return Promise.resolve(myDevice);
-              }
-            }),
+            findOneBy: jest.fn().mockResolvedValue(mockDeviceInDB),
             find: jest.fn().mockResolvedValue([myDevice]),
             delete: jest.fn().mockResolvedValue({ raw: [], affected: 1 }),
           },
@@ -54,30 +51,73 @@ describe('DevicesController', () => {
 
   describe('bind', () => {
     it('should return a devices', async () => {
-      myDevice = await controller.bind(rawDevices);
-      expect(myDevice.id).toBeDefined;
+      myDevice = await controller.bind(rawDevices, {
+        user: {
+          username: 'user',
+          id: 1,
+        },
+      });
+      expect(myDevice).toBeDefined;
       expect(myDevice.createdTime).toBeDefined;
+    });
+  });
+
+  describe('bind again', () => {
+    it('should throw a BadRequestException', async () => {
+      const errorText = `The device [${rawDevices.deviceId}] has already been bound`;
+      const badRequestException = new BadRequestException(errorText);
+      const user1Process = controller.bind(rawDevices, {
+        user: {
+          username: 'user',
+          id: 1,
+        },
+      });
+      await expect(user1Process).rejects.toThrowError(badRequestException);
+    });
+
+    it('should throw a BadRequestException', async () => {
+      const errorText = `Can not bind other user's device`;
+      const unauthorizedException = new UnauthorizedException(errorText);
+      const user2Process = controller.bind(rawDevices, {
+        user: {
+          username: 'user2',
+          id: 2,
+        },
+      });
+      await expect(user2Process).rejects.toThrowError(unauthorizedException);
     });
   });
 
   describe('update', () => {
     it('should return a devices', async () => {
       const newDevice = { ...myDevice, alias: 'lounge' };
-      const device = await controller.update(newDevice);
+      const device = await controller.update(newDevice, {
+        user: {
+          username: 'user',
+          id: '1',
+        },
+      });
       expect(device.alias).toBe('lounge');
     });
   });
 
-  describe('findAllWithUserId', () => {
+  describe('findAllByUser', () => {
     it("Should return all of user's devices", async () => {
-      const deviceArray = await controller.findAllWithUserId(ownerUserId);
+      const deviceArray = await controller.findAllWithUserId({
+        user: { username: 'user', id: '1' },
+      });
       expect(Array.isArray(deviceArray)).toBe(true);
     });
   });
 
   describe('unbind', () => {
     it('should return a devices', async () => {
-      const result = await controller.unbind(myDevice.id);
+      const result = await controller.unbind(myDevice.deviceId, {
+        user: {
+          username: 'user',
+          id: '1',
+        },
+      });
       expect(result).toBe(true);
     });
   });

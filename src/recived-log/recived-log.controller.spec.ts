@@ -6,18 +6,35 @@ import { ReceivedLog } from './entity/recived-log.entity';
 import { ReceivedLogDto } from './dto/recived-log.dto';
 import { ReceivedLogService } from './recived-log.service';
 import { ReceivedLogController } from './recived-log.controller';
+import { DevicesService } from '../devices/devices.service';
+import { Device } from '../devices/entities/device.entity';
 
 describe('ReceivedLog Controller', () => {
   let service: ReceivedLogService;
   let controller: ReceivedLogController;
+  const ownerUserId = 1;
+  const deviceId1 = 'rc-box-test-12301';
+  const deviceId2 = 'rc-box-test-53104';
+  const dbDevices = [
+    {
+      deviceId: deviceId1,
+      ownerUserId: ownerUserId,
+      alias: '',
+    },
+    {
+      deviceId: deviceId2,
+      ownerUserId: ownerUserId,
+      alias: '',
+    },
+  ];
 
-  const oneLog = new ReceivedLog('jest test 1', new Date(), 1);
-  const allLogs = [
+  const oneLog = new ReceivedLog(deviceId1, new Date(), 1);
+  const dbLogs = [
     oneLog,
-    new ReceivedLog('jest test 2'),
-    new ReceivedLog('jest test 2'),
-    new ReceivedLog('jest test 3'),
-    new ReceivedLog('jest test 3'),
+    new ReceivedLog(deviceId1, new Date(), 2),
+    new ReceivedLog(deviceId2, new Date(), 3),
+    new ReceivedLog(deviceId1, new Date(), 4),
+    new ReceivedLog(deviceId2, new Date(), 5),
   ];
 
   beforeEach(async () => {
@@ -29,19 +46,33 @@ describe('ReceivedLog Controller', () => {
           provide: getRepositoryToken(ReceivedLog),
           useValue: {
             save: jest.fn().mockImplementation((dto: ReceivedLogDto) => {
-              const log = new ReceivedLog(dto.deviceId, new Date(), 10);
+              const log = new ReceivedLog(dto.deviceId, new Date(), 6);
+              dbLogs.push(log);
               return Promise.resolve(log);
             }),
             find: jest.fn().mockImplementation((params: object) => {
               if (params['where'] && params['where']['deviceId']) {
                 const deviceId = params['where']['deviceId'];
-                const logs = allLogs.map((log) => log.deviceId == deviceId);
+                const logs = dbLogs.filter((log) => log.deviceId == deviceId);
                 return Promise.resolve(logs);
               } else {
-                return Promise.resolve(allLogs);
+                return Promise.resolve(dbLogs);
               }
             }),
             delete: jest.fn().mockResolvedValue({ affected: 3 }),
+          },
+        },
+        DevicesService,
+        {
+          provide: getRepositoryToken(Device),
+          useValue: {
+            find: jest.fn().mockResolvedValue(dbDevices),
+            findOneBy: (obj) => {
+              const foundDevice = dbDevices.find(
+                (device) => device.deviceId == obj.deviceId,
+              );
+              return Promise.resolve(foundDevice);
+            },
           },
         },
       ],
@@ -55,26 +86,18 @@ describe('ReceivedLog Controller', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('getAll', () => {
-    it('should return an array of logs', async () => {
-      await expect(controller.getAll()).resolves.toEqual(allLogs);
-    });
-  });
-
-  describe('findByDeviceId', () => {
-    it('should return logs with deviceId "jest test 2"', async () => {
-      const deviceId = 'jest test 2';
-      const logs = allLogs.map((log) => log.deviceId == deviceId);
-      await expect(controller.findByDeviceId(deviceId)).resolves.toEqual(logs);
-    });
-  });
+  // describe('getAll', () => {
+  //   it('should return an array of logs', async () => {
+  //     await expect(controller.getAll()).resolves.toEqual(dbLogs);
+  //   });
+  // });
 
   describe('create', () => {
     it('should return a log', async () => {
       const dto: ReceivedLogDto = {
-        deviceId: 'jest test 4',
+        deviceId: deviceId1,
       };
-      const log = await controller.create(dto);
+      const log = await controller.add(dto);
       expect(log.deviceId).toEqual(dto.deviceId);
       expect(log.time).toBeInstanceOf(Date);
       expect(typeof log.id).toBe('number');
@@ -86,7 +109,7 @@ describe('ReceivedLog Controller', () => {
 
     it('shold throw BadRequestException', async () => {
       try {
-        await controller.create(dto);
+        await controller.add(dto);
       } catch (error) {
         // expect(error).toBeInstanceOf(BadRequestException);
         expect(error).toEqual(
@@ -101,7 +124,7 @@ describe('ReceivedLog Controller', () => {
 
     it('try catch', async () => {
       try {
-        await controller.create(dto);
+        await controller.add(dto);
       } catch (error) {
         expect(error).toBeInstanceOf(BadRequestException);
         expect(error).toEqual(exceptionObj);
@@ -109,30 +132,63 @@ describe('ReceivedLog Controller', () => {
     });
 
     it('toThrow Exception', async () => {
-      await expect(controller.create(dto)).rejects.toThrow(BadRequestException);
+      await expect(controller.add(dto)).rejects.toThrowError(BadRequestException);
     });
     it('toThrow Exception Object', async () => {
-      await expect(controller.create(dto)).rejects.toThrow(exceptionObj);
+      await expect(controller.add(dto)).rejects.toThrow(exceptionObj);
     });
     it('toThrow Exception text', async () => {
-      await expect(controller.create(dto)).rejects.toThrow(errorText);
+      await expect(controller.add(dto)).rejects.toThrow(errorText);
     });
     it('toThrowError Exception', async () => {
-      await expect(controller.create(dto)).rejects.toThrowError(
+      await expect(controller.add(dto)).rejects.toThrowError(
         BadRequestException,
       );
     });
     it('toThrowError Exception Object', async () => {
-      await expect(controller.create(dto)).rejects.toThrowError(exceptionObj);
+      await expect(controller.add(dto)).rejects.toThrowError(exceptionObj);
     });
     it('toThrowError text', async () => {
-      await expect(controller.create(dto)).rejects.toThrowError(errorText);
+      await expect(controller.add(dto)).rejects.toThrowError(errorText);
     });
   });
 
-  describe('delete', () => {
-    it('should delete logs', async () => {
-      const response = await service.clean('test_device_id');
+  describe('findByDeviceId', () => {
+    it('should return logs with deviceId "' + deviceId1 + '"', async () => {
+      const returnLogs = dbLogs.filter((log) => {
+        return log.deviceId == deviceId1;
+      });
+      const logs = await controller.findByDeviceId(deviceId1, {
+        user: {
+          username: 'user',
+          id: '1',
+        },
+      });
+      expect(logs).toEqual(returnLogs);
+    });
+  });
+
+  describe('getAllByUser', () => {
+    it('should return logs with userId "' + ownerUserId + '"', async () => {
+      const returnLogs = dbLogs.sort((a, b) => b.id - a.id);
+      const logs = await controller.getAllByUser({
+        user: {
+          username: 'user',
+          id: ownerUserId,
+        },
+      });
+      expect(logs).toEqual(returnLogs);
+    });
+  });
+
+  describe('clean', () => {
+    it('should clean logs', async () => {
+      const response = await controller.clean(deviceId1, {
+        user: {
+          username: 'user',
+          id: '1',
+        },
+      });
       expect(response).toBeTruthy();
     });
   });

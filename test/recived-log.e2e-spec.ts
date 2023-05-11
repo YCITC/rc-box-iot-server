@@ -4,28 +4,39 @@ import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as request from 'supertest';
 import { Repository } from 'typeorm';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 
-import commonConfig from '../src/config/common.config';
-import dbConfig from '../src/config/db.config';
 import { ReceivedLog } from '../src/recived-log/entity/recived-log.entity';
 import { ReceivedLogModule } from '../src/recived-log/recived-log.module';
+import { DevicesModule } from '../src/devices/devices.module';
+import { DevicesService } from '../src/devices/devices.service';
+import { Device } from '../src/devices/entities/device.entity';
+import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
+import commonConfig from '../src/config/common.config';
+import dbConfig from '../src/config/db.config';
+import jwtConfig from '../src/config/jwt.config';
+import rawUser from './raw-uer';
 
-describe('UserController (e2e)', () => {
+describe('ReceivedLogController (e2e)', () => {
   let app: INestApplication;
   let repo: Repository<ReceivedLog>;
-  const deviceId1 = 'jest_e2e_test_1';
-  const deviceId2 = 'jest_e2e_test_2';
+  let jwtService: JwtService;
+  let accessToken: string;
+  const deviceId1 = 'rc-box-test-12301';
+  const deviceId2 = 'rc-box-test-53104';
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         ReceivedLogModule,
+        DevicesModule,
         ConfigModule.forRoot({
           isGlobal: false,
           envFilePath: ['.development.env'],
         }),
         ConfigModule.forFeature(commonConfig),
         ConfigModule.forFeature(dbConfig),
+        ConfigModule.forFeature(jwtConfig),
         TypeOrmModule.forRootAsync({
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
@@ -37,19 +48,38 @@ describe('UserController (e2e)', () => {
               password: configService.get('DB.password'),
               database: 'rc-box-test',
               // entities: ['dist/**/*.entity{.ts,.js}'],
-              entities: [ReceivedLog],
+              entities: [Device, ReceivedLog],
               synchronize: true,
             };
             return dbInfo;
           },
           inject: [ConfigService],
         }),
+        JwtModule.registerAsync({
+          imports: [ConfigModule],
+          inject: [ConfigService],
+          useFactory: async (configService: ConfigService) => {
+            const obj = {
+              secret: configService.get('JWT.SECRET'),
+              signOptions: {
+                expiresIn: `${configService.get('JWT.EXPIRATION_TIME')}`,
+                issuer: configService.get('JWT.ISSUER'),
+              },
+            };
+            return obj;
+          },
+        }),
       ],
+      providers: [DevicesService, JwtService, JwtStrategy],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     repo = app.get<Repository<ReceivedLog>>(getRepositoryToken(ReceivedLog));
+    jwtService = moduleFixture.get<JwtService>(JwtService);
     await app.init();
+
+    const payload = { id: 1, username: rawUser.username };
+    accessToken = jwtService.sign(payload);
   });
 
   afterEach(async () => {
@@ -73,28 +103,41 @@ describe('UserController (e2e)', () => {
     expect(response1.body.deviceId).toEqual(deviceId1);
   });
 
-  it('/log/get/ (GET)', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/log/get/')
-      .expect(200);
-    expect(response.body[0].deviceId).toBe(deviceId2);
-    expect(response.body[1].deviceId).toBe(deviceId1);
-  });
+  //* Don't use this API on production environment.
+  // it('/log/getAll/ (GET)', async () => {
+  //   const response = await request(app.getHttpServer())
+  //     .get('/log/getAll/')
+  //     .expect(200);
+  //   expect(response.body[0].deviceId).toBe(deviceId2);
+  //   expect(response.body[1].deviceId).toBe(deviceId1);
+  // });
 
   it('/log/get/:deviceId (GET)', async () => {
     const response1 = await request(app.getHttpServer())
       .get('/log/get/' + deviceId1)
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(200);
     expect(response1.body[0].deviceId).toBe(deviceId1);
     const response2 = await request(app.getHttpServer())
       .get('/log/get/' + deviceId2)
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(200);
     expect(response2.body[0].deviceId).toBe(deviceId2);
+  });
+
+  it('/log/getAllByUser (GET)', async () => {
+    const response1 = await request(app.getHttpServer())
+      .get('/log/getAllByUser')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .expect(200);
+    expect(response1.body[0].deviceId).toBe(deviceId2);
+    expect(response1.body[1].deviceId).toBe(deviceId1);
   });
 
   it('/log/clean/ (DELETE)', async () => {
     const response = await request(app.getHttpServer())
       .delete('/log/clean/' + deviceId1)
+      .set('Authorization', 'Bearer ' + accessToken)
       .expect(200);
     expect(response.body.statusCode).toEqual(200);
 

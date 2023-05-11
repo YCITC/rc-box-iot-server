@@ -30,7 +30,7 @@ export class ReceivedLogService {
     });
   }
 
-  async create(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
+  async add(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
     const log = new ReceivedLog(receivedLogDto.deviceId, new Date());
     return this.receivedLogRepository.save(log);
   }

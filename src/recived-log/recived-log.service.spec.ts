@@ -66,14 +66,14 @@ describe('ReceivedLogService', () => {
     });
   });
 
-  describe('create', () => {
+  describe('add', () => {
     it('should return an log', async () => {
       const rawLog = {
         id: 'uuid',
         time: new Date(),
         deviceId: 'jest test 1',
       };
-      const log = await service.create(rawLog);
+      const log = await service.add(rawLog);
       expect(log).toMatchObject(oneLog);
       expect(log.deviceId).toEqual(log.deviceId);
     });

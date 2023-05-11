@@ -22,7 +22,7 @@ export class ReceivedLog {
   @ApiProperty({ example: 'rc-box-v1-a12301' })
   @Column({
     type: 'varchar',
-    length: 16,
+    length: 20,
   })
   deviceId: string;
 

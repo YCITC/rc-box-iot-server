@@ -11,7 +11,7 @@ describe('DevicesController', () => {
   let myDevice: Device;
   const ownerUserId = 1;
   const rawDevices = {
-    deviceId: 'rc-box-v1-a12301',
+    deviceId: 'rc-box-test-12301',
     ownerUserId: ownerUserId,
     alias: 'tsutaya',
   };

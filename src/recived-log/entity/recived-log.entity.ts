@@ -19,7 +19,7 @@ export class ReceivedLog {
   })
   time: Date;
 
-  @ApiProperty({ example: 'rc-box-v1-a12301' })
+  @ApiProperty({ example: 'rc-box-test-12301' })
   @Column({
     type: 'varchar',
     length: 20,

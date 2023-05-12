@@ -1,54 +1,85 @@
-import { Controller } from '@nestjs/common';
-import { Get, Post, Req, Request, Param, Body } from '@nestjs/common';
-import {
-  BadRequestException,
-  ServiceUnavailableException,
-} from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, UseGuards } from '@nestjs/common';
+import { Get, Post, Req, Param, Body } from '@nestjs/common';
+import { BadRequestException, NotAcceptableException } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { PushService } from './push.service';
-import { PushRegisterDto } from './dto/pushRegister.dto';
-import { WebClient } from './entity/web.client.entity';
+import { RegisterChromeDto } from './dto/register-chrome.dto';
+import { RegisterIPhoneDto } from './dto/register-iphone.dto';
+import { ChromeClient } from './entity/chrome.client.entity';
 import { iOSClient } from './entity/ios.client.entity';
-import { PushClientInterface } from './interface/push.client.interface';
+import { PushClientInterface } from './interface/push-client.interface';
+import { DevicesService } from '../devices/devices.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('PushNotification')
 @Controller('push')
 export class PushController {
-  constructor(private readonly pushService: PushService) {}
+  constructor(
+    private readonly pushService: PushService,
+    private devicesService: DevicesService,
+  ) {}
 
-  @Get('genVAPID/:browserName')
-  genVapid(@Param() params) {
-    return this.pushService.genVapid(params.browserName);
+  @Get('genChromeVAPID')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'gen VAPID for chrome' })
+  @ApiResponse({
+    status: 200,
+    description: 'Will return publicKey and privateKey in object.',
+    schema: {
+      example: {
+        publicKey: `BEjK-zifN-t2nc2UjISjwGhURmiRaa4atjXyXMPcIy6BLMpvs6y0OY_352T_HUwrQ1gJdZ-A_W1l-GbDLHewFMQ`,
+        privateKey: '-qyMxJqPC7TPElaREk352lfp4kR8WabsAHF88d9d7bs',
+      },
+      type: 'object',
+      properties: {
+        publicKey: { type: 'string' },
+        privateKey: { type: 'string' },
+      },
+    },
+  })
+  genChromeVapid() {
+    return this.pushService.genChromeVapid();
   }
 
-  @Post('subscribe')
-  subscribe(@Body() pushRegisterDto: PushRegisterDto): Promise<WebClient> {
-    const deviceId = pushRegisterDto.deviceId;
+  @Post('subscribe/chrome')
+  @UseGuards(JwtAuthGuard)
+  async subscribeChrome(
+    @Body() registerChromeDto: RegisterChromeDto,
+    @Req() req,
+  ): Promise<ChromeClient> {
+    const deviceId = registerChromeDto.deviceId;
+    const userHasDevice = await this.devicesService.checkDeviceWithUser(
+      req.user.id,
+      deviceId,
+    );
+    if (!userHasDevice) {
+      throw new NotAcceptableException(
+        'Incorrect. Current user (' +
+          req.user.username +
+          ') has no device ' +
+          deviceId,
+      );
+    }
     if (deviceId == undefined || deviceId == '') {
       return Promise.reject(
         new BadRequestException("Have no deviceId, it's length must > 0"),
       );
     }
-    const browserName = pushRegisterDto.browserName;
-    if (browserName == undefined || browserName == '') {
-      return Promise.reject(
-        new BadRequestException("Have no browserName, it's length must > 0"),
-      );
-    }
-    const browserVersion = pushRegisterDto.browserVersion;
+
+    const browserVersion = registerChromeDto.browserVersion;
     if (browserVersion == undefined || browserVersion == '') {
       return Promise.reject(
         new BadRequestException("Have no browserVersion, it's length must > 0"),
       );
     }
-    const vapidPublicKey = pushRegisterDto.vapidPublicKey;
+    const vapidPublicKey = registerChromeDto.vapidPublicKey;
     if (vapidPublicKey == undefined || vapidPublicKey == '') {
       return Promise.reject(
         new BadRequestException("Have no vapidPublicKey, it's length must > 0"),
       );
     }
-    const vapidPrivateKey = pushRegisterDto.vapidPrivateKey;
+    const vapidPrivateKey = registerChromeDto.vapidPrivateKey;
     if (vapidPrivateKey == undefined || vapidPrivateKey == '') {
       return Promise.reject(
         new BadRequestException(
@@ -56,70 +87,80 @@ export class PushController {
         ),
       );
     }
-    const endpoint = pushRegisterDto.endpoint;
+    const endpoint = registerChromeDto.endpoint;
     if (endpoint == undefined || endpoint == '') {
       return Promise.reject(
         new BadRequestException("Have no endpoint, it's length must > 0"),
       );
     }
-    const keysAuth = pushRegisterDto.keysAuth;
+    const keysAuth = registerChromeDto.keysAuth;
     if (keysAuth == undefined || keysAuth == '') {
       return Promise.reject(
         new BadRequestException("Have no keysAuth, it's length must > 0"),
       );
     }
-    const keysP256dh = pushRegisterDto.keysP256dh;
+    const keysP256dh = registerChromeDto.keysP256dh;
     if (keysP256dh == undefined || keysP256dh == '') {
       return Promise.reject(
         new BadRequestException("Have no keysP256dh, it's length must > 0"),
       );
     }
-    return this.pushService.broswerSubscribe(pushRegisterDto);
+    return this.pushService.broswerSubscribe(registerChromeDto);
   }
 
-  @Post('subscribeIOS')
-  subscribeIOS(@Body() pushRegisterDto: PushRegisterDto): Promise<iOSClient> {
-    console.log('recived dto: \n', pushRegisterDto);
-    const deviceId = pushRegisterDto.deviceId;
+  @Post('subscribe/ios')
+  @UseGuards(JwtAuthGuard)
+  async subscribeIOS(
+    @Body() registerIPhoneDto: RegisterIPhoneDto,
+    @Req() req,
+  ): Promise<iOSClient> {
+    const deviceId = registerIPhoneDto.deviceId;
     if (deviceId == undefined || deviceId == '') {
       return Promise.reject(
         new BadRequestException("Have no deviceId, it's length must > 0"),
       );
     }
-    const appId = pushRegisterDto.appId;
+    const appId = registerIPhoneDto.appId;
     if (appId == undefined || appId == '') {
       return Promise.reject(
         new BadRequestException("Have no deviceId, it's length must > 0"),
       );
     }
-    const iPhoneToken = pushRegisterDto.iPhoneToken;
+    const iPhoneToken = registerIPhoneDto.iPhoneToken;
     if (iPhoneToken == undefined || iPhoneToken == '') {
       return Promise.reject(
         new BadRequestException("Have no iPhoneToken, it's length must > 0"),
       );
     }
-    return this.pushService.iOSSubscribe(pushRegisterDto);
+    const userHasDevice = await this.devicesService.checkDeviceWithUser(
+      req.user.id,
+      deviceId,
+    );
+    if (!userHasDevice) {
+      throw new NotAcceptableException(
+        'Incorrect. Current user (' +
+          req.user.username +
+          ') has no device ' +
+          deviceId,
+      );
+    }
+    // return this.pushService.iOSSubscribe(registerIPhoneDto);
+    const client = await this.pushService.iOSSubscribe(registerIPhoneDto);
+    return Promise.resolve(client);
   }
 
-  @Post('send')
-  async send(@Req() req): Promise<PushClientInterface[]> {
-    // console.log('request: ', req);
-    // console.log('headers: ', req.headers);
-    // console.log('body: ', req.body.deviceId);
-    // console.log('query: ', req.query);
+  @Get('send/:deviceId')
+  @Post('send/:deviceId')
+  @ApiResponse({
+    status: 200,
+    description: 'Will return publicKey and privateKey in object.',
+  })
+  async send(
+    @Param('deviceId') deviceId: string,
+  ): Promise<PushClientInterface[]> {
+    const browserClientList = await this.pushService.sendChrome(deviceId);
+    const iOSClientList = await this.pushService.sendiOS(deviceId);
 
-    try {
-      // return this.pushService.sendWeb(req.body.deviceId);
-      const browserClientList = await this.pushService.sendWeb(
-        req.body.deviceId,
-      );
-      const iPhoneClientList = await this.pushService.sendiPhone(
-        req.body.deviceId,
-      );
-      return Promise.resolve(browserClientList.concat(iPhoneClientList));
-    } catch (error) {
-      console.log('push send error: ', error);
-      return Promise.reject(new ServiceUnavailableException(error.message));
-    }
+    return Promise.resolve(browserClientList.concat(iOSClientList));
   }
 }

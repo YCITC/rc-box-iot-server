@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity({
-  name: 'iOSClient',
+  name: 'push_client_ios',
   engine: 'MyISAM',
 })
 export class iOSClient {
@@ -18,7 +18,7 @@ export class iOSClient {
 
   @Column({
     type: 'varchar',
-    length: 16,
+    length: 20,
     nullable: false,
   })
   deviceId: string;

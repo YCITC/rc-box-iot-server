@@ -3,161 +3,122 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as webpush from 'web-push';
 import * as apn from '@parse/node-apn';
-import * as asyncLib from 'async';
 
-import { WebClient } from './entity/web.client.entity';
+import { ConfigService } from '@nestjs/config';
+import { ChromeClient } from './entity/chrome.client.entity';
 import { iOSClient } from './entity/ios.client.entity';
-import { PushClientInterface } from './interface/push.client.interface';
+import { PushClientInterface } from './interface/push-client.interface';
 
 @Injectable()
 export class PushService {
   constructor(
-    @InjectRepository(WebClient)
-    private WebClientRepository: Repository<WebClient>,
-
+    @InjectRepository(ChromeClient)
+    private ChromeClientRepository: Repository<ChromeClient>,
     @InjectRepository(iOSClient)
     private IOSClientRepository: Repository<iOSClient>,
+    private configService: ConfigService,
   ) {}
 
-  genVapid(browserName) {
-    let key = '';
-    switch (browserName) {
-      case 'Chrom/prettier/eslint-plugin-prettiere':
-        // '<Your GCM API Key Here>'
-        key = `BM7Z_5aIzx78z_kKGWOTPcMPeGQSZovDbiF-3VWpJ2nnr93jh0KfOE-IXaxSwehQPIPKkhHP_r8XHd4opGY_-roBM7Z_5aIzx78z_kKGWOTPcMPeGQSZovDbiF-3VWpJ2nnr93jh0KfOE-IXaxSwehQPIPKkhHP_r8XHd4opGY_-ro`;
-        webpush.setGCMAPIKey(key);
-        break;
-      case 'Firefox':
-        key = '';
-        break;
-      case 'Safari':
-        key = '';
-        break;
-    }
-
+  genChromeVapid() {
+    webpush.setGCMAPIKey(this.configService.get('GCM.APIKey'));
     // VAPID keys should be generated only once.
     const vapidKeys = webpush.generateVAPIDKeys();
 
     return vapidKeys;
   }
 
-  broswerSubscribe(pushRegisterDto): Promise<WebClient> {
-    return this.WebClientRepository.save(pushRegisterDto);
+  async broswerSubscribe(pushRegisterChromeDto): Promise<ChromeClient> {
+    return this.ChromeClientRepository.save(pushRegisterChromeDto);
   }
 
-  iOSSubscribe(pushRegisterDto): Promise<iOSClient> {
-    return this.IOSClientRepository.save(pushRegisterDto);
+  async iOSSubscribe(registerIPhoneDto): Promise<iOSClient> {
+    return this.IOSClientRepository.save(registerIPhoneDto);
   }
 
-  async sendWeb(deviceId): Promise<PushClientInterface[]> {
-    try {
-      const clientList = await this.WebClientRepository.find({
-        where: {
-          deviceId: deviceId,
-        },
-      });
-      const pushClientList = [];
-      if (clientList == undefined || clientList.length == 0) {
-        return Promise.resolve([
-          {
-            uid: -1,
-            deviceId: deviceId,
-            clientType: 'browser',
-            state: false,
-            message: 'No registered client.',
-            vapidPublicKey: '',
-            iPhoneToken: '',
-          },
-        ]);
+  async sendChrome(deviceId): Promise<PushClientInterface[]> {
+    const clientList = await this.ChromeClientRepository.find({
+      order: {
+        id: 'DESC',
+      },
+      where: {
+        deviceId: deviceId,
+      },
+    });
+    const pushedClientList = [];
+    const failedClientList = [];
+    const clientPromises = clientList.map(async (client) => {
+      try {
+        webpush.setVapidDetails(
+          'https://rc-box.yesseecity.com/',
+          client.vapidPublicKey,
+          client.vapidPrivateKey,
+        );
+      } catch (error) {
+        const errorMessage = '[webpush][' + error.name + ']' + error.message;
+        failedClientList.push({
+          id: client.id,
+          deviceId: client.deviceId,
+          clientType: 'Chrome',
+          state: false,
+          message: errorMessage,
+          vapidPublicKey: client.vapidPublicKey,
+          iPhoneToken: '',
+        });
+        return Promise.reject(error);
       }
-      await asyncLib.forEachOf(clientList, (client, index, callback) => {
-        try {
-          webpush.setVapidDetails(
-            'https://rc-box.yesseecity.com/',
-            client.vapidPublicKey,
-            client.vapidPrivateKey,
-          );
-          const pushSubscription = {
-            endpoint: client.endpoint,
-            keys: {
-              auth: client.keysAuth,
-              p256dh: client.keysP256dh,
-            },
-          };
-          webpush
-            .sendNotification(pushSubscription, 'Received A Box')
-            .then(() => {
-              // success
-              // console.log('[notification] success index: ', index);
-              pushClientList.push({
-                uid: client.uid,
-                deviceId: client.deviceId,
-                clientType: 'browser',
-                state: true,
-                message: '',
-                vapidPublicKey: client.vapidPublicKey,
-                iPhoneToken: '',
-              });
-              callback(); // this callback is mean asyncLib.forEachOf iteratee functions have finished.
-            })
-            .catch((error) => {
-              // failed
-              // console.log('[notification] failed index: ', index);
-              const errorMessage = '[webpush][' + error.name + ']' + error.body;
-              pushClientList.push({
-                uid: client.uid,
-                deviceId: client.deviceId,
-                clientType: 'browser',
-                state: false,
-                message: errorMessage,
-                vapidPublicKey: client.vapidPublicKey,
-                iPhoneToken: '',
-              });
-              callback(); // this callback is mean asyncLib.forEachOf iteratee functions have finished.
-            });
-        } catch (error) {
-          // webpush libary failed
-          // console.log('[notification] error index: ', index);
-          const errorMessage = '[webpush][' + error.name + ']' + error.message;
-          pushClientList.push({
-            uid: client.uid,
-            deviceId: client.deviceId,
-            clientType: 'browser',
-            state: false,
-            message: errorMessage,
-            vapidPublicKey: client.vapidPublicKey,
-            iPhoneToken: '',
-          });
-          callback();
-        }
-      });
-      return Promise.resolve(pushClientList);
-    } catch (error) {
-      console.log('try .WebClientRepository.find catch');
-      return Promise.reject([
-        { deviceId: deviceId, message: 'Find client failed.' + error.message },
-      ]);
-    }
+      const pushSubscription = {
+        endpoint: client.endpoint,
+        keys: {
+          auth: client.keysAuth,
+          p256dh: client.keysP256dh,
+        },
+      };
+      try {
+        await webpush.sendNotification(pushSubscription, 'Received A Box');
+        pushedClientList.push({
+          id: client.id,
+          deviceId: client.deviceId,
+          clientType: 'Chrome',
+          state: true,
+          message: '',
+          vapidPublicKey: client.vapidPublicKey,
+          iPhoneToken: '',
+        });
+      } catch (error) {
+        const errorMessage = '[webpush][' + error.name + ']' + error.message;
+        failedClientList.push({
+          id: client.id,
+          deviceId: client.deviceId,
+          clientType: 'Chrome',
+          state: false,
+          message: errorMessage,
+          vapidPublicKey: client.vapidPublicKey,
+          iPhoneToken: '',
+        });
+      }
+    });
+    await Promise.allSettled(clientPromises);
+    /* 
+    * Promise 用法備註
+      如果用 await Promise.any(clientPromises);
+      那麼在 clientList.map 的 await webpush.sendNotification(pushSubscription, 'Received A Box');
+      在最後一筆時，如果成功的話，後面的 pushedClientList.push({***}) 不執行
+    */
+
+    return Promise.resolve(pushedClientList.concat(failedClientList));
   }
 
-  async sendiPhone(deviceId): Promise<any> {
+  async sendiOS(deviceId): Promise<any> {
     const clientList = await this.IOSClientRepository.find({
+      order: {
+        id: 'DESC',
+      },
       where: {
         deviceId: deviceId,
       },
     });
     if (clientList == undefined || clientList.length == 0) {
-      return Promise.resolve([
-        {
-          uid: -1,
-          deviceId: deviceId,
-          clientType: 'iPhone',
-          state: false,
-          message: 'No registered client.',
-          vapidPublicKey: '',
-          iPhoneToken: '',
-        },
-      ]);
+      return Promise.resolve([]);
     }
     const options = {
       token: {
@@ -174,12 +135,51 @@ export class PushService {
     note.sound = 'ping.aiff';
     note.alert = {
       title: 'RC-Box',
-      // subtitle: 'You Got A Box',
-      body: 'You Got A Box',
+      body: 'You Got A Box package',
     };
-    note.topic = 'yesseecity.rc-box-app-dev';
-    console.log('clientList.length: ', clientList.length);
-    const pushClientList = [];
+    note.topic = 'yesseecity.rc-box-app-dev'; //same to appId
+    const pushedClientList = [];
+    const failedClientList = [];
+
+    const clientPromises = clientList.map(async (client) => {
+      note.topic = client.appId;
+      try {
+        await apnProvider.send(note, client.iPhoneToken);
+        // console.log('[notification] success iOS client.id: ', client.id);
+        pushedClientList.push({
+          id: client.id,
+          deviceId: client.deviceId,
+          clientType: 'iPhone',
+          state: true,
+          message: '',
+          vapidPublicKey: '',
+          iPhoneToken: '',
+        });
+      } catch (error) {
+        // failed
+        // console.log('[notification] failed iOS client.id: ', client.id);
+        const errorMessage = '[webpush][' + error.name + ']' + error.message;
+        failedClientList.push({
+          id: client.id,
+          deviceId: client.deviceId,
+          clientType: 'iPhone',
+          state: false,
+          message: errorMessage,
+          vapidPublicKey: '',
+          iPhoneToken: '',
+        });
+      }
+    });
+    await Promise.allSettled(clientPromises);
+
+    return Promise.resolve(pushedClientList.concat(failedClientList));
+
+    /*
+    const arrayToResolve = pushedClientList.concat(failedClientList);
+
+    return Promise.resolve(arrayToResolve);
+    // TODO: remove asyncLib
+    
     await asyncLib.forEachOf(clientList, (client, index, callback) => {
       note.topic = client.appId;
       apnProvider
@@ -189,7 +189,7 @@ export class PushService {
           // success
           // console.log('[notification] success index: ', index);
           pushClientList.push({
-            uid: client.uid,
+            id: client.id,
             deviceId: client.deviceId,
             clientType: 'iPhone',
             state: true,
@@ -204,7 +204,7 @@ export class PushService {
           // console.log('[notification] failed index: ', index);
           const errorMessage = '[webpush][' + error.name + ']' + error.body;
           pushClientList.push({
-            uid: client.uid,
+            id: client.id,
             deviceId: client.deviceId,
             clientType: 'iPhone',
             state: false,
@@ -216,5 +216,6 @@ export class PushService {
         });
     });
     return Promise.resolve(true);
+    */
   }
 }

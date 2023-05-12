@@ -1,10 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity({
-  name: 'WebClient',
+  name: 'push_client_chrome',
   engine: 'MyISAM',
 })
-export class WebClient {
+export class ChromeClient {
   @PrimaryGeneratedColumn({
     unsigned: true,
   })
@@ -18,17 +18,10 @@ export class WebClient {
 
   @Column({
     type: 'varchar',
-    length: 16,
+    length: 20,
     nullable: false,
   })
   deviceId: string;
-
-  @Column({
-    type: 'varchar',
-    length: 10,
-    nullable: false,
-  })
-  browserName: string;
 
   @Column({
     type: 'varchar',
@@ -64,7 +57,6 @@ export class WebClient {
 
   constructor(
     deviceId: string,
-    browserName: string,
     browserVersion: string,
     vapidPublicKey: string,
     vapidPrivateKey: string,
@@ -74,7 +66,6 @@ export class WebClient {
   );
   constructor(
     deviceId: string,
-    browserName?: string,
     browserVersion?: string,
     vapidPublicKey?: string,
     vapidPrivateKey?: string,
@@ -84,7 +75,6 @@ export class WebClient {
   );
   constructor(
     deviceId: string,
-    browserName?: string,
     browserVersion?: string,
     vapidPublicKey?: string,
     vapidPrivateKey?: string,
@@ -94,7 +84,6 @@ export class WebClient {
   ) {
     this.subscribeTime = new Date();
     this.deviceId = deviceId;
-    this.browserName = browserName;
     this.browserVersion = browserVersion;
     this.vapidPublicKey = vapidPublicKey;
     this.vapidPrivateKey = vapidPrivateKey;

@@ -1,5 +1,5 @@
 export interface PushClientInterface {
-  uid: number;
+  id: number;
   deviceId: string;
   clientType: string;
   state: boolean;

@@ -10,7 +10,6 @@ import { DevicesService } from '../devices/devices.service';
 import { Device } from '../devices/entities/device.entity';
 
 describe('ReceivedLog Controller', () => {
-  let service: ReceivedLogService;
   let controller: ReceivedLogController;
   const ownerUserId = 1;
   const deviceId1 = 'rc-box-test-12301';
@@ -78,7 +77,6 @@ describe('ReceivedLog Controller', () => {
       ],
     }).compile();
 
-    service = app.get<ReceivedLogService>(ReceivedLogService);
     controller = app.get<ReceivedLogController>(ReceivedLogController);
   });
 
@@ -132,7 +130,9 @@ describe('ReceivedLog Controller', () => {
     });
 
     it('toThrow Exception', async () => {
-      await expect(controller.add(dto)).rejects.toThrowError(BadRequestException);
+      await expect(controller.add(dto)).rejects.toThrowError(
+        BadRequestException,
+      );
     });
     it('toThrow Exception Object', async () => {
       await expect(controller.add(dto)).rejects.toThrow(exceptionObj);

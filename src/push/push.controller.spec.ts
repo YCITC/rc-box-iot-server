@@ -13,8 +13,6 @@ import gcmConfig from '../config/gcm.config';
 
 describe('PushController', () => {
   let controller: PushController;
-  let repoWeb: Repository<ChromeClient>;
-  let repoIOS: Repository<iOSClient>;
   const deviceId1 = 'rc-box-test-12301';
   const deviceId2 = 'rc-box-test-53104';
   const ownerUserId = 1;
@@ -102,10 +100,6 @@ describe('PushController', () => {
     }).compile();
 
     controller = module.get<PushController>(PushController);
-    repoWeb = module.get<Repository<ChromeClient>>(
-      getRepositoryToken(ChromeClient),
-    );
-    repoIOS = module.get<Repository<iOSClient>>(getRepositoryToken(iOSClient));
   });
 
   it('service should be defined', () => {

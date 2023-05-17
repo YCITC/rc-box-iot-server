@@ -160,8 +160,9 @@ export class PushController {
     @Param('deviceId') deviceId: string,
   ): Promise<PushClientInterface[]> {
     const browserClientList = await this.pushService.sendChrome(deviceId);
-    const iOSClientList = await this.pushService.sendiOS(deviceId);
+    return Promise.resolve(browserClientList);
 
-    return Promise.resolve(browserClientList.concat(iOSClientList));
+    // const iOSClientList = await this.pushService.sendiOS(deviceId);
+    // return Promise.resolve(browserClientList.concat(iOSClientList));
   }
 }

@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { Repository } from 'typeorm';
+import * as webpush from 'web-push';
+import * as apn from '@parse/node-apn';
 
 import { ChromeClient } from './entity/chrome.client.entity';
 import { iOSClient } from './entity/ios.client.entity';
@@ -126,6 +128,7 @@ describe('PushService', () => {
 
   describe('sendChrome', () => {
     it('should find all of specific deviceId', async () => {
+      webpush.sendNotification = jest.fn().mockRejectedValue(true);
       const repoSpy = jest.spyOn(repoChrome, 'find');
       expect(service.sendChrome(deviceId)).resolves.toBeDefined();
       expect(repoSpy).toBeCalledWith({
@@ -141,6 +144,9 @@ describe('PushService', () => {
 
   describe('sendiOS', () => {
     it('should find all of specific deviceId', async () => {
+      apn.Provider.prototype.send = jest.fn().mockImplementation(async () => {
+        return Promise.resolve(true);
+      });
       const repoSpy = jest.spyOn(repoIOS, 'find');
       expect(service.sendiOS(deviceId)).resolves.toBeDefined();
       expect(repoSpy).toBeCalledWith({

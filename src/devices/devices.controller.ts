@@ -1,13 +1,15 @@
 import { Controller, UseGuards } from '@nestjs/common';
 import { Get, Put, Delete, Patch, Body, Param, Req } from '@nestjs/common';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { DevicesService } from './devices.service';
 import { DeviceDto } from './dto/device.dto';
 import { Device } from './entities/device.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Devices')
+@ApiBearerAuth()
 @Controller('devices')
 export class DevicesController {
   constructor(private devicesService: DevicesService) {}

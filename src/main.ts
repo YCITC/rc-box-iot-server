@@ -17,6 +17,7 @@ async function buildDocument(app) {
     .setTitle('RC-Box API documents')
     // .setDescription('')
     .setVersion(configService.get('common.VERSION'))
+    .addBearerAuth()
     .build();
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

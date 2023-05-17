@@ -1,8 +1,8 @@
 import { Controller, UseGuards } from '@nestjs/common';
 import { Get, Post, Req, Param, Body } from '@nestjs/common';
 import { BadRequestException, NotAcceptableException } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { PushService } from './push.service';
 import { RegisterChromeDto } from './dto/register-chrome.dto';
 import { RegisterIPhoneDto } from './dto/register-iphone.dto';
@@ -13,6 +13,7 @@ import { DevicesService } from '../devices/devices.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('PushNotification')
+@ApiBearerAuth()
 @Controller('push')
 export class PushController {
   constructor(

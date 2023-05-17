@@ -2,7 +2,8 @@ import { Controller, UseGuards } from '@nestjs/common';
 import { Req, Body, Param } from '@nestjs/common';
 import { Get, Put, Delete } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { ReceivedLog } from './entity/recived-log.entity';
 import { ReceivedLogDto } from './dto/recived-log.dto';
@@ -11,6 +12,7 @@ import { DevicesService } from '../devices/devices.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Log')
+@ApiBearerAuth()
 @Controller('log')
 export class ReceivedLogController {
   constructor(

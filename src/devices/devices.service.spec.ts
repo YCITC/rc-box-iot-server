@@ -8,9 +8,10 @@ describe('DevicesService', () => {
   let service: DevicesService;
   let repo: Repository<Device>;
   let myDevice: Device;
+  let mockDeviceInDB: Device;
   const ownerUserId = 1;
   const rawDevices = {
-    deviceId: 'rc-box-v1-a12301',
+    deviceId: 'rc-box-test-12301',
     ownerUserId: ownerUserId,
     alias: 'tsutaya',
   };
@@ -25,19 +26,14 @@ describe('DevicesService', () => {
             save: (device) => {
               device.id = 1;
               device.createdTime = new Date();
+              mockDeviceInDB = { ...device };
               return Promise.resolve(device);
             },
-            update: jest.fn().mockImplementation((id, obj) => {
-              if (id === myDevice.id) {
-                myDevice.alias = obj.alias;
-              }
+            update: jest.fn().mockImplementation((deviceId, obj) => {
+              mockDeviceInDB.alias = obj.alias;
               return Promise.resolve({ raw: [], affected: 1 });
             }),
-            findOneBy: jest.fn().mockImplementation((obj) => {
-              if (obj.id === myDevice.id) {
-                return Promise.resolve(myDevice);
-              }
-            }),
+            findOneBy: jest.fn().mockResolvedValue(mockDeviceInDB),
             find: jest.fn().mockResolvedValue([myDevice]),
             delete: jest.fn().mockResolvedValue({ raw: [], affected: 1 }),
           },
@@ -57,9 +53,15 @@ describe('DevicesService', () => {
     it('should return a devices', async () => {
       const repoSpy = jest.spyOn(repo, 'save');
       myDevice = await service.bind(rawDevices);
-      expect(myDevice.id).toBeDefined;
       expect(myDevice.createdTime).toBeDefined;
       expect(repoSpy).toBeCalledWith(myDevice);
+    });
+  });
+
+  describe('findByOneDeviceId', () => {
+    it('should return a devices', async () => {
+      myDevice = await service.findByOneDeviceId(rawDevices.deviceId);
+      expect(myDevice.createdTime).toBeDefined;
     });
   });
 
@@ -69,7 +71,14 @@ describe('DevicesService', () => {
       const newDevice = { ...myDevice, alias: 'lounge' };
       const device = await service.update(newDevice);
       expect(device.alias).toBe('lounge');
-      expect(repoSpy).toBeCalledWith(newDevice.id, { alias: 'lounge' });
+      expect(repoSpy).toBeCalledWith(newDevice.deviceId, { alias: 'lounge' });
+    });
+  });
+
+  describe('checkDeviceWithUser', () => {
+    it('should return boolean', async () => {
+      const result = await service.checkDeviceWithUser(ownerUserId, myDevice);
+      expect(typeof result).toBe('boolean');
     });
   });
 
@@ -79,18 +88,18 @@ describe('DevicesService', () => {
       const deviceArray = await service.findAllWithUserId(ownerUserId);
       expect(Array.isArray(deviceArray)).toBe(true);
       expect(repoSpy).toBeCalledWith({
-        order: { id: 'DESC' },
+        order: { createdTime: 'DESC' },
         where: { ownerUserId: ownerUserId },
       });
     });
   });
 
   describe('unbind', () => {
-    it('should return a devices', async () => {
+    it('should return boolean', async () => {
       const repoSpy = jest.spyOn(repo, 'delete');
-      const result = await service.unbind(1);
-      expect(result).toBe(true);
-      expect(repoSpy).toBeCalledWith({ id: 1 });
+      const result = await service.unbind(rawDevices.deviceId);
+      expect(typeof result).toBe('boolean');
+      expect(repoSpy).toBeCalledWith({ deviceId: rawDevices.deviceId });
     });
   });
 });

@@ -1,8 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BindDeviceDto } from './dto/bind-device.dto';
-import { UpdateDeviceDto } from './dto/update-device.dto';
+import { DeviceDto } from './dto/device.dto';
 import { Device } from './entities/device.entity';
 
 @Injectable()
@@ -11,43 +10,42 @@ export class DevicesService {
     @InjectRepository(Device)
     private devicesRepository: Repository<Device>,
   ) {}
-  async bind(BindDeviceDto: BindDeviceDto): Promise<Device> {
-    try {
-      const device = await this.devicesRepository.save(BindDeviceDto);
-      return Promise.resolve(device);
-    } catch (error) {
-      if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
-        const deviceId = BindDeviceDto.deviceId;
-        throw new BadRequestException(
-          `The device [${deviceId}] has already been bound`,
-        );
-      }
-    }
+
+  findByOneDeviceId(deviceId: string): Promise<Device> {
+    return this.devicesRepository.findOneBy({ deviceId });
   }
 
-  async update(updateDeviceDto: UpdateDeviceDto): Promise<Device> {
-    await this.devicesRepository
-      .update(updateDeviceDto.id, {
-        alias: updateDeviceDto.alias,
-      })
-      .then((response) => {
-        response.affected == 1;
-        // console.log(response.affected == 1);
-      });
-    return this.devicesRepository.findOneBy({ id: updateDeviceDto.id });
+  async bind(deviceDto: DeviceDto): Promise<Device> {
+    return this.devicesRepository.save(deviceDto);
+  }
+
+  async update(deviceDto: DeviceDto): Promise<Device> {
+    await this.devicesRepository.update(deviceDto.deviceId, {
+      alias: deviceDto.alias,
+    });
+    return this.devicesRepository.findOneBy({ deviceId: deviceDto.deviceId });
+  }
+
+  async checkDeviceWithUser(userId, deviceId): Promise<boolean> {
+    const device = await this.devicesRepository.findOneBy({ deviceId });
+    if (device == null) return Promise.resolve(false);
+    if (device.ownerUserId == userId) return Promise.resolve(true);
+    return Promise.resolve(false);
   }
 
   async findAllWithUserId(ownerUserId: number) {
     return this.devicesRepository.find({
       order: {
-        id: 'DESC',
+        createdTime: 'DESC',
       },
       where: { ownerUserId },
     });
   }
 
-  async unbind(id: number): Promise<boolean> {
-    const response = await this.devicesRepository.delete({ id });
+  async unbind(deviceId: string): Promise<boolean> {
+    const response = await this.devicesRepository.delete({
+      deviceId: deviceId,
+    });
     if (response.affected == 1) {
       return Promise.resolve(true);
     }

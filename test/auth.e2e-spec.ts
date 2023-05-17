@@ -6,13 +6,14 @@ import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { PassportModule } from '@nestjs/passport';
 
-import commonConfig from '../src/config/common.config';
-import dbConfig from '../src/config/db.config';
 import { AuthModule } from '../src/auth/auth.module';
 import { User } from '../src/users/entity/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../src/users/users.service';
 import { UsersModule } from '../src/users/users.module';
+import rawUser from './raw-uer';
+import commonConfig from '../src/config/common.config';
+import dbConfig from '../src/config/db.config';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -21,16 +22,6 @@ describe('AuthController (e2e)', () => {
   let emailVerifyToken: string;
   let accessToken: string;
   let repo: Repository<User>;
-
-  const rawUser = {
-    email: 'yesseecity@icloud.com',
-    password: 'jidiizllewnicvjgiowddjoi',
-    fullName: 'Tid Huang',
-    username: 'Tid',
-    phoneNumber: '0900123456',
-    address: 'No. 7, Section 5, Xinyi Road, Xinyi District, Taiepi, Taiwan',
-    zipCode: '110',
-  };
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -62,17 +53,12 @@ describe('AuthController (e2e)', () => {
           inject: [ConfigService],
         }),
       ],
-      providers: [
-        UsersService,
-        //
-        JwtService,
-      ],
+      providers: [UsersService, JwtService],
     }).compile();
 
     config = moduleFixture.get<ConfigService>(ConfigService);
     app = moduleFixture.createNestApplication();
     repo = app.get<Repository<User>>(getRepositoryToken(User));
-    // await repo.clear();
 
     await app.init();
   });
@@ -81,6 +67,7 @@ describe('AuthController (e2e)', () => {
   });
 
   it('/auth/createUser/ (PUT)', async () => {
+    await repo.clear();
     const response = await request(app.getHttpServer())
       .put('/auth/createUser')
       .send(rawUser)
@@ -100,8 +87,6 @@ describe('AuthController (e2e)', () => {
     expect(response.header.location).toEqual(
       config.get('common.VERIFY_SUCCESS_URL'),
     );
-
-    // await repo.clear();
   });
 
   it('/auth/login/ (post)', async () => {
@@ -119,6 +104,13 @@ describe('AuthController (e2e)', () => {
       .set('Authorization', 'Bearer ' + accessToken)
       .expect(200);
     expect(response.body.id).toBe(userId);
-    await repo.clear();
+  });
+
+  it('/auth/updateToken (Get)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/auth/updateToken')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .expect(200);
+    expect(response.body.access_token).toBeDefined();
   });
 });

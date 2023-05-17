@@ -1,14 +1,21 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PushController } from './push.controller';
 import { PushService } from './push.service';
-import { WebClient } from './entity/web.client.entity';
+import { ChromeClient } from './entity/chrome.client.entity';
 import { iOSClient } from './entity/ios.client.entity';
+import { Device } from '../devices/entities/device.entity';
+import { DevicesService } from '../devices/devices.service';
+import gcmConfig from '../config/gcm.config';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([WebClient, iOSClient])],
+  imports: [
+    ConfigModule.forFeature(gcmConfig),
+    TypeOrmModule.forFeature([ChromeClient, iOSClient, Device]),
+  ],
   exports: [TypeOrmModule],
   controllers: [PushController],
-  providers: [PushService],
+  providers: [PushService, DevicesService, ConfigService],
 })
 export class PushModule {}

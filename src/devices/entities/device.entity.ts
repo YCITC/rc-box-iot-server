@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity({
@@ -6,17 +6,11 @@ import { ApiProperty } from '@nestjs/swagger';
   engine: 'MyISAM',
 })
 export class Device {
-  @ApiProperty({ example: 0 })
-  @PrimaryGeneratedColumn({
-    unsigned: true,
-  })
-  id: number;
-
-  @ApiProperty({ example: 'rc-box-v1-a12301' })
-  @Column({
+  @ApiProperty({ example: 'rc-box-test-12301' })
+  @PrimaryColumn({
     unique: true,
     type: 'varchar',
-    length: 16,
+    length: 20,
   })
   deviceId: string;
 
@@ -38,22 +32,11 @@ export class Device {
   })
   createdTime: Date;
 
-  constructor(
-    deviceId: string,
-    ownerUserId: number,
-    alias: string,
-    id?: number,
-  );
-  constructor(
-    deviceId: string,
-    ownerUserId: number,
-    alias: string,
-    id?: number,
-  ) {
+  constructor(deviceId: string, ownerUserId: number, alias: string);
+  constructor(deviceId: string, ownerUserId: number, alias: string) {
     this.deviceId = deviceId;
     this.ownerUserId = ownerUserId;
     this.alias = alias;
-    if (id) this.id = id;
 
     const now = new Date();
     this.createdTime = new Date(now.toLocaleDateString());

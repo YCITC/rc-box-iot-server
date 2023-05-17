@@ -1,12 +1,10 @@
 import { UnauthorizedException } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 
-import commonConfig from '../../src/config/common.config';
-import dbConfig from '../../src/config/db.config';
 import { User } from '../users/entity/user.entity';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';

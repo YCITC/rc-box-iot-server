@@ -1,13 +1,12 @@
-import { WebClient } from './web.client.entity';
+import { ChromeClient } from './chrome.client.entity';
 
 describe('WebClient class', () => {
   const now = new Date();
   const nowLocaleDateString = now.toLocaleDateString();
 
-  it('should return a webClient', () => {
-    const webClient = new WebClient(
+  it('should return a client', () => {
+    const client = new ChromeClient(
       'jest Test',
-      'Chrome',
       '102.0.0.0',
       'pubKey_uaRadWRQl8A4oaF_6PyjD9',
       'privKey_ZUB95eUT',
@@ -15,10 +14,10 @@ describe('WebClient class', () => {
       'keysAuth_RltisQ',
       'keysP256dh_D1PoUqA',
     );
-    expect(webClient).toBeTruthy();
-    expect(webClient.subscribeTime.toLocaleDateString()).toEqual(
+    expect(client).toBeTruthy();
+    expect(client.subscribeTime.toLocaleDateString()).toEqual(
       nowLocaleDateString,
     );
-    expect(webClient.deviceId).toBe('jest Test');
+    expect(client.deviceId).toBe('jest Test');
   });
 });

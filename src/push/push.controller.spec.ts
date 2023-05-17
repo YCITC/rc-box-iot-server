@@ -1,23 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
-import { Repository } from 'typeorm';
 import * as webpush from 'web-push';
 import * as apn from '@parse/node-apn';
 
 import { ChromeClient } from './entity/chrome.client.entity';
 import { iOSClient } from './entity/ios.client.entity';
 import { PushService } from './push.service';
+import { PushController } from './push.controller';
+import { DevicesService } from '../devices/devices.service';
+import { Device } from '../devices/entities/device.entity';
 import gcmConfig from '../config/gcm.config';
 
-describe('PushService', () => {
-  let service: PushService;
-  let repoChrome: Repository<ChromeClient>;
-  let repoIOS: Repository<iOSClient>;
-
-  const deviceId = 'rc-box-test-12301';
+describe('PushController', () => {
+  let controller: PushController;
+  const deviceId1 = 'rc-box-test-12301';
+  const deviceId2 = 'rc-box-test-53104';
+  const ownerUserId = 1;
+  const dbDevices = [
+    {
+      deviceId: deviceId1,
+      ownerUserId: ownerUserId,
+      alias: '',
+    },
+    {
+      deviceId: deviceId2,
+      ownerUserId: ownerUserId,
+      alias: '',
+    },
+  ];
   const registerChromeDto = {
-    deviceId: deviceId,
+    deviceId: deviceId1,
     browserVersion: '1.0.0',
     vapidPublicKey: 'vapidPublicKey_01',
     vapidPrivateKey: 'vapidPrivateKey_01',
@@ -25,17 +38,8 @@ describe('PushService', () => {
     keysAuth: 'keysAuth_01',
     keysP256dh: 'keysP256dh_01',
   };
-  const registerChromeDto2 = {
-    deviceId: deviceId,
-    browserVersion: '102.0.0.0',
-    vapidPublicKey: `BM-OKm4cmnKx9zkMhqP6jJppzJCxCXL8aLs7ZySSbqPlWPn_hmB0bEDguaRadWRQl8A4oaF_6PyjD9q5p-6tgWw`,
-    vapidPrivateKey: `4pI3o3iAAocpxIZUB95eUTvgXCKiuQzNfJSqByvmYRw`,
-    endpoint: `https://fcm.googleapis.com/fcm/send/fIQ6PqdkgJQ:APA91bHDCq87n4VFSCiHen3v2QVFYCyoywLcRezfJ69kT8lickUrz9vqQPBtXnY99YR7XjpjKaXHc3RuLRmQW7XRHyVIBn8XMtmRbLprLL5zWG8fpZ6r1y5Tjr8Iff3dfkWyjyOpOqDo`,
-    keysAuth: 'AfeoiYTENxJylrgnRltisQ',
-    keysP256dh: `BD1PoUqAA4f_gENcke5W7Q8Elt1BX9OMYTkpTQMv1-dL9D1rPD4ThfKE6dBNi1k1_Ji4soNPlywUMzuMU8TtBvg`,
-  };
   const registerIPhoneDto = {
-    deviceId: deviceId,
+    deviceId: deviceId1,
     iPhoneToken: 'tokenString',
     appId: 'yesseecity.rc-box-app-dev',
   };
@@ -43,6 +47,7 @@ describe('PushService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [ConfigModule.forFeature(gcmConfig)],
+      controllers: [PushController],
       providers: [
         PushService,
         {
@@ -52,11 +57,6 @@ describe('PushService', () => {
               {
                 ...registerChromeDto,
                 id: 1,
-                subscribeTime: new Date(),
-              },
-              {
-                ...registerChromeDto2,
-                id: 2,
                 subscribeTime: new Date(),
               },
             ]),
@@ -84,79 +84,77 @@ describe('PushService', () => {
             }),
           },
         },
+        DevicesService,
+        {
+          provide: getRepositoryToken(Device),
+          useValue: {
+            find: jest.fn().mockResolvedValue(dbDevices),
+            findOneBy: (obj) => {
+              const foundDevice = dbDevices.find(
+                (device) => device.deviceId == obj.deviceId,
+              );
+              return Promise.resolve(foundDevice);
+            },
+          },
+        },
       ],
     }).compile();
 
-    service = module.get<PushService>(PushService);
-    repoChrome = module.get<Repository<ChromeClient>>(
-      getRepositoryToken(ChromeClient),
-    );
-    repoIOS = module.get<Repository<iOSClient>>(getRepositoryToken(iOSClient));
+    controller = module.get<PushController>(PushController);
   });
 
   it('service should be defined', () => {
-    expect(service).toBeDefined();
+    expect(controller).toBeDefined();
   });
 
   describe('genChromeVapid', () => {
     it('should return has keys publicKey and privateKey', async () => {
-      const vapidKeys = await service.genChromeVapid();
+      const vapidKeys = await controller.genChromeVapid();
       expect(vapidKeys).toHaveProperty('publicKey');
       expect(vapidKeys).toHaveProperty('privateKey');
     });
   });
 
-  describe('broswerSubscribe', () => {
+  describe('subscribeChrome', () => {
     it('should insert a chromeClient info', async () => {
-      const obj = await service.broswerSubscribe(registerChromeDto);
-      expect(obj).toBeDefined();
-      expect(obj.deviceId).toBe(deviceId);
-      expect(obj).toHaveProperty('id');
-      expect(obj).toHaveProperty('subscribeTime');
+      const client = await controller.subscribeChrome(registerChromeDto, {
+        user: {
+          username: 'user',
+          id: 1,
+        },
+      });
+      expect(client).toBeDefined();
+      expect(client.deviceId).toBe(deviceId1);
+      expect(client).toHaveProperty('id');
+      expect(client).toHaveProperty('subscribeTime');
     });
   });
 
   describe('iOSSubscribe', () => {
     it('should insert a iOSClient info', async () => {
-      const obj = await service.iOSSubscribe(registerIPhoneDto);
+      const obj = await controller.subscribeIOS(registerIPhoneDto, {
+        user: {
+          username: 'user',
+          id: 1,
+        },
+      });
       expect(obj).toBeDefined();
-      expect(obj.deviceId).toBe(deviceId);
+      expect(obj.deviceId).toBe(deviceId1);
       expect(obj).toHaveProperty('id');
       expect(obj).toHaveProperty('subscribeTime');
     });
   });
 
-  describe('sendChrome', () => {
-    it('should find all of specific deviceId', async () => {
-      webpush.sendNotification = jest.fn().mockRejectedValue(true);
-      const repoSpy = jest.spyOn(repoChrome, 'find');
-      expect(service.sendChrome(deviceId)).resolves.toBeDefined();
-      expect(repoSpy).toBeCalledWith({
-        order: {
-          id: 'DESC',
-        },
-        where: {
-          deviceId: deviceId,
-        },
-      });
-    });
-  });
-
-  describe('sendiOS', () => {
-    it('should find all of specific deviceId', async () => {
+  describe('send', () => {
+    it('should return clients with state of send notification', async () => {
+      // Just mock the return value of apnProvider.send, we don't make apn.Provider as `providers
       apn.Provider.prototype.send = jest.fn().mockImplementation(async () => {
         return Promise.resolve(true);
       });
-      const repoSpy = jest.spyOn(repoIOS, 'find');
-      expect(service.sendiOS(deviceId)).resolves.toBeDefined();
-      expect(repoSpy).toBeCalledWith({
-        order: {
-          id: 'DESC',
-        },
-        where: {
-          deviceId: deviceId,
-        },
-      });
+      webpush.sendNotification = jest.fn().mockRejectedValue(true);
+      const clients = await controller.send(deviceId1);
+      expect(clients).toBeDefined();
+      expect(clients.length).toBeGreaterThan(0);
     });
   });
 });

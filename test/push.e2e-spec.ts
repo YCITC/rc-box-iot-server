@@ -6,8 +6,9 @@ import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 
-import { ReceivedLog } from '../src/recived-log/entity/recived-log.entity';
-import { ReceivedLogModule } from '../src/recived-log/recived-log.module';
+import { PushModule } from '../src/push/push.module';
+import { ChromeClient } from '../src/push/entity/chrome.client.entity';
+import { iOSClient } from '../src/push/entity/ios.client.entity';
 import { DevicesModule } from '../src/devices/devices.module';
 import { DevicesService } from '../src/devices/devices.service';
 import { Device } from '../src/devices/entities/device.entity';
@@ -17,18 +18,32 @@ import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
 import rawUser from './raw-uer';
 
-describe('ReceivedLogController (e2e)', () => {
+describe('PushController (e2e)', () => {
   let app: INestApplication;
-  let repo: Repository<ReceivedLog>;
+  let chromeClientRepo: Repository<ChromeClient>;
+  let iOSClientRepo: Repository<iOSClient>;
   let jwtService: JwtService;
   let accessToken: string;
   const deviceId1 = 'rc-box-test-12301';
-  const deviceId2 = 'rc-box-test-53104';
+  const registerChromeDto = {
+    deviceId: deviceId1,
+    browserVersion: '1.0.0',
+    vapidPublicKey: 'vapidPublicKey_01',
+    vapidPrivateKey: 'vapidPrivateKey_01',
+    endpoint: 'endpoint_01',
+    keysAuth: 'keysAuth_01',
+    keysP256dh: 'keysP256dh_01',
+  };
+  const registerIPhoneDto = {
+    deviceId: deviceId1,
+    iPhoneToken: 'tokenString',
+    appId: 'yesseecity.rc-box-app-dev',
+  };
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
-        ReceivedLogModule,
+        PushModule,
         DevicesModule,
         ConfigModule.forRoot({
           isGlobal: false,
@@ -48,7 +63,7 @@ describe('ReceivedLogController (e2e)', () => {
               password: configService.get('DB.password'),
               database: 'rc-box-test',
               // entities: ['dist/**/*.entity{.ts,.js}'],
-              entities: [Device, ReceivedLog],
+              entities: [Device, ChromeClient, iOSClient],
               synchronize: true,
             };
             return dbInfo;
@@ -74,7 +89,13 @@ describe('ReceivedLogController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    repo = app.get<Repository<ReceivedLog>>(getRepositoryToken(ReceivedLog));
+
+    chromeClientRepo = app.get<Repository<ChromeClient>>(
+      getRepositoryToken(ChromeClient),
+    );
+    iOSClientRepo = app.get<Repository<iOSClient>>(
+      getRepositoryToken(iOSClient),
+    );
     jwtService = moduleFixture.get<JwtService>(JwtService);
     await app.init();
 
@@ -86,61 +107,53 @@ describe('ReceivedLogController (e2e)', () => {
     await app.close();
   });
 
-  it('/log/add/ (POST)', async () => {
-    const response1 = await request(app.getHttpServer())
-      .put('/log/add')
+  it('/push/genChromeVAPID/ (GET)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/push/genChromeVAPID')
       .send({
         deviceId: deviceId1,
       })
-      .expect(200);
-    await request(app.getHttpServer())
-      .put('/log/add')
-      .send({
-        deviceId: deviceId2,
-      })
-      .expect(200);
-
-    expect(response1.body.deviceId).toEqual(deviceId1);
-  });
-
-  //* Don't use this API on production environment.
-  // it('/log/getAll/ (GET)', async () => {
-  //   const response = await request(app.getHttpServer())
-  //     .get('/log/getAll/')
-  //     .expect(200);
-  //   expect(response.body[0].deviceId).toBe(deviceId2);
-  //   expect(response.body[1].deviceId).toBe(deviceId1);
-  // });
-
-  it('/log/get/:deviceId (GET)', async () => {
-    const response1 = await request(app.getHttpServer())
-      .get('/log/get/' + deviceId1)
       .set('Authorization', 'Bearer ' + accessToken)
       .expect(200);
-    expect(response1.body[0].deviceId).toBe(deviceId1);
-    const response2 = await request(app.getHttpServer())
-      .get('/log/get/' + deviceId2)
-      .set('Authorization', 'Bearer ' + accessToken)
-      .expect(200);
-    expect(response2.body[0].deviceId).toBe(deviceId2);
+    expect(response.body).toHaveProperty('publicKey');
+    expect(response.body).toHaveProperty('privateKey');
   });
 
-  it('/log/getAllByUser (GET)', async () => {
-    const response1 = await request(app.getHttpServer())
-      .get('/log/getAllByUser')
-      .set('Authorization', 'Bearer ' + accessToken)
-      .expect(200);
-    expect(response1.body[0].deviceId).toBe(deviceId2);
-    expect(response1.body[1].deviceId).toBe(deviceId1);
-  });
-
-  it('/log/clean/ (DELETE)', async () => {
+  it('/push/subscribe/chrome (POST)', async () => {
+    await chromeClientRepo.clear();
     const response = await request(app.getHttpServer())
-      .delete('/log/clean/' + deviceId1)
+      .post('/push/subscribe/chrome')
       .set('Authorization', 'Bearer ' + accessToken)
-      .expect(200);
-    expect(response.body.statusCode).toEqual(200);
+      .send(registerChromeDto)
+      .expect(201);
+    const client = response.body;
+    expect(client).toBeDefined();
+    expect(client.deviceId).toBe(deviceId1);
+    expect(client).toHaveProperty('id');
+    expect(client).toHaveProperty('subscribeTime');
+  });
 
-    await repo.clear();
+  it('/push/subscribe/ios (POST)', async () => {
+    await iOSClientRepo.clear();
+    const response = await request(app.getHttpServer())
+      .post('/push/subscribe/ios')
+      .set('Authorization', 'Bearer ' + accessToken)
+      .send(registerIPhoneDto)
+      .expect(201);
+    const client = response.body;
+    expect(client).toBeDefined();
+    expect(client.deviceId).toBe(deviceId1);
+    expect(client).toHaveProperty('id');
+    expect(client).toHaveProperty('subscribeTime');
+  });
+
+  it('/push/send/:deviceId (GET)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/push/send/' + deviceId1)
+      .send(registerIPhoneDto)
+      .expect(200);
+    const clients = response.body;
+    expect(clients).toBeDefined();
+    expect(clients.length).toBeGreaterThan(0);
   });
 });

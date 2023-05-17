@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class BindDeviceDto {
-  @ApiProperty({ example: 'rc-box-v1-a12301' })
+export class DeviceDto {
+  @ApiProperty({ example: 'rc-box-test-12301' })
   deviceId: string;
 
   @ApiProperty({ example: 1 })

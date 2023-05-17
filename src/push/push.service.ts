@@ -171,7 +171,6 @@ export class PushService {
       }
     });
     await Promise.allSettled(clientPromises);
-
     return Promise.resolve(pushedClientList.concat(failedClientList));
   }
 }

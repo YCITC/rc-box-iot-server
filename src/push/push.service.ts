@@ -173,49 +173,5 @@ export class PushService {
     await Promise.allSettled(clientPromises);
 
     return Promise.resolve(pushedClientList.concat(failedClientList));
-
-    /*
-    const arrayToResolve = pushedClientList.concat(failedClientList);
-
-    return Promise.resolve(arrayToResolve);
-    // TODO: remove asyncLib
-    
-    await asyncLib.forEachOf(clientList, (client, index, callback) => {
-      note.topic = client.appId;
-      apnProvider
-        .send(note, client.iPhoneToken)
-        .then((result) => {
-          console.log('sent to iPhone:', result.sent[0].device);
-          // success
-          // console.log('[notification] success index: ', index);
-          pushClientList.push({
-            id: client.id,
-            deviceId: client.deviceId,
-            clientType: 'iPhone',
-            state: true,
-            message: '',
-            vapidPublicKey: '',
-            iPhoneToken: '',
-          });
-          callback(); // this callback is mean asyncLib.forEachOf iteratee functions have finished.
-        })
-        .catch((error) => {
-          // failed
-          // console.log('[notification] failed index: ', index);
-          const errorMessage = '[webpush][' + error.name + ']' + error.body;
-          pushClientList.push({
-            id: client.id,
-            deviceId: client.deviceId,
-            clientType: 'iPhone',
-            state: false,
-            message: errorMessage,
-            vapidPublicKey: '',
-            iPhoneToken: '',
-          });
-          callback(); // this callback is mean asyncLib.forEachOf iteratee functions have finished.
-        });
-    });
-    return Promise.resolve(true);
-    */
   }
 }

@@ -17,5 +17,5 @@ rsync --verbose --chmod=ug=rwX -axv -r --files-from=$DIR/deploy/rsync-include --
     -e "ssh " $DEPLOY_SOURCE_DIR $DEPLOY_ACCOUNT@$DEPLOY_SERVER:$DEPLOY_DEST_DIR
 
 echo -e
-echo 'Docker Restart rc-box-iot-serer-1'
-ssh $DEPLOY_ACCOUNT@$DEPLOY_SERVER docker restart rc-box-iot-serer-1
+echo 'Docker Restart rc-box-iot-server-1'
+ssh $DEPLOY_ACCOUNT@$DEPLOY_SERVER docker restart rc-box-iot-server-1

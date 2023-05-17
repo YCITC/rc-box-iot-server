@@ -9,5 +9,5 @@ export default registerAs('common', () => ({
   DOCUMENT_ENABLE: true,
 
   // Version information
-  VERSION: '0.1',
+  VERSION: '0.2.0',
 }));

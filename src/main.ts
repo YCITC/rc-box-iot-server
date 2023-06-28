@@ -32,6 +32,7 @@ async function buildDocument(app) {
 
 async function httpServer() {
   const app = await NestFactory.create(AppModule, { cors: true });
+  app.setGlobalPrefix('api');
   // app.enableCors(); //enable CORS
 
   const configService = app.get(ConfigService);
@@ -59,6 +60,7 @@ async function httpsServer() {
   const app = await NestFactory.create(AppModule, {
     httpsOptions,
   });
+  app.setGlobalPrefix('api');
   await app.listen(443);
 }
 
@@ -70,6 +72,7 @@ async function multipleServers() {
 
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+  app.setGlobalPrefix('api');
   app.enableCors(); //enable CORS
   // TODO enable CORS need white list.
 

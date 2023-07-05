@@ -66,7 +66,7 @@ export class DevicesController {
     type: [Device],
   })
   findAllWithUserId(@Req() req) {
-    return this.devicesService.findAllWithUserId(req.user.userid);
+    return this.devicesService.findAllWithUserId(req.user.id);
   }
 
   @Get('checkDeviceWithUser/:deviceId')

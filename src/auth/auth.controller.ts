@@ -44,6 +44,7 @@ export class AuthController {
       const token = this.authService.createToken(user);
       return Promise.resolve({
         access_token: token,
+        user: user,
       });
     } catch (error) {
       console.log('[auth/login][error]\n', error);

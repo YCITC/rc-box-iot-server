@@ -154,7 +154,7 @@ export class PushController {
   @Post('send/:deviceId')
   @ApiResponse({
     status: 200,
-    description: 'Will return publicKey and privateKey in object.',
+    description: `It will return the devices to which notifications will be sent.`,
   })
   async send(
     @Param('deviceId') deviceId: string,

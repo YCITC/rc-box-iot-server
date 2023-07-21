@@ -1,5 +1,8 @@
+import * as crypto from 'crypto';
+import * as https from 'https';
+
 import { Controller, UseGuards } from '@nestjs/common';
-import { Get, Post, Put, Header } from '@nestjs/common';
+import { Get, Post, Put } from '@nestjs/common';
 import { Req, Res, Body, Param } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -42,9 +45,27 @@ export class AuthController {
     try {
       const user = await this.authService.validateUser(userLoginDto);
       const token = this.authService.createToken(user);
-      return Promise.resolve({
-        access_token: token,
-        user: user,
+
+      return new Promise((resolve) => {
+        const hash = crypto.createHash('md5').update(user.email).digest('hex');
+        https.get(
+          'https://www.gravatar.com/avatar/' + hash + '?d=404',
+          (res) => {
+            if (res.statusCode === 404) {
+              user.avatarUrl = null;
+              resolve({
+                access_token: token,
+                user: user,
+              });
+            } else {
+              user.avatarUrl = 'https://www.gravatar.com/avatar/' + hash;
+              resolve({
+                access_token: token,
+                user: user,
+              });
+            }
+          },
+        );
       });
     } catch (error) {
       console.log('[auth/login][error]\n', error);

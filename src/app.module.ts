@@ -22,9 +22,9 @@ import dbConfig from './config/db.config';
     }),
     ConfigModule.forFeature(commonConfig),
     ConfigModule.forFeature(dbConfig),
-    // ServeStaticModule.forRoot({
-    //   rootPath: join(__dirname, '..', 'client'),
-    // }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'client'),
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {

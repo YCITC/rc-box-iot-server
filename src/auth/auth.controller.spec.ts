@@ -94,10 +94,12 @@ describe('AuthController', () => {
   });
 
   describe('login', () => {
-    it('should return a token object when credentials are valid', async () => {
+    it('should return user and token when credentials are valid', async () => {
       const user = { email: '1@2.3', password: '1234' };
       const res = await controller.login(user);
       expect(res.access_token).toBeDefined();
+      expect(res.user).toBeDefined();
+      expect(res.user).toHaveProperty('avatarUrl');
     });
   });
   describe('createUser', () => {

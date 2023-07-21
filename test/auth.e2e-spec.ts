@@ -96,6 +96,8 @@ describe('AuthController (e2e)', () => {
       .expect(201);
     accessToken = response.body.access_token;
     expect(response.body.access_token).toBeDefined();
+    expect(response.body.user).toBeDefined();
+    expect(response.body.user).toHaveProperty('avatarUrl');
   });
 
   it('/auth/profile (Get)', async () => {

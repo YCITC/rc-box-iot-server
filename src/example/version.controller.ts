@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
 
 @ApiTags('version')
 @Controller('version')
@@ -9,6 +10,7 @@ export class VersionController {
 
   @Get()
   async version() {
-    return this.configService.get('common.VERSION');
+    const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    return packageJson.version;
   }
 }

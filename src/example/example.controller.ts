@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Req, Res, HttpStatus, Ip } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
+import { Req, Res, HttpStatus, Ip } from '@nestjs/common';
 import { ExampleAppService } from './example.service';
 import { Request, Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';

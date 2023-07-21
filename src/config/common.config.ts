@@ -7,7 +7,4 @@ export default registerAs('common', () => ({
 
   // # DocumentBuilder
   DOCUMENT_ENABLE: true,
-
-  // Version information
-  VERSION: '0.3.0',
 }));

@@ -124,9 +124,9 @@ export class AuthController {
       const user = await this.usersService.addOne(userDto);
       const token = this.authService.createOneDayToken(user);
       const url =
-        'http://' +
+        'https://' +
         this.configService.get('SERVER_HOSTNAME') +
-        '/auth/emailVerify/' +
+        '/email-verify?t=' +
         token;
 
       const result = await this.emailService.sendVerificationEmail(
@@ -146,14 +146,14 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description:
-      'If the token has no errors, redirect the user to a specific page, if the token has error, redirect the user to other page.',
+      'If the token has no errors, it will return ture, if the token has error, redirect the user to other page.',
   })
   async emailVerify(@Param('token') token: string, @Res() res) {
     try {
       const userInfo = await this.authService.verifyToken(token);
       await this.usersService.emailVerify(userInfo.id);
-      // return res.status(200).json();
-      return res.redirect(this.configService.get('common.VERIFY_SUCCESS_URL'));
+      return res.status(200).send('true');
+      // return res.redirect(this.configService.get('common.VERIFY_SUCCESS_URL'));
     } catch (error) {
       if (error.name == 'TokenExpiredError') {
         const url =

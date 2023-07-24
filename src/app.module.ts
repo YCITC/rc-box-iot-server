@@ -30,7 +30,7 @@ import dbConfig from './config/db.config';
       useFactory: (configService: ConfigService) => {
         const dbInfo = {
           type: configService.get('DB.type'),
-          host: configService.get('DB_host'),
+          host: configService.get('DB_host'), // Get DB_host from .env file
           port: configService.get('DB.port'),
           username: configService.get('DB.username'),
           password: configService.get('DB.password'),

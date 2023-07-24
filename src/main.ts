@@ -30,6 +30,7 @@ async function buildDocument(app) {
   return app;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function httpServer() {
   const app = await NestFactory.create(AppModule, { cors: true });
   app.setGlobalPrefix('api');
@@ -42,6 +43,7 @@ async function httpServer() {
   await app.listen(3000);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function httpsServer() {
   const httpsOptions = {
     key: fs.readFileSync('./secrets/sslforfree/private.key'),
@@ -64,6 +66,7 @@ async function httpsServer() {
   await app.listen(443);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function multipleServers() {
   const httpsOptions = {
     key: fs.readFileSync('./secrets/sslforfree/private.key'),

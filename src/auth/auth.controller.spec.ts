@@ -58,6 +58,7 @@ describe('AuthController', () => {
             save: jest.fn().mockResolvedValue(testUser),
             update: jest.fn().mockResolvedValue({ affected: 1 }),
             findOneBy: jest.fn().mockResolvedValue(testUser),
+            findOneByMail: jest.fn().mockResolvedValue(testUser),
           },
         },
         {
@@ -119,6 +120,14 @@ describe('AuthController', () => {
       expect(newToekn).toBeDefined();
     });
   });
+
+  describe('emailResend', () => {
+    it('should retrun true', async () => {
+      token = await controller.emailResend(rawUser.email);
+      expect(token).toBeTruthy();
+    });
+  });
+
   describe('emailVerify', () => {
     // it('should redirect to other page', async () => {
     //   let redirectUrl: string;

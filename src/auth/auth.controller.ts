@@ -171,15 +171,52 @@ export class AuthController {
         return Promise.reject(new BadRequestException('TokenExpiredError'));
       }
 
-      return Promise.reject(new BadRequestException(error.message));
-
-      return Promise.reject(error);
       // console.log(error);
       // return res.status(400).json({
       //   statusCode: 400,
       //   error: 'Bad Request',
       //   message: error.message,
       // });
+      return Promise.reject(new BadRequestException(error.message));
+    }
+  }
+
+  @Get('emailResend/:email')
+  @ApiResponse({
+    status: 200,
+    description: 'I will search user with email address and send varify email',
+  })
+  async emailResend(@Param('email') email: string): Promise<string> {
+    try {
+      const user = await this.usersService.findOneByMail(email);
+      if (!user)
+        return Promise.reject(new BadRequestException(`Could not find user`));
+      if (user.isEmailVerified) {
+        return Promise.reject(new BadRequestException(`EmailVerified`));
+      }
+      const token = this.authService.createOneDayToken(user);
+      const url =
+        'https://' +
+        this.configService.get('SERVER_HOSTNAME') +
+        '/email-verify?t=' +
+        token;
+
+      const result = await this.emailService.sendVerificationEmail(
+        user.email,
+        url,
+      );
+      if (result.accepted.length > 0) return Promise.resolve(token);
+    } catch (error) {
+      if (error.name == 'TokenExpiredError') {
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
+      }
+
+      if (error.name == 'JsonWebTokenError') {
+        error.message = 'JsonWebTokenError';
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
+      }
+
+      return Promise.reject(new BadRequestException(error.message));
     }
   }
 }

@@ -1,9 +1,9 @@
 import * as crypto from 'crypto';
 import * as https from 'https';
 
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller, UseGuards, BadRequestException } from '@nestjs/common';
 import { Get, Post, Put } from '@nestjs/common';
-import { Req, Res, Body, Param } from '@nestjs/common';
+import { Req, Body, Param } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -148,33 +148,38 @@ export class AuthController {
     description:
       'If the token has no errors, it will return ture, if the token has error, redirect the user to other page.',
   })
-  async emailVerify(@Param('token') token: string, @Res() res) {
+  async emailVerify(@Param('token') token: string): Promise<boolean> {
     try {
       const userInfo = await this.authService.verifyToken(token);
       await this.usersService.emailVerify(userInfo.id);
-      return res.status(200).send('true');
-      // return res.redirect(this.configService.get('common.VERIFY_SUCCESS_URL'));
+      return Promise.resolve(true);
     } catch (error) {
       if (error.name == 'TokenExpiredError') {
-        const url =
-          this.configService.get('common.VERIFY_FAILED_URL') +
-          '?error=TokenExpiredError';
-        return res.redirect(url);
+        // const url =
+        //   this.configService.get('common.VERIFY_FAILED_URL') +
+        //   '?error=TokenExpiredError';
+        // return res.redirect(url);
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
       }
 
       if (error.name == 'JsonWebTokenError') {
-        const url =
-          this.configService.get('common.VERIFY_FAILED_URL') +
-          '?error=JsonWebTokenError';
-        return res.redirect(url);
+        // const url =
+        //   this.configService.get('common.VERIFY_FAILED_URL') +
+        //   '?error=JsonWebTokenError';
+        // return res.redirect(url);
+        error.message = 'JsonWebTokenError';
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
       }
 
-      console.log(error);
-      return res.status(400).json({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: error.message,
-      });
+      return Promise.reject(new BadRequestException(error.message));
+
+      return Promise.reject(error);
+      // console.log(error);
+      // return res.status(400).json({
+      //   statusCode: 400,
+      //   error: 'Bad Request',
+      //   message: error.message,
+      // });
     }
   }
 }

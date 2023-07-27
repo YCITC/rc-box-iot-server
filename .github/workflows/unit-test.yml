@@ -21,8 +21,22 @@ jobs:
         run: |
           corepack enable
           corepack prepare yarn@stable --activate
+      - name: Restore yarn
+        id: cache-restore-node-yarn
+        uses: actions/cache/restore@v3
+        with:
+          fail-on-cache-miss: 'false'
+          path: ~/.yarn
+          key: ${{ runner.os }}-iot-server-yarn--
       - name: Yarn install 
         run: yarn install --immutable
+      - uses: actions/cache@v3
+        id: cache-node-yarn
+        with:
+          path: ~/.yarn
+          key: ${{ runner.os }}-iot-server-yarn--${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-iot-server-yarn--
       - name: Start Test
         run: | 
           yarn test

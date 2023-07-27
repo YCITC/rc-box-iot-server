@@ -1,9 +1,4 @@
-# For learning NestJS
-
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+[![Deployment](https://github.com/YCITC/rc-box-iot-server/actions/workflows/deploy.yml/badge.svg)](https://github.com/YCITC/rc-box-iot-server/actions/workflows/deploy.yml)
 
 ## Installation
 

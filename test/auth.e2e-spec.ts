@@ -79,14 +79,20 @@ describe('AuthController (e2e)', () => {
     expect(response.body.id).toBeDefined();
   });
 
+  it('/auth/emailResend/ (GET)', async () => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const response = await request(app.getHttpServer())
+      .get('/auth/emailResend/' + rawUser.email)
+      .expect(200);
+    expect(response.body).toBeTruthy();
+  });
+
   it('/auth/emailVerify/ (GET)', async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const response = await request(app.getHttpServer())
       .get('/auth/emailVerify/' + emailVerifyToken)
-      .expect(302);
-    expect(response.header.location).toEqual(
-      config.get('common.VERIFY_SUCCESS_URL'),
-    );
+      .expect(200);
+    expect(response.body).toBeTruthy();
   });
 
   it('/auth/login/ (post)', async () => {

@@ -94,6 +94,7 @@ export class User {
     this.phoneNumber = phoneNumber;
     this.address = address;
     this.zipCode = zipCode;
+    this.isEmailVerified = false;
     if (id) this.id = id;
 
     const now = new Date();

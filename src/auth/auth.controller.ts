@@ -1,9 +1,9 @@
 import * as crypto from 'crypto';
 import * as https from 'https';
 
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller, UseGuards, BadRequestException } from '@nestjs/common';
 import { Get, Post, Put } from '@nestjs/common';
-import { Req, Res, Body, Param } from '@nestjs/common';
+import { Req, Body, Param } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -124,9 +124,9 @@ export class AuthController {
       const user = await this.usersService.addOne(userDto);
       const token = this.authService.createOneDayToken(user);
       const url =
-        'http://' +
+        'https://' +
         this.configService.get('SERVER_HOSTNAME') +
-        '/auth/emailVerify/' +
+        '/email-verify?t=' +
         token;
 
       const result = await this.emailService.sendVerificationEmail(
@@ -146,35 +146,77 @@ export class AuthController {
   @ApiResponse({
     status: 200,
     description:
-      'If the token has no errors, redirect the user to a specific page, if the token has error, redirect the user to other page.',
+      'If the token has no errors, it will return ture, if the token has error, redirect the user to other page.',
   })
-  async emailVerify(@Param('token') token: string, @Res() res) {
+  async emailVerify(@Param('token') token: string): Promise<boolean> {
     try {
       const userInfo = await this.authService.verifyToken(token);
       await this.usersService.emailVerify(userInfo.id);
-      // return res.status(200).json();
-      return res.redirect(this.configService.get('common.VERIFY_SUCCESS_URL'));
+      return Promise.resolve(true);
     } catch (error) {
       if (error.name == 'TokenExpiredError') {
-        const url =
-          this.configService.get('common.VERIFY_FAILED_URL') +
-          '?error=TokenExpiredError';
-        return res.redirect(url);
+        // const url =
+        //   this.configService.get('common.VERIFY_FAILED_URL') +
+        //   '?error=TokenExpiredError';
+        // return res.redirect(url);
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
       }
 
       if (error.name == 'JsonWebTokenError') {
-        const url =
-          this.configService.get('common.VERIFY_FAILED_URL') +
-          '?error=JsonWebTokenError';
-        return res.redirect(url);
+        // const url =
+        //   this.configService.get('common.VERIFY_FAILED_URL') +
+        //   '?error=JsonWebTokenError';
+        // return res.redirect(url);
+        error.message = 'JsonWebTokenError';
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
       }
 
-      console.log(error);
-      return res.status(400).json({
-        statusCode: 400,
-        error: 'Bad Request',
-        message: error.message,
-      });
+      // console.log(error);
+      // return res.status(400).json({
+      //   statusCode: 400,
+      //   error: 'Bad Request',
+      //   message: error.message,
+      // });
+      return Promise.reject(new BadRequestException(error.message));
+    }
+  }
+
+  @Get('emailResend/:email')
+  @ApiResponse({
+    status: 200,
+    description: 'I will search user with email address and send varify email',
+  })
+  async emailResend(@Param('email') email: string): Promise<string> {
+    try {
+      const user = await this.usersService.findOneByMail(email);
+      if (!user)
+        return Promise.reject(new BadRequestException(`Could not find user`));
+      if (user.isEmailVerified) {
+        return Promise.reject(new BadRequestException(`EmailVerified`));
+      }
+      const token = this.authService.createOneDayToken(user);
+      const url =
+        'https://' +
+        this.configService.get('SERVER_HOSTNAME') +
+        '/email-verify?t=' +
+        token;
+
+      const result = await this.emailService.sendVerificationEmail(
+        user.email,
+        url,
+      );
+      if (result.accepted.length > 0) return Promise.resolve(token);
+    } catch (error) {
+      if (error.name == 'TokenExpiredError') {
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
+      }
+
+      if (error.name == 'JsonWebTokenError') {
+        error.message = 'JsonWebTokenError';
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
+      }
+
+      return Promise.reject(new BadRequestException(error.message));
     }
   }
 }

@@ -58,6 +58,7 @@ describe('AuthController', () => {
             save: jest.fn().mockResolvedValue(testUser),
             update: jest.fn().mockResolvedValue({ affected: 1 }),
             findOneBy: jest.fn().mockResolvedValue(testUser),
+            findOneByMail: jest.fn().mockResolvedValue(testUser),
           },
         },
         {
@@ -119,23 +120,35 @@ describe('AuthController', () => {
       expect(newToekn).toBeDefined();
     });
   });
-  describe('emailVerify', () => {
-    it('should redirect to other page', async () => {
-      let redirectUrl: string;
-      const mockResponse = {
-        redirect: jest.fn((url) => {
-          // console.log('redirect success url: ', url);
-          redirectUrl = url;
-        }),
-        status: jest.fn().mockReturnValue({ json: jest.fn() }),
-      };
 
-      const spy = jest.spyOn(mockResponse, 'redirect');
-      await controller.emailVerify(token, mockResponse);
-      expect(mockResponse.redirect).toBeCalled();
-      expect(mockResponse.redirect).toHaveBeenCalledWith('localhost:3000');
-      expect(spy).toHaveBeenCalledWith('localhost:3000');
-      expect(redirectUrl).toBe('localhost:3000');
+  describe('emailResend', () => {
+    it('should retrun true', async () => {
+      token = await controller.emailResend(rawUser.email);
+      expect(token).toBeTruthy();
+    });
+  });
+
+  describe('emailVerify', () => {
+    // it('should redirect to other page', async () => {
+    //   let redirectUrl: string;
+    //   const mockResponse = {
+    //     redirect: jest.fn((url) => {
+    //       // console.log('redirect success url: ', url);
+    //       redirectUrl = url;
+    //     }),
+    //     status: jest.fn().mockReturnValue({ json: jest.fn() }),
+    //   };
+
+    //   const spy = jest.spyOn(mockResponse, 'redirect');
+    //   await controller.emailVerify(token, mockResponse);
+    //   expect(mockResponse.redirect).toBeCalled();
+    //   expect(mockResponse.redirect).toHaveBeenCalledWith('localhost:3000');
+    //   expect(spy).toHaveBeenCalledWith('localhost:3000');
+    //   expect(redirectUrl).toBe('localhost:3000');
+    // });
+    it('should retrun true', async () => {
+      const result = await controller.emailVerify(token);
+      expect(result).toBeTruthy();
     });
   });
 });

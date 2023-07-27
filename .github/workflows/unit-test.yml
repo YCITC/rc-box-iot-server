@@ -1,5 +1,5 @@
 name: Unit-test
-run-name: unit-test - ${{ github.actor }}
+run-name: Unit-test - ${{ github.actor }}
 on: 
   push:
     branches:
@@ -8,7 +8,7 @@ concurrency:
   group: development
   cancel-in-progress: true
 jobs:
-  build-and-test:
+  test-code:
     runs-on: ubuntu-22.04
     environment: development 
     steps:
@@ -16,21 +16,28 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - name: Restore node_modules
-        id: cache-restore-node-modules
+          cache: yarn
+      - name: Update-yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@stable --activate
+      - name: Restore yarn
+        id: cache-restore-node-yarn
         uses: actions/cache/restore@v3
         with:
           fail-on-cache-miss: 'false'
-          path: node_modules
-          key: ${{ runner.os }}-rc-box-iot-server--
-      - run: yarn
+          path: ~/.yarn
+          key: ${{ runner.os }}-iot-server-yarn--
+      - name: Yarn install 
+        run: yarn install --immutable
       - uses: actions/cache@v3
-        id: cache-node-modules
+        id: cache-node-yarn
         with:
-          path: node_modules
-          key: ${{ runner.os }}-rc-box-iot-server--${{ hashFiles('**/yarn.lock') }}
+          path: ~/.yarn
+          key: ${{ runner.os }}-iot-server-yarn--${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-rc-box-iot-server--
-      - run: yarn
-      - run: yarn test
-      - run: yarn test:e2e
+            ${{ runner.os }}-iot-server-yarn--
+      - name: Start Test
+        run: | 
+          yarn test
+          yarn test:e2e

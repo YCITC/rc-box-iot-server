@@ -30,7 +30,8 @@ jobs:
           key: ${{ runner.os }}-iot-server-yarn--
       - name: Yarn install 
         run: yarn install --immutable
-      - uses: actions/cache@v3
+      - name: Store yarn
+        uses: actions/cache@v3
         id: cache-node-yarn
         with:
           path: ~/.yarn

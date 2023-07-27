@@ -10,30 +10,39 @@ on:
 jobs:
   test-code:
     runs-on: ubuntu-22.04
-    environment: production 
+    environment: development 
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - name: Restore node_modules
-        id: cache-restore-node-modules
+          cache: yarn
+      - name: Update-yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@stable --activate
+      - name: Restore yarn
+        id: cache-restore-node-yarn
         uses: actions/cache/restore@v3
         with:
           fail-on-cache-miss: 'false'
-          path: node_modules
-          key: ${{ runner.os }}-rc-box-iot-server--
-      - run: yarn
-      - uses: actions/cache@v3
-        id: cache-node-modules
+          path: ~/.yarn
+          key: ${{ runner.os }}-iot-server-yarn--
+      - name: Yarn install 
+        run: yarn install --immutable
+      - name: Store yarn
+        uses: actions/cache@v3
+        id: cache-node-yarn
         with:
-          path: node_modules
-          key: ${{ runner.os }}-rc-box-iot-server--${{ hashFiles('**/yarn.lock') }}
+          path: ~/.yarn
+          key: ${{ runner.os }}-iot-server-yarn--${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-rc-box-iot-server--
-      - run: yarn
-      - run: yarn test
-      - run: yarn test:e2e
+            ${{ runner.os }}-iot-server-yarn--
+      - name: Start Test
+        run: | 
+          yarn test
+          yarn test:e2e
+
   deploy:
     needs: test-code
     runs-on: ubuntu-22.04
@@ -43,16 +52,19 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - name: Restore node_modules
-        id: cache-restore-node-modules
+          cache: yarn
+      - name: Update-yarn
+        run: corepack enable && corepack prepare yarn@stable --activate
+      - name: Restore yarn
+        id: cache-restore-node-yarn
         uses: actions/cache/restore@v3
         with:
           fail-on-cache-miss: 'false'
-          path: node_modules
-          key: ${{ runner.os }}-rc-box-iot-server--
+          path: ~/.yarn
+          key: ${{ runner.os }}-iot-server-yarn--
       - name: Build
         run: |
-          yarn
+          yarn install
           yarn build
       - name: Create SSH key
         run: |
@@ -62,8 +74,8 @@ jobs:
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
         shell: bash
         env:
-          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
-          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
       - name: Deploy
         run: |
           bash auto-deploy.sh

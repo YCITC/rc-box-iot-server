@@ -52,4 +52,4 @@ import dbConfig from './config/db.config';
   controllers: [VersionController, ExampleAppController],
   providers: [ExampleAppService],
 })
-export class AppModule {}
+export class AppModule { }

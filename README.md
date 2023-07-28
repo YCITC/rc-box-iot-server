@@ -49,3 +49,13 @@ So in your test DB, you have to create a table `rc-box`.
 We want the "validate" function in "jwt.strategy.ts" to return an object with "userId" and "username" keys.
 
 When we use "jwtService.sign(payload, signOptions)", the "payload" object will be passed into the "validate" function in "jwt.strategy.ts". The object that is returned by "validate" will be used to populate the "user" field in the request object for the controller.
+
+
+## Github Actions (workflows)
+We useing three workflow
+1. create-create-cache.yml  
+  When main branch pushed 'yarn.lock', this workflow will be triggered. 
+2. unit-test.yml  
+  When feature/* branch pushed, it will test the branch.
+3. deploy.yml
+  When release/* branch pushed, it will build this project and deploy to server.

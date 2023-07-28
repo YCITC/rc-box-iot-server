@@ -17,7 +17,6 @@ import dbConfig from '../src/config/db.config';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
-  let config: ConfigService;
   let userId: number;
   let emailVerifyToken: string;
   let accessToken: string;
@@ -56,7 +55,6 @@ describe('AuthController (e2e)', () => {
       providers: [UsersService, JwtService],
     }).compile();
 
-    config = moduleFixture.get<ConfigService>(ConfigService);
     app = moduleFixture.createNestApplication();
     repo = app.get<Repository<User>>(getRepositoryToken(User));
 

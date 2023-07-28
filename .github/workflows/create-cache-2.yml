@@ -1,9 +1,11 @@
 name: Branch Merged Workflow
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
+    paths:
+      - 'yarn.lock'
+    branches:
+      - 'main'
 
 jobs:
   on_merge:

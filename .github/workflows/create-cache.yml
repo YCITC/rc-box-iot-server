@@ -1,12 +1,11 @@
 name: Create-cache
 run-name: Create-cache - ${{ github.actor }}
 on:
-  pull_request:
-    branches:    
-      - main
-concurrency: 
-  group: development
-  cancel-in-progress: true
+  push:
+    paths:
+      - 'yarn.lock'
+    branches:
+      - 'main'
 jobs:
   create-catch:
     runs-on: ubuntu-22.04

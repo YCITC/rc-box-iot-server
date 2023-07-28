@@ -1,0 +1,41 @@
+name: Create-cache
+run-name: Create-cache - ${{ github.actor }}
+on:
+  pull_request:
+    branches:    
+      - main
+concurrency: 
+  group: development
+  cancel-in-progress: true
+jobs:
+  create-catch:
+    runs-on: ubuntu-22.04
+    environment: development 
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: yarn
+      - name: Update-yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@stable --activate
+      - name: Restore yarn
+        id: cache-restore-node-yarn
+        uses: actions/cache/restore@v3
+        with:
+          fail-on-cache-miss: 'false'
+          path: ~/.yarn
+          key: ${{ runner.os }}-iot-server-yarn--
+      - name: Yarn install 
+        if: steps.cache-restore-node-yarn.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+      - name: Store yarn
+        uses: actions/cache@v3
+        id: cache-node-yarn
+        with:
+          path: ~/.yarn
+          key: ${{ runner.os }}-iot-server-yarn--${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-iot-server-yarn--

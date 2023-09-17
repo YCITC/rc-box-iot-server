@@ -10,7 +10,7 @@ import { PushService } from './push.service';
 import { PushController } from './push.controller';
 import { DevicesService } from '../devices/devices.service';
 import { Device } from '../devices/entities/device.entity';
-import gcmConfig from '../config/gcm.config';
+import googleConfig from '../config/google.config';
 
 describe('PushController', () => {
   let controller: PushController;
@@ -46,7 +46,7 @@ describe('PushController', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule.forFeature(gcmConfig)],
+      imports: [ConfigModule.forFeature(googleConfig)],
       controllers: [PushController],
       providers: [
         PushService,

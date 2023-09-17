@@ -15,6 +15,7 @@ import { UserRegisterDto } from '../users/dto/user.register.dto';
 import { UserLoginDto } from '../users/dto/user.login.dto';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
+import { GoogleOauthGuard } from './guards/google-auth.guard';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -120,6 +121,16 @@ export class AuthController {
     description: 'Email [ ****** ] exist',
   })
   async createUser(@Body() userDto: UserRegisterDto): Promise<User | any> {
+    if (userDto.password === undefined) {
+      throw new BadRequestException('Require password');
+    }
+    if (userDto.email === undefined) {
+      throw new BadRequestException('Require email');
+    }
+    if (userDto.username === undefined) {
+      throw new BadRequestException('Require username');
+    }
+
     try {
       const user = await this.usersService.addOne(userDto);
       const token = this.authService.createOneDayToken(user);
@@ -218,5 +229,18 @@ export class AuthController {
 
       return Promise.reject(new BadRequestException(error.message));
     }
+  }
+
+  @Get('google')
+  @UseGuards(GoogleOauthGuard)
+  async googleOAuth(): Promise<boolean> {
+    return Promise.resolve(true);
+  }
+
+  @Get('google/callback')
+  @UseGuards(GoogleOauthGuard)
+  async googleOAuthCallback(@Req() req): Promise<boolean> {
+    console.log(req.user);
+    return Promise.resolve(true);
   }
 }

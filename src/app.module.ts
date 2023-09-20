@@ -18,7 +18,10 @@ import dbConfig from './config/db.config';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.production.env'], //['.development.env'],
+      envFilePath:
+        process.env.NODE_ENV == 'development'
+          ? ['.development.env']
+          : ['.production.env'],
     }),
     ConfigModule.forFeature(commonConfig),
     ConfigModule.forFeature(dbConfig),

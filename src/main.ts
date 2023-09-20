@@ -5,10 +5,10 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
-import * as fs from 'fs';
-import * as express from 'express';
-import * as https from 'https';
-import * as http from 'http';
+import fs from 'fs';
+import express from 'express';
+import https from 'https';
+import http from 'http';
 
 async function buildDocument(app) {
   const configService = app.get(ConfigService);

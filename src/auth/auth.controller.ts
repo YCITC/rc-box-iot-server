@@ -239,8 +239,11 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleOauthGuard)
-  async googleOAuthCallback(@Req() req): Promise<boolean> {
-    console.log(req.user);
-    return Promise.resolve(true);
+  async googleOAuthCallback(@Req() req): Promise<any> {
+    const token = this.authService.createToken(req.user);
+    return Promise.resolve({
+      access_token: token,
+      user: req.user,
+    });
   }
 }

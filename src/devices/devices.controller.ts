@@ -41,7 +41,7 @@ export class DevicesController {
 
   @Patch('update')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Register device' })
+  @ApiOperation({ summary: 'Update device' })
   @ApiResponse({
     status: 200,
     description: 'Update device alias successfully',

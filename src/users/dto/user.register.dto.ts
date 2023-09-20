@@ -7,7 +7,7 @@ export class UserRegisterDto extends PartialType(UserLoginDto) {
   fullName: string;
 
   @ApiProperty({ example: 'Tid' })
-  username: string; // or displayName
+  username: string;
 
   @ApiProperty({ example: '0900123456' })
   phoneNumber: string;

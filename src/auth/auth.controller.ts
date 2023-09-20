@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 import * as https from 'https';
 
 import { Controller, UseGuards, BadRequestException } from '@nestjs/common';
-import { Get, Post, Put } from '@nestjs/common';
+import { Get, Post, Put, Patch } from '@nestjs/common';
 import { Req, Body, Param } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -16,6 +16,7 @@ import { UserLoginDto } from '../users/dto/user.login.dto';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { GoogleOauthGuard } from './guards/google-auth.guard';
+import { UserProfileDto } from 'src/users/dto/user.profile.dto';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -77,16 +78,53 @@ export class AuthController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
-    summary:
-      'test jwtToken, Front-End must add "Authorization: Bearer ****token*****" in header',
+    summary: 'Get user profile without password',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Lost user information',
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized.',
   })
-  getProfile(@Req() req) {
-    // console.log('profile: ', req);
-    return req.user;
+  async getProfile(@Req() req): Promise<User> {
+    if (req.user?.id) {
+      const user = await this.usersService.findOneById(req.user.id);
+      delete user.password;
+      delete user.isEmailVerified;
+      return Promise.resolve(user);
+    }
+
+    throw new BadRequestException('Lost user information');
+  }
+
+  @Post('updateProfile')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Update user profile',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile updated',
+    schema: {
+      example: true,
+      type: 'boolean',
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized.',
+  })
+  async updateProfile(@Body() userProfileDto: UserProfileDto): Promise<User> {
+    try {
+      console.log('aaaaa');
+      const user = this.usersService.updateProfile(userProfileDto);
+      return Promise.resolve(user);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   }
 
   @Get('updateToken')

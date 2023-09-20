@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserRegisterDto } from './dto/user.register.dto';
 import { User } from './entity/user.entity';
+import { UserProfileDto } from './dto/user.profile.dto';
 
 export type UserObj = any;
 
@@ -31,6 +32,11 @@ export class UsersService {
       }
       console.log(error);
     }
+  }
+
+  async updateProfile(userProfileDto: UserProfileDto): Promise<User> {
+    const user = await this.usersRepository.save(userProfileDto);
+    return Promise.resolve(user);
   }
 
   async deleteOne(id: number): Promise<any> {
@@ -62,6 +68,7 @@ export class UsersService {
     }
     throw new BadRequestException('Cannot find user');
   }
+
   async emailVerify(id: number): Promise<any> {
     try {
       const userObj = await this.usersRepository.findOneBy({ id });

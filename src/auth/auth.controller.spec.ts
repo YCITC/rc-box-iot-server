@@ -111,6 +111,14 @@ describe('AuthController', () => {
       expect(success).toBeTruthy();
     });
   });
+  describe('profile', () => {
+    it('should send a mail and return true', async () => {
+      const payload = { id: testUser.id, username: testUser.username };
+      token = jwtService.sign(payload);
+      const success = await controller.createUser(rawUser);
+      expect(success).toBeTruthy();
+    });
+  });
   describe('updateToken', () => {
     it('should return a token', async () => {
       expect(controller).toBeDefined();

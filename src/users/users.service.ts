@@ -76,10 +76,11 @@ export class UsersService {
     throw new BadRequestException('Cannot find user');
   }
 
-  async emailVerify(id: number): Promise<any> {
+  async emailVerify(id: number): Promise<boolean> {
     try {
       const userObj = await this.usersRepository.findOneBy({ id });
-      /*
+      // TODO:
+      /* 
       * 流程設計上，驗證過就在驗證過一次。
       * 怕有人無聊一直點，就用token過期來處理。
       // if (userObj.isEmailVerified) {
@@ -87,14 +88,11 @@ export class UsersService {
       // }
       */
       userObj.isEmailVerified = true;
-      const updateResult = await this.usersRepository.update(id, userObj);
-      if (updateResult.affected == 1) {
-        return Promise.resolve(userObj);
-      } else {
-        throw new BadRequestException(
-          'Email Verify Failed, Cannot update user with id:' + id,
-        );
-      }
+      await this.usersRepository.save({
+        id,
+        isEmailVerified: true,
+      });
+      return Promise.resolve(true);
     } catch (error) {
       console.log(error);
       if (error.message.indexOf('Cannot set properties of null') > -1) {

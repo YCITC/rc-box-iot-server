@@ -200,8 +200,7 @@ export class AuthController {
   async emailVerify(@Param('token') token: string): Promise<boolean> {
     try {
       const userInfo = await this.authService.verifyToken(token);
-      await this.usersService.emailVerify(userInfo.id);
-      return Promise.resolve(true);
+      return this.usersService.emailVerify(userInfo.id);
     } catch (error) {
       if (error.name == 'TokenExpiredError') {
         // const url =

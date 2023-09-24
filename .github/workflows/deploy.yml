@@ -5,8 +5,8 @@ concurrency:
 run-name: Deployment - ${{ github.actor }}
 on: 
   push:
-    branches:
-      - 'release/*'
+    tags:
+      - 'v*'
 jobs:
   test-code:
     runs-on: ubuntu-22.04

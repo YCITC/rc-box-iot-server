@@ -37,7 +37,9 @@ describe('UsersService', () => {
             findOneBy: jest.fn().mockResolvedValue(testUser),
             save: (user) => {
               user.createdTime = new Date();
-              user.isEmailVerified = false;
+              if (user?.isEmailVerified === undefined) {
+                user.isEmailVerified = false;
+              }
               return Promise.resolve(user);
             },
             update: jest.fn().mockResolvedValue({ affected: 1 }),
@@ -67,6 +69,15 @@ describe('UsersService', () => {
     });
   });
 
+  describe('updateProfile', () => {
+    it('should trigger repo save', async () => {
+      const newData = { ...rawUser, zipCode: '11005' };
+      const repoSpy = jest.spyOn(repo, 'save');
+      await service.updateProfile(newData);
+      expect(repoSpy).toBeCalled();
+    });
+  });
+
   describe('findOneById', () => {
     it('should trigger repo findOneBy', async () => {
       const repoSpy = jest.spyOn(repo, 'findOneBy');
@@ -84,9 +95,9 @@ describe('UsersService', () => {
   });
 
   describe('emailVerify', () => {
-    it('should trigger repo findOneBy & update', async () => {
+    it('should trigger repo findOneBy & save', async () => {
       const repoSpyFind = jest.spyOn(repo, 'findOneBy');
-      const updateSpy = jest.spyOn(repo, 'update');
+      const updateSpy = jest.spyOn(repo, 'save');
       await service.emailVerify(1);
 
       expect(repoSpyFind).toBeCalled();

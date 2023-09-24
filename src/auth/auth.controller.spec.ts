@@ -34,6 +34,7 @@ describe('AuthController', () => {
     rawUser.zipCode,
     1,
   );
+  let currentUser = null;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -54,11 +55,16 @@ describe('AuthController', () => {
         {
           provide: getRepositoryToken(User),
           useValue: {
-            find: jest.fn(),
-            save: jest.fn().mockResolvedValue(testUser),
-            update: jest.fn().mockResolvedValue({ affected: 1 }),
             findOneBy: jest.fn().mockResolvedValue(testUser),
-            findOneByMail: jest.fn().mockResolvedValue(testUser),
+            save: (user) => {
+              user.createdTime = new Date();
+              if (user?.isEmailVerified === undefined) {
+                user.isEmailVerified = false;
+              }
+              return Promise.resolve(user);
+            },
+            update: jest.fn().mockResolvedValue({ affected: 1 }),
+            delete: jest.fn().mockResolvedValue({ affected: 1 }),
           },
         },
         {
@@ -98,8 +104,8 @@ describe('AuthController', () => {
     it('should return user and token when credentials are valid', async () => {
       const user = { email: '1@2.3', password: '1234' };
       const res = await controller.login(user);
+      currentUser = res;
       expect(res.access_token).toBeDefined();
-      expect(res.user).toBeDefined();
       expect(res.user).toHaveProperty('avatarUrl');
     });
   });
@@ -112,16 +118,25 @@ describe('AuthController', () => {
     });
   });
   describe('profile', () => {
-    it('should send a mail and return true', async () => {
+    it('should send a mail and return user profile without password and isEmailVerified', async () => {
+      const user = await controller.getProfile({ user: { id: testUser.id } });
+      expect(true).toBeTruthy();
+      expect(user).toHaveProperty('id');
+      expect(user).toHaveProperty('username');
+      expect(user).toHaveProperty('email');
+    });
+  });
+  describe('updateProfile', () => {
+    it('should change user profile and return user', async () => {
       const payload = { id: testUser.id, username: testUser.username };
       token = jwtService.sign(payload);
-      const success = await controller.createUser(rawUser);
-      expect(success).toBeTruthy();
+      currentUser.zipCode = '70445';
+      const returnUser = await controller.updateProfile(currentUser);
+      expect(returnUser.zipCode).toBe('70445');
     });
   });
   describe('updateToken', () => {
     it('should return a token', async () => {
-      expect(controller).toBeDefined();
       const newToekn = await controller.updateToken({
         user: { id: 1, username: 'testUser' },
       });

@@ -2,7 +2,7 @@ import * as crypto from 'crypto';
 import * as https from 'https';
 
 import { Controller, UseGuards, BadRequestException } from '@nestjs/common';
-import { Get, Post, Put, Patch } from '@nestjs/common';
+import { Get, Post, Put } from '@nestjs/common';
 import { Req, Body, Param } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -12,11 +12,11 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { User } from '../users/entity/user.entity';
 import { UserRegisterDto } from '../users/dto/user.register.dto';
+import { UserProfileDto } from '../users/dto/user.profile.dto';
 import { UserLoginDto } from '../users/dto/user.login.dto';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { GoogleOauthGuard } from './guards/google-auth.guard';
-import { UserProfileDto } from 'src/users/dto/user.profile.dto';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -118,7 +118,6 @@ export class AuthController {
   })
   async updateProfile(@Body() userProfileDto: UserProfileDto): Promise<User> {
     try {
-      console.log('aaaaa');
       const user = this.usersService.updateProfile(userProfileDto);
       return Promise.resolve(user);
     } catch (error) {

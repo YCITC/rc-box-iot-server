@@ -15,17 +15,10 @@ export class UsersService {
   ) {}
 
   async addOne(userRegisterDto: UserRegisterDto): Promise<User> {
-    if (userRegisterDto.password === undefined) {
-      throw new BadRequestException('Require password');
+    let hashedPassword = '';
+    if (userRegisterDto.password) {
+      hashedPassword = await bcrypt.hash(userRegisterDto.password, 5);
     }
-    if (userRegisterDto.email === undefined) {
-      throw new BadRequestException('Require email');
-    }
-    if (userRegisterDto.username === undefined) {
-      throw new BadRequestException('Require username');
-    }
-
-    const hashedPassword = await bcrypt.hash(userRegisterDto.password, 5);
     try {
       const user = await this.usersRepository.save({
         ...userRegisterDto,

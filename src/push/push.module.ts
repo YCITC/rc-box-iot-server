@@ -7,11 +7,11 @@ import { ChromeClient } from './entity/chrome.client.entity';
 import { iOSClient } from './entity/ios.client.entity';
 import { Device } from '../devices/entities/device.entity';
 import { DevicesService } from '../devices/devices.service';
-import gcmConfig from '../config/gcm.config';
+import googleConfig from '../config/google.config';
 
 @Module({
   imports: [
-    ConfigModule.forFeature(gcmConfig),
+    ConfigModule.forFeature(googleConfig),
     TypeOrmModule.forFeature([ChromeClient, iOSClient, Device]),
   ],
   exports: [TypeOrmModule],

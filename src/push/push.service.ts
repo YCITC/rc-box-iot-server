@@ -20,7 +20,7 @@ export class PushService {
   ) {}
 
   genChromeVapid() {
-    webpush.setGCMAPIKey(this.configService.get('google.WebPush.APIKey'));
+    webpush.setGCMAPIKey(this.configService.get('GCM.APIKey'));
     // VAPID keys should be generated only once.
     const vapidKeys = webpush.generateVAPIDKeys();
 

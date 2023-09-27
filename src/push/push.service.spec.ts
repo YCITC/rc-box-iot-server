@@ -8,7 +8,7 @@ import * as apn from '@parse/node-apn';
 import { ChromeClient } from './entity/chrome.client.entity';
 import { iOSClient } from './entity/ios.client.entity';
 import { PushService } from './push.service';
-import googleConfig from '../config/google.config';
+import gcmConfig from '../config/gcm.config';
 
 describe('PushService', () => {
   let service: PushService;
@@ -42,7 +42,7 @@ describe('PushService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [ConfigModule.forFeature(googleConfig)],
+      imports: [ConfigModule.forFeature(gcmConfig)],
       providers: [
         PushService,
         {

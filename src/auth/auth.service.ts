@@ -4,7 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { UserLoginDto } from '../users/dto/user.login.dto';
 import { UsersService } from '../users/users.service';
-import { User } from 'src/users/entity/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,7 +11,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   async validateUser(userDto: UserLoginDto): Promise<any> {
     const user = await this.usersService.findOneByMail(userDto.email);
@@ -25,16 +24,6 @@ export class AuthService {
       new UnauthorizedException('email or password incorrect'),
     );
   }
-  async validateGoogleUser(details) {
-    try {
-      const user = await this.usersService.findOneByMail(details.email);
-      return user;
-    } catch (error) {
-      console.log('User not found. Creating...');
-      const user = this.usersService.addOne(details);
-      return user;
-    }
-  }
 
   createToken(user: any) {
     const signOptions = {
@@ -44,8 +33,6 @@ export class AuthService {
     const token = this.jwtService.sign(payload, signOptions);
     return token;
   }
-
-  // TODO: createRefreshToken, setcookie, httponly
 
   createOneDayToken(user: any) {
     const signOptions = {

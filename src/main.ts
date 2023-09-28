@@ -46,31 +46,22 @@ async function httpServer() {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function httpsServer() {
   const httpsOptions = {
-    key: fs.readFileSync('./secrets/sslforfree/private.key'),
-    cert: fs.readFileSync('./secrets/sslforfree/certificate.crt'),
+    key: fs.readFileSync('./secrets/letsencrypt/privkey.pem'),
+    cert: fs.readFileSync('./secrets/letsencrypt/cert.pem'),
   };
-  // const server = express();
-  // const app = await NestFactory.create(
-  //   AppModule,
-  //   new ExpressAdapter(server),
-  // );
-
-  // await app.init();
-
-  // https.createServer(httpsOptions, server).listen(3000);
 
   const app = await NestFactory.create(AppModule, {
     httpsOptions,
   });
   app.setGlobalPrefix('api');
-  await app.listen(443);
+  await app.listen(1443);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function multipleServers() {
   const httpsOptions = {
-    key: fs.readFileSync('./secrets/sslforfree/private.key'),
-    cert: fs.readFileSync('./secrets/sslforfree/certificate.crt'),
+    key: fs.readFileSync('./secrets/letsencrypt/privkey.pem'),
+    cert: fs.readFileSync('./secrets/letsencrypt/cert.pem'),
   };
 
   const server = express();

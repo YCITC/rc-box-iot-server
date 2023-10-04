@@ -3,15 +3,16 @@ import { Get, Put, Delete, Patch, Body, Param, Req } from '@nestjs/common';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { DevicesService } from './devices.service';
-import { DeviceDto } from './dto/device.dto';
-import { Device } from './entities/device.entity';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+import DevicesService from './devices.service';
+import DeviceDto from './dto/device.dto';
+import Device from './entities/device.entity';
+import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Devices')
 @ApiBearerAuth()
 @Controller('devices')
-export class DevicesController {
+export default class DevicesController {
   constructor(private devicesService: DevicesService) {}
 
   @Put('bind')
@@ -22,21 +23,19 @@ export class DevicesController {
     description: 'Device bound successfully',
   })
   async bind(@Body() deviceDto: DeviceDto, @Req() req): Promise<Device> {
-    deviceDto.ownerUserId = req.user.id;
     const deviceInDB = await this.devicesService.findByOneDeviceId(
       deviceDto.deviceId,
     );
     if (deviceInDB) {
-      const deviceId = deviceDto.deviceId;
-      if (deviceInDB.ownerUserId == req.user.id) {
+      if (deviceInDB.ownerUserId === req.user.id) {
         throw new BadRequestException(
-          `The device [${deviceId}] has already been bound`,
+          `The device [${deviceDto.deviceId}] has already been bound`,
         );
       } else {
         throw new UnauthorizedException(`Can not bind other user's device`);
       }
     }
-    return this.devicesService.bind(deviceDto);
+    return this.devicesService.bind({ ...deviceDto, ownerUserId: req.user.id });
   }
 
   @Patch('update')
@@ -51,8 +50,8 @@ export class DevicesController {
       req.user.id,
       deviceDto.deviceId,
     );
-    if (userHasDevice == false) {
-      throw new UnauthorizedException("Can not unbind other user's device");
+    if (userHasDevice === false) {
+      throw new UnauthorizedException("Can not update other user's device");
     }
     return this.devicesService.update(deviceDto);
   }
@@ -96,7 +95,7 @@ export class DevicesController {
       req.user.id,
       deviceId,
     );
-    if (userHasDevice == false) {
+    if (userHasDevice === false) {
       throw new UnauthorizedException("Can not unbind other user's device");
     }
     return this.devicesService.unbind(deviceId);

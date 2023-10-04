@@ -1,3 +1,4 @@
+import * as console from 'console';
 import * as crypto from 'crypto';
 import * as https from 'https';
 
@@ -8,19 +9,19 @@ import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { AuthService } from './auth.service';
-import { User } from '../users/entity/user.entity';
-import { UserRegisterDto } from '../users/dto/user.register.dto';
-import { UserProfileDto } from '../users/dto/user.profile.dto';
-import { UserLoginDto } from '../users/dto/user.login.dto';
-import { UsersService } from '../users/users.service';
-import { EmailService } from '../email/email.service';
+import JwtAuthGuard from './guards/jwt-auth.guard';
+import AuthService from './auth.service';
+import User from '../users/entity/user.entity';
+import UserRegisterDto from '../users/dto/user.register.dto';
+import UserProfileDto from '../users/dto/user.profile.dto';
+import UserLoginDto from '../users/dto/user.login.dto';
+import UsersService from '../users/users.service';
+import EmailService from '../email/email.service';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
 @Controller('auth')
-export class AuthController {
+export default class AuthController {
   constructor(
     private readonly authService: AuthService,
     private usersService: UsersService,
@@ -47,29 +48,26 @@ export class AuthController {
       const user = await this.authService.validateUser(userLoginDto);
       const token = this.authService.createToken(user);
 
-      return new Promise((resolve) => {
+      return await new Promise((resolve) => {
         const hash = crypto.createHash('md5').update(user.email).digest('hex');
-        https.get(
-          'https://www.gravatar.com/avatar/' + hash + '?d=404',
-          (res) => {
-            if (res.statusCode === 404) {
-              user.avatarUrl = null;
-              resolve({
-                access_token: token,
-                user: user,
-              });
-            } else {
-              user.avatarUrl = 'https://www.gravatar.com/avatar/' + hash;
-              resolve({
-                access_token: token,
-                user: user,
-              });
-            }
-          },
-        );
+        https.get(`https://www.gravatar.com/avatar/${hash}?d=404`, (res) => {
+          if (res.statusCode === 404) {
+            user.avatarUrl = null;
+            resolve({
+              access_token: token,
+              user,
+            });
+          } else {
+            user.avatarUrl = `https://www.gravatar.com/avatar/${hash}`;
+            resolve({
+              access_token: token,
+              user,
+            });
+          }
+        });
       });
     } catch (error) {
-      console.log('[auth/login][error]\n', error);
+      console.error('[auth/login][error]\n', error);
       return Promise.reject(error);
     }
   }
@@ -118,7 +116,7 @@ export class AuthController {
   async updateProfile(@Body() userProfileDto: UserProfileDto): Promise<User> {
     try {
       const user = this.usersService.updateProfile(userProfileDto);
-      return Promise.resolve(user);
+      return await Promise.resolve(user);
     } catch (error) {
       console.error(error);
       throw error;
@@ -162,17 +160,15 @@ export class AuthController {
       const token = this.authService.createOneDayToken(user);
       const url =
         'https://' +
-        this.configService.get('SERVER_HOSTNAME') +
-        '/email-verify?t=' +
-        token;
+        `${this.configService.get('SERVER_HOSTNAME')}/email-verify?t=${token}`;
 
       const result = await this.emailService.sendVerificationEmail(
         user.email,
         url,
       );
       if (result.accepted.length > 0)
-        return Promise.resolve({ ...user, token });
-      return Promise.resolve(false);
+        return await Promise.resolve({ ...user, token });
+      return await Promise.resolve(false);
     } catch (error) {
       console.error(error);
       throw error;
@@ -188,9 +184,9 @@ export class AuthController {
   async emailVerify(@Param('token') token: string): Promise<boolean> {
     try {
       const userInfo = await this.authService.verifyToken(token);
-      return this.usersService.emailVerify(userInfo.id);
+      return await this.usersService.emailVerify(userInfo.id);
     } catch (error) {
-      if (error.name == 'TokenExpiredError') {
+      if (error.name === 'TokenExpiredError') {
         // const url =
         //   this.configService.get('common.VERIFY_FAILED_URL') +
         //   '?error=TokenExpiredError';
@@ -198,7 +194,7 @@ export class AuthController {
         return Promise.reject(new BadRequestException('TokenExpiredError'));
       }
 
-      if (error.name == 'JsonWebTokenError') {
+      if (error.name === 'JsonWebTokenError') {
         // const url =
         //   this.configService.get('common.VERIFY_FAILED_URL') +
         //   '?error=JsonWebTokenError';
@@ -226,28 +222,29 @@ export class AuthController {
     try {
       const user = await this.usersService.findOneByMail(email);
       if (!user)
-        return Promise.reject(new BadRequestException(`Could not find user`));
+        return await Promise.reject(
+          new BadRequestException(`Could not find user`),
+        );
       if (user.isEmailVerified) {
-        return Promise.reject(new BadRequestException(`EmailVerified`));
+        return await Promise.reject(new BadRequestException(`EmailVerified`));
       }
       const token = this.authService.createOneDayToken(user);
       const url =
         'https://' +
-        this.configService.get('SERVER_HOSTNAME') +
-        '/email-verify?t=' +
-        token;
+        `this.configService.get('SERVER_HOSTNAME')/email-verify?t=${token}`;
 
       const result = await this.emailService.sendVerificationEmail(
         user.email,
         url,
       );
-      if (result.accepted.length > 0) return Promise.resolve(token);
+      if (result.accepted.length > 0) return await Promise.resolve(token);
+      return await Promise.resolve('send mail failed');
     } catch (error) {
-      if (error.name == 'TokenExpiredError') {
+      if (error.name === 'TokenExpiredError') {
         return Promise.reject(new BadRequestException('TokenExpiredError'));
       }
 
-      if (error.name == 'JsonWebTokenError') {
+      if (error.name === 'JsonWebTokenError') {
         error.message = 'JsonWebTokenError';
         return Promise.reject(new BadRequestException('TokenExpiredError'));
       }

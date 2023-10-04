@@ -1,4 +1,4 @@
-import { ReceivedLog } from './recived-log.entity';
+import ReceivedLog from './recived-log.entity';
 
 describe('ReceivedLog class', () => {
   it('should make a receivedLog with deviceId only', () => {

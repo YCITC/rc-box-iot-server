@@ -4,12 +4,12 @@ import { ConfigModule } from '@nestjs/config';
 import * as webpush from 'web-push';
 import * as apn from '@parse/node-apn';
 
-import { ChromeClient } from './entity/chrome.client.entity';
-import { iOSClient } from './entity/ios.client.entity';
-import { PushService } from './push.service';
-import { PushController } from './push.controller';
-import { DevicesService } from '../devices/devices.service';
-import { Device } from '../devices/entities/device.entity';
+import ChromeClient from './entity/chrome.client.entity';
+import IOSClient from './entity/ios.client.entity';
+import PushService from './push.service';
+import PushController from './push.controller';
+import DevicesService from '../devices/devices.service';
+import Device from '../devices/entities/device.entity';
 import gcmConfig from '../config/gcm.config';
 
 describe('PushController', () => {
@@ -20,12 +20,12 @@ describe('PushController', () => {
   const dbDevices = [
     {
       deviceId: deviceId1,
-      ownerUserId: ownerUserId,
+      ownerUserId,
       alias: '',
     },
     {
       deviceId: deviceId2,
-      ownerUserId: ownerUserId,
+      ownerUserId,
       alias: '',
     },
   ];
@@ -68,7 +68,7 @@ describe('PushController', () => {
           },
         },
         {
-          provide: getRepositoryToken(iOSClient),
+          provide: getRepositoryToken(IOSClient),
           useValue: {
             find: jest.fn().mockResolvedValue([
               {
@@ -91,7 +91,7 @@ describe('PushController', () => {
             find: jest.fn().mockResolvedValue(dbDevices),
             findOneBy: (obj) => {
               const foundDevice = dbDevices.find(
-                (device) => device.deviceId == obj.deviceId,
+                (device) => device.deviceId === obj.deviceId,
               );
               return Promise.resolve(foundDevice);
             },
@@ -131,7 +131,7 @@ describe('PushController', () => {
   });
 
   describe('iOSSubscribe', () => {
-    it('should insert a iOSClient info', async () => {
+    it('should insert a IOSClient info', async () => {
       const obj = await controller.subscribeIOS(registerIPhoneDto, {
         user: {
           username: 'user',

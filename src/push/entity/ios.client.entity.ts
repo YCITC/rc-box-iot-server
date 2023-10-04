@@ -4,7 +4,7 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
   name: 'push_client_ios',
   engine: 'MyISAM',
 })
-export class iOSClient {
+export default class IOSClient {
   @PrimaryGeneratedColumn({
     unsigned: true,
   })

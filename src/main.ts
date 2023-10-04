@@ -1,14 +1,15 @@
+import express from 'express';
+import * as fs from 'fs';
+import * as https from 'https';
+import * as http from 'http';
+
 import { SwaggerModule, SwaggerDocumentOptions } from '@nestjs/swagger';
 import { DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 
-import fs from 'fs';
-import express from 'express';
-import https from 'https';
-import http from 'http';
+import AppModule from './app.module';
 
 async function buildDocument(app) {
   const configService = app.get(ConfigService);
@@ -67,7 +68,7 @@ async function multipleServers() {
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
   app.setGlobalPrefix('api');
-  app.enableCors(); //enable CORS
+  app.enableCors(); // enable CORS
   // TODO enable CORS need white list.
 
   const configService = app.get(ConfigService);

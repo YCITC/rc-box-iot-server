@@ -4,12 +4,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import jwtConfig from '../config/jwt.config';
-import { AuthService } from './auth.service';
-import { UsersModule } from '../users/users.module';
-import { AuthController } from './auth.controller';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { EmailService } from '../email/email.service';
-import { EmailModule } from '../email/email.module';
+import AuthService from './auth.service';
+import UsersModule from '../users/users.module';
+import AuthController from './auth.controller';
+import JwtStrategy from './strategies/jwt.strategy';
+import EmailService from '../email/email.service';
+import EmailModule from '../email/email.module';
 
 @Module({
   imports: [
@@ -36,4 +36,4 @@ import { EmailModule } from '../email/email.module';
   providers: [AuthService, JwtStrategy, EmailService],
   controllers: [AuthController],
 })
-export class AuthModule {}
+export default class AuthModule {}

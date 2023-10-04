@@ -5,19 +5,19 @@ import { Repository } from 'typeorm';
 import * as webpush from 'web-push';
 import * as apn from '@parse/node-apn';
 
-import { ChromeClient } from './entity/chrome.client.entity';
-import { iOSClient } from './entity/ios.client.entity';
-import { PushService } from './push.service';
+import ChromeClient from './entity/chrome.client.entity';
+import IOSClient from './entity/ios.client.entity';
+import PushService from './push.service';
 import gcmConfig from '../config/gcm.config';
 
 describe('PushService', () => {
   let service: PushService;
   let repoChrome: Repository<ChromeClient>;
-  let repoIOS: Repository<iOSClient>;
+  let repoIOS: Repository<IOSClient>;
 
   const deviceId = 'rc-box-test-12301';
   const registerChromeDto = {
-    deviceId: deviceId,
+    deviceId,
     browserVersion: '1.0.0',
     vapidPublicKey: 'vapidPublicKey_01',
     vapidPrivateKey: 'vapidPrivateKey_01',
@@ -26,7 +26,7 @@ describe('PushService', () => {
     keysP256dh: 'keysP256dh_01',
   };
   const registerChromeDto2 = {
-    deviceId: deviceId,
+    deviceId,
     browserVersion: '102.0.0.0',
     vapidPublicKey: `BM-OKm4cmnKx9zkMhqP6jJppzJCxCXL8aLs7ZySSbqPlWPn_hmB0bEDguaRadWRQl8A4oaF_6PyjD9q5p-6tgWw`,
     vapidPrivateKey: `4pI3o3iAAocpxIZUB95eUTvgXCKiuQzNfJSqByvmYRw`,
@@ -35,7 +35,7 @@ describe('PushService', () => {
     keysP256dh: `BD1PoUqAA4f_gENcke5W7Q8Elt1BX9OMYTkpTQMv1-dL9D1rPD4ThfKE6dBNi1k1_Ji4soNPlywUMzuMU8TtBvg`,
   };
   const registerIPhoneDto = {
-    deviceId: deviceId,
+    deviceId,
     iPhoneToken: 'tokenString',
     appId: 'yesseecity.rc-box-app-dev',
   };
@@ -68,7 +68,7 @@ describe('PushService', () => {
           },
         },
         {
-          provide: getRepositoryToken(iOSClient),
+          provide: getRepositoryToken(IOSClient),
           useValue: {
             find: jest.fn().mockResolvedValue([
               {
@@ -91,7 +91,7 @@ describe('PushService', () => {
     repoChrome = module.get<Repository<ChromeClient>>(
       getRepositoryToken(ChromeClient),
     );
-    repoIOS = module.get<Repository<iOSClient>>(getRepositoryToken(iOSClient));
+    repoIOS = module.get<Repository<IOSClient>>(getRepositoryToken(IOSClient));
   });
 
   it('service should be defined', () => {
@@ -117,7 +117,7 @@ describe('PushService', () => {
   });
 
   describe('iOSSubscribe', () => {
-    it('should insert a iOSClient info', async () => {
+    it('should insert a IOSClient info', async () => {
       const obj = await service.iOSSubscribe(registerIPhoneDto);
       expect(obj).toBeDefined();
       expect(obj.deviceId).toBe(deviceId);
@@ -136,7 +136,7 @@ describe('PushService', () => {
           id: 'DESC',
         },
         where: {
-          deviceId: deviceId,
+          deviceId,
         },
       });
     });
@@ -154,7 +154,7 @@ describe('PushService', () => {
           id: 'DESC',
         },
         where: {
-          deviceId: deviceId,
+          deviceId,
         },
       });
     });

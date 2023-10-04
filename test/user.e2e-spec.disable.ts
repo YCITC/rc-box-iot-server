@@ -6,8 +6,8 @@ import * as request from 'supertest';
 
 import commonConfig from '../src/config/common.config';
 import dbConfig from '../src/config/db.config';
-import { UsersModule } from '../src/users/users.module';
-import { User } from '../src/users/entity/user.entity';
+import UsersModule from '../src/users/users.module';
+import User from '../src/users/entity/user.entity';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
@@ -76,7 +76,7 @@ describe('UserController (e2e)', () => {
 
   it('/users/findByMail/:email (GET)', () => {
     return request(app.getHttpServer())
-      .get('/users/findByMail/' + userEmail)
+      .get(`/users/findByMail/${userEmail}`)
       .expect(200)
       .then((response) => {
         expect(response.body.email).toBe(userEmail);
@@ -85,14 +85,14 @@ describe('UserController (e2e)', () => {
 
   it('/users/findById/:userId (GET)', async () => {
     const response = await request(app.getHttpServer())
-      .get('/users/findById/' + userId)
+      .get(`/users/findById/${userId}`)
       .expect(200);
     expect(response.body.id).toEqual(userId);
   });
 
   it('/users/delete/:userId (GET)', async () => {
     const response = await request(app.getHttpServer())
-      .delete('/users/delete/' + userId)
+      .delete(`/users/delete/${userId}`)
       .expect(200);
     expect(response.body.statusCode).toBe(200);
   });

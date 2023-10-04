@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class RegisterChromeDto {
+export default class RegisterChromeDto {
   @ApiProperty({ example: 'rc-box-test-12301' })
   deviceId: string;
 

@@ -4,13 +4,13 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { ExampleAppController } from './example/example.controller';
-import { ExampleAppService } from './example/example.service';
-import { VersionController } from './example/version.controller';
-import { ReceivedLogModule } from './recived-log/recived-log.module';
-import { PushModule } from './push/push.module';
-import { AuthModule } from './auth/auth.module';
-import { DevicesModule } from './devices/devices.module';
+import ExampleAppController from './example/example.controller';
+import ExampleAppService from './example/example.service';
+import VersionController from './example/version.controller';
+import ReceivedLogModule from './recived-log/recived-log.module';
+import PushModule from './push/push.module';
+import AuthModule from './auth/auth.module';
+import DevicesModule from './devices/devices.module';
 import commonConfig from './config/common.config';
 import dbConfig from './config/db.config';
 
@@ -19,7 +19,7 @@ import dbConfig from './config/db.config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
-        process.env.NODE_ENV == 'development'
+        process.env.NODE_ENV === 'development'
           ? ['.development.env']
           : ['.production.env'],
     }),
@@ -55,4 +55,4 @@ import dbConfig from './config/db.config';
   controllers: [VersionController, ExampleAppController],
   providers: [ExampleAppService],
 })
-export class AppModule {}
+export default class AppModule {}

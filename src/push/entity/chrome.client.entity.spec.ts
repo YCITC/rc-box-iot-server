@@ -1,4 +1,4 @@
-import { ChromeClient } from './chrome.client.entity';
+import ChromeClient from './chrome.client.entity';
 
 describe('WebClient class', () => {
   const now = new Date();

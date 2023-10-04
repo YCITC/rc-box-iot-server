@@ -5,7 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
   name: 'devices',
   engine: 'MyISAM',
 })
-export class Device {
+export default class Device {
   @ApiProperty({ example: 'rc-box-test-12301' })
   @PrimaryColumn({
     unique: true,

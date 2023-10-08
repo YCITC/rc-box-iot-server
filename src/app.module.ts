@@ -26,7 +26,7 @@ import dbConfig from './config/db.config';
     ConfigModule.forFeature(commonConfig),
     ConfigModule.forFeature(dbConfig),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'client'),
+      rootPath: join(__dirname, '..', 'frontend'),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

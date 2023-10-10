@@ -39,6 +39,8 @@ jobs:
           key: ${{ runner.os }}-iot-server-yarn--${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-iot-server-yarn--
+      - name: Change Test DB host
+        run: echo DB_host='${{ secrets.DBIP }}' >> .development.env
       - name: Start Test
         run: | 
           yarn test

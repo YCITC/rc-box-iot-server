@@ -20,6 +20,7 @@ jobs:
         run: |
           corepack enable
           corepack prepare yarn@stable --activate
+          yarn set version 3.6.1
       - name: Restore yarn
         id: cache-restore-node-yarn
         uses: actions/cache/restore@v3

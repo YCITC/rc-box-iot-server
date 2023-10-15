@@ -5,13 +5,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import jwtConfig from '../config/jwt.config';
 import googleConfig from '../config/google.config';
-import { AuthService } from './auth.service';
-import { UsersModule } from '../users/users.module';
-import { AuthController } from './auth.controller';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { EmailService } from '../email/email.service';
-import { EmailModule } from '../email/email.module';
-import { GoogleStrategy } from './strategies/google.strategy';
+import AuthService from './auth.service';
+import UsersModule from '../users/users.module';
+import AuthController from './auth.controller';
+import GoogleStrategy from './strategies/google.strategy';
+import JwtStrategy from './strategies/jwt.strategy';
+import EmailService from '../email/email.service';
+import EmailModule from '../email/email.module';
 
 @Module({
   imports: [
@@ -39,4 +39,4 @@ import { GoogleStrategy } from './strategies/google.strategy';
   providers: [AuthService, JwtStrategy, EmailService, GoogleStrategy],
   controllers: [AuthController],
 })
-export class AuthModule {}
+export default class AuthModule {}

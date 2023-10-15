@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as webpush from 'web-push';
 import * as apn from '@parse/node-apn';
 
-import { ConfigService } from '@nestjs/config';
-import { ChromeClient } from './entity/chrome.client.entity';
-import { iOSClient } from './entity/ios.client.entity';
-import { PushClientInterface } from './interface/push-client.interface';
+import ChromeClient from './entity/chrome.client.entity';
+import IOSClient from './entity/ios.client.entity';
+import PushClientInterface from './interface/push-client.interface';
 
 @Injectable()
-export class PushService {
+export default class PushService {
   constructor(
     @InjectRepository(ChromeClient)
     private ChromeClientRepository: Repository<ChromeClient>,
-    @InjectRepository(iOSClient)
-    private IOSClientRepository: Repository<iOSClient>,
+    @InjectRepository(IOSClient)
+    private IOSClientRepository: Repository<IOSClient>,
     private configService: ConfigService,
   ) {}
 
@@ -31,7 +31,7 @@ export class PushService {
     return this.ChromeClientRepository.save(pushRegisterChromeDto);
   }
 
-  async iOSSubscribe(registerIPhoneDto): Promise<iOSClient> {
+  async iOSSubscribe(registerIPhoneDto): Promise<IOSClient> {
     return this.IOSClientRepository.save(registerIPhoneDto);
   }
 
@@ -41,7 +41,7 @@ export class PushService {
         id: 'DESC',
       },
       where: {
-        deviceId: deviceId,
+        deviceId,
       },
     });
     const pushedClientList = [];
@@ -54,7 +54,7 @@ export class PushService {
           client.vapidPrivateKey,
         );
       } catch (error) {
-        const errorMessage = '[webpush][' + error.name + ']' + error.message;
+        const errorMessage = `[webpush][${error.name}]${error.message}`;
         failedClientList.push({
           id: client.id,
           deviceId: client.deviceId,
@@ -85,7 +85,7 @@ export class PushService {
           iPhoneToken: '',
         });
       } catch (error) {
-        const errorMessage = '[webpush][' + error.name + ']' + error.message;
+        const errorMessage = `[webpush][${error.name}]${error.message}`;
         failedClientList.push({
           id: client.id,
           deviceId: client.deviceId,
@@ -96,6 +96,7 @@ export class PushService {
           iPhoneToken: '',
         });
       }
+      return Promise.resolve();
     });
     await Promise.allSettled(clientPromises);
     /* 
@@ -114,10 +115,10 @@ export class PushService {
         id: 'DESC',
       },
       where: {
-        deviceId: deviceId,
+        deviceId,
       },
     });
-    if (clientList == undefined || clientList.length == 0) {
+    if (clientList === undefined || clientList.length === 0) {
       return Promise.resolve([]);
     }
     const options = {
@@ -137,7 +138,7 @@ export class PushService {
       title: 'RC-Box',
       body: 'You Got A Box package',
     };
-    note.topic = 'yesseecity.rc-box-app-dev'; //same to appId
+    note.topic = 'yesseecity.rc-box-app-dev'; // same to appId
     const pushedClientList = [];
     const failedClientList = [];
 
@@ -158,7 +159,7 @@ export class PushService {
       } catch (error) {
         // failed
         // console.log('[notification] failed iOS client.id: ', client.id);
-        const errorMessage = '[webpush][' + error.name + ']' + error.message;
+        const errorMessage = `[webpush][${error.name}]${error.message}`;
         failedClientList.push({
           id: client.id,
           deviceId: client.deviceId,

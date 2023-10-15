@@ -6,11 +6,11 @@ import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { PassportModule } from '@nestjs/passport';
 
-import { AuthModule } from '../src/auth/auth.module';
-import { User } from '../src/users/entity/user.entity';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../src/users/users.service';
-import { UsersModule } from '../src/users/users.module';
+import AuthModule from '../src/auth/auth.module';
+import User from '../src/users/entity/user.entity';
+import UsersService from '../src/users/users.service';
+import UsersModule from '../src/users/users.module';
 import rawUser from './raw-uer';
 import commonConfig from '../src/config/common.config';
 import dbConfig from '../src/config/db.config';
@@ -38,7 +38,7 @@ describe('AuthController (e2e)', () => {
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
               type: configService.get('DB.type'),
-              host: configService.get('DB_host'),
+              host: configService.get('DB_HOST'),
               port: configService.get('DB.port'),
               username: configService.get('DB.username'),
               password: configService.get('DB.password'),
@@ -78,17 +78,25 @@ describe('AuthController (e2e)', () => {
   });
 
   it('/auth/emailResend/ (GET)', async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(true);
+      }, 1000);
+    });
     const response = await request(app.getHttpServer())
-      .get('/auth/emailResend/' + rawUser.email)
+      .get(`/auth/emailResend/${rawUser.email}`)
       .expect(200);
     expect(response.body).toBeTruthy();
   });
 
   it('/auth/emailVerify/ (GET)', async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(true);
+      }, 1000);
+    });
     const response = await request(app.getHttpServer())
-      .get('/auth/emailVerify/' + emailVerifyToken)
+      .get(`/auth/emailVerify/${emailVerifyToken}`)
       .expect(200);
     expect(response.body).toBeTruthy();
   });
@@ -107,7 +115,7 @@ describe('AuthController (e2e)', () => {
   it('/auth/profile (Get)', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/profile')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response.body.id).toBe(userId);
   });
@@ -115,7 +123,7 @@ describe('AuthController (e2e)', () => {
   it('/auth/updateToken (Get)', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/updateToken')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response.body.access_token).toBeDefined();
   });

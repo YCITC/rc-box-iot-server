@@ -5,16 +5,16 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-import { ReceivedLog } from './entity/recived-log.entity';
-import { ReceivedLogDto } from './dto/recived-log.dto';
-import { ReceivedLogService } from './recived-log.service';
-import { DevicesService } from '../devices/devices.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import ReceivedLog from './entity/recived-log.entity';
+import ReceivedLogDto from './dto/recived-log.dto';
+import ReceivedLogService from './recived-log.service';
+import DevicesService from '../devices/devices.service';
+import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Log')
 @ApiBearerAuth()
 @Controller('log')
-export class ReceivedLogController {
+export default class ReceivedLogController {
   constructor(
     private readonly receiveService: ReceivedLogService,
     private readonly devicesService: DevicesService,
@@ -61,11 +61,10 @@ export class ReceivedLogController {
   add(@Body() receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
     if (receivedLogDto.deviceId.length > 0) {
       return this.receiveService.add(receivedLogDto);
-    } else {
-      return Promise.reject(
-        new BadRequestException('deviceId length cannot be zero'),
-      );
     }
+    return Promise.reject(
+      new BadRequestException('deviceId length cannot be zero'),
+    );
   }
 
   @Get('get/:deviceId')
@@ -97,7 +96,7 @@ export class ReceivedLogController {
       req.user.id,
       deviceId,
     );
-    if (userHasDevice == false) {
+    if (userHasDevice === false) {
       throw new UnauthorizedException("You have no device 'deviceId'");
     }
     return this.receiveService.findByDeviceId(deviceId);
@@ -154,22 +153,18 @@ export class ReceivedLogController {
       req.user.id,
       deviceId,
     );
-    if (userHasDevice == false) {
+    if (userHasDevice === false) {
       throw new UnauthorizedException("Can not unbind other user's device");
     }
     if (deviceId.length > 0) {
       await this.receiveService.clean(deviceId);
       return Promise.resolve({
         statusCode: 200,
-        message:
-          'Logs has been successfully deleted using the provided deviceId ' +
-          deviceId +
-          '.',
+        message: `Logs has been successfully deleted using the provided deviceId ${deviceId}.`,
       });
-    } else {
-      return Promise.reject(
-        new BadRequestException('deviceId length cannot be zero'),
-      );
     }
+    return Promise.reject(
+      new BadRequestException('deviceId length cannot be zero'),
+    );
   }
 }

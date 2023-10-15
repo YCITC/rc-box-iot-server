@@ -1,4 +1,4 @@
-import { Device } from './device.entity';
+import Device from './device.entity';
 
 describe('Device class', () => {
   it('should make a device', () => {

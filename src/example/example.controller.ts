@@ -1,12 +1,13 @@
+import * as console from 'console';
 import { Controller, Get, Post } from '@nestjs/common';
 import { Req, Res, HttpStatus, Ip } from '@nestjs/common';
-import { ExampleAppService } from './example.service';
 import { Request, Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
+import ExampleAppService from './example.service';
 
 @ApiTags('Example')
 @Controller('myRouter')
-export class ExampleAppController {
+export default class ExampleAppController {
   constructor(private readonly appService: ExampleAppService) {}
 
   @Get()

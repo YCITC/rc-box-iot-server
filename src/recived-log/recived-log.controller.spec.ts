@@ -2,12 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { BadRequestException } from '@nestjs/common';
 
-import { ReceivedLog } from './entity/recived-log.entity';
-import { ReceivedLogDto } from './dto/recived-log.dto';
-import { ReceivedLogService } from './recived-log.service';
-import { ReceivedLogController } from './recived-log.controller';
-import { DevicesService } from '../devices/devices.service';
-import { Device } from '../devices/entities/device.entity';
+import ReceivedLog from './entity/recived-log.entity';
+import ReceivedLogDto from './dto/recived-log.dto';
+import ReceivedLogService from './recived-log.service';
+import ReceivedLogController from './recived-log.controller';
+import DevicesService from '../devices/devices.service';
+import Device from '../devices/entities/device.entity';
 
 describe('ReceivedLog Controller', () => {
   let controller: ReceivedLogController;
@@ -17,12 +17,12 @@ describe('ReceivedLog Controller', () => {
   const dbDevices = [
     {
       deviceId: deviceId1,
-      ownerUserId: ownerUserId,
+      ownerUserId,
       alias: '',
     },
     {
       deviceId: deviceId2,
-      ownerUserId: ownerUserId,
+      ownerUserId,
       alias: '',
     },
   ];
@@ -49,14 +49,13 @@ describe('ReceivedLog Controller', () => {
               dbLogs.push(log);
               return Promise.resolve(log);
             }),
-            find: jest.fn().mockImplementation((params: object) => {
-              if (params['where'] && params['where']['deviceId']) {
-                const deviceId = params['where']['deviceId'];
-                const logs = dbLogs.filter((log) => log.deviceId == deviceId);
+            find: jest.fn().mockImplementation((params: any) => {
+              if (params.where?.deviceId) {
+                const deviceId = params.where?.deviceId;
+                const logs = dbLogs.filter((log) => log.deviceId === deviceId);
                 return Promise.resolve(logs);
-              } else {
-                return Promise.resolve(dbLogs);
               }
+              return Promise.resolve(dbLogs);
             }),
             delete: jest.fn().mockResolvedValue({ affected: 3 }),
           },
@@ -68,7 +67,7 @@ describe('ReceivedLog Controller', () => {
             find: jest.fn().mockResolvedValue(dbDevices),
             findOneBy: (obj) => {
               const foundDevice = dbDevices.find(
-                (device) => device.deviceId == obj.deviceId,
+                (device) => device.deviceId === obj.deviceId,
               );
               return Promise.resolve(foundDevice);
             },
@@ -154,14 +153,14 @@ describe('ReceivedLog Controller', () => {
   });
 
   describe('findByDeviceId', () => {
-    it('should return logs with deviceId "' + deviceId1 + '"', async () => {
+    it(`should return logs with deviceId "${deviceId1}"`, async () => {
       const returnLogs = dbLogs.filter((log) => {
-        return log.deviceId == deviceId1;
+        return log.deviceId === deviceId1;
       });
       const logs = await controller.findByDeviceId(deviceId1, {
         user: {
           username: 'user',
-          id: '1',
+          id: 1,
         },
       });
       expect(logs).toEqual(returnLogs);
@@ -169,7 +168,7 @@ describe('ReceivedLog Controller', () => {
   });
 
   describe('getAllByUser', () => {
-    it('should return logs with userId "' + ownerUserId + '"', async () => {
+    it(`should return logs with userId "${ownerUserId}"`, async () => {
       const returnLogs = dbLogs.sort((a, b) => b.id - a.id);
       const logs = await controller.getAllByUser({
         user: {
@@ -186,7 +185,7 @@ describe('ReceivedLog Controller', () => {
       const response = await controller.clean(deviceId1, {
         user: {
           username: 'user',
-          id: '1',
+          id: 1,
         },
       });
       expect(response).toBeTruthy();

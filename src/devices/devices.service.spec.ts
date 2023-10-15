@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DevicesService } from './devices.service';
-import { Device } from './entities/device.entity';
+import DevicesService from './devices.service';
+import Device from './entities/device.entity';
 
 describe('DevicesService', () => {
   let service: DevicesService;
@@ -12,7 +12,7 @@ describe('DevicesService', () => {
   const ownerUserId = 1;
   const rawDevices = {
     deviceId: 'rc-box-test-12301',
-    ownerUserId: ownerUserId,
+    ownerUserId,
     alias: 'tsutaya',
   };
 
@@ -24,10 +24,8 @@ describe('DevicesService', () => {
           provide: getRepositoryToken(Device),
           useValue: {
             save: (device) => {
-              device.id = 1;
-              device.createdTime = new Date();
-              mockDeviceInDB = { ...device };
-              return Promise.resolve(device);
+              mockDeviceInDB = { ...device, id: 1, createdTime: new Date() };
+              return Promise.resolve(mockDeviceInDB);
             },
             update: jest.fn().mockImplementation((deviceId, obj) => {
               mockDeviceInDB.alias = obj.alias;
@@ -53,15 +51,15 @@ describe('DevicesService', () => {
     it('should return a devices', async () => {
       const repoSpy = jest.spyOn(repo, 'save');
       myDevice = await service.bind(rawDevices);
-      expect(myDevice.createdTime).toBeDefined;
-      expect(repoSpy).toBeCalledWith(myDevice);
+      expect(myDevice.createdTime).toBeDefined();
+      expect(repoSpy).toBeCalledWith(rawDevices);
     });
   });
 
   describe('findByOneDeviceId', () => {
     it('should return a devices', async () => {
       myDevice = await service.findByOneDeviceId(rawDevices.deviceId);
-      expect(myDevice.createdTime).toBeDefined;
+      expect(myDevice.createdTime).toBeDefined();
     });
   });
 
@@ -89,7 +87,7 @@ describe('DevicesService', () => {
       expect(Array.isArray(deviceArray)).toBe(true);
       expect(repoSpy).toBeCalledWith({
         order: { createdTime: 'DESC' },
-        where: { ownerUserId: ownerUserId },
+        where: { ownerUserId },
       });
     });
   });

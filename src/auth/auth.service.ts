@@ -2,22 +2,21 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { UserLoginDto } from '../users/dto/user.login.dto';
-import { UsersService } from '../users/users.service';
-import { User } from 'src/users/entity/user.entity';
+import UserLoginDto from '../users/dto/user.login.dto';
+import UsersService from '../users/users.service';
 
 @Injectable()
-export class AuthService {
+export default class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
     private configService: ConfigService,
-  ) { }
+  ) {}
 
   async validateUser(userDto: UserLoginDto): Promise<any> {
     const user = await this.usersService.findOneByMail(userDto.email);
     const result = await bcrypt.compare(userDto.password, user.password);
-    if (user && result == true) {
+    if (user && result === true) {
       delete user.password;
       return Promise.resolve(user);
     }
@@ -25,12 +24,11 @@ export class AuthService {
       new UnauthorizedException('email or password incorrect'),
     );
   }
-  async validateGoogleUser(details) {
+
+  async validateGoogleUser(details): Promise<any> {
     try {
-      const user = await this.usersService.findOneByMail(details.email);
-      return user;
+      return await this.usersService.findOneByMail(details.email);
     } catch (error) {
-      console.log('User not found. Creating...');
       const user = this.usersService.addOne(details);
       return user;
     }

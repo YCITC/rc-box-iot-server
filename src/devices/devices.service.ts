@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DeviceDto } from './dto/device.dto';
-import { Device } from './entities/device.entity';
+import DeviceDto from './dto/device.dto';
+import Device from './entities/device.entity';
 
 @Injectable()
-export class DevicesService {
+export default class DevicesService {
   constructor(
     @InjectRepository(Device)
     private devicesRepository: Repository<Device>,
@@ -29,7 +29,7 @@ export class DevicesService {
   async checkDeviceWithUser(userId, deviceId): Promise<boolean> {
     const device = await this.devicesRepository.findOneBy({ deviceId });
     if (device == null) return Promise.resolve(false);
-    if (device.ownerUserId == userId) return Promise.resolve(true);
+    if (device.ownerUserId === userId) return Promise.resolve(true);
     return Promise.resolve(false);
   }
 
@@ -44,9 +44,9 @@ export class DevicesService {
 
   async unbind(deviceId: string): Promise<boolean> {
     const response = await this.devicesRepository.delete({
-      deviceId: deviceId,
+      deviceId,
     });
-    if (response.affected == 1) {
+    if (response.affected === 1) {
       return Promise.resolve(true);
     }
     throw new BadRequestException('device not found');

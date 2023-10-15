@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ReceivedLog } from './entity/recived-log.entity';
-import { ReceivedLogService } from './recived-log.service';
+import ReceivedLog from './entity/recived-log.entity';
+import ReceivedLogService from './recived-log.service';
 
 describe('ReceivedLogService', () => {
   let service: ReceivedLogService;

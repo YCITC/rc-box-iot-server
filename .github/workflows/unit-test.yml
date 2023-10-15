@@ -1,7 +1,7 @@
 name: Unit-test
 run-name: Unit-test - ${{ github.actor }}
 on: 
-  push:
+  pull_request:
     branches:
       - 'feature/*'
 concurrency: 

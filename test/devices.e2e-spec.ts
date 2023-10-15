@@ -6,9 +6,9 @@ import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 
-import { DevicesModule } from '../src/devices/devices.module';
-import { Device } from '../src/devices/entities/device.entity';
-import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
+import DevicesModule from '../src/devices/devices.module';
+import Device from '../src/devices/entities/device.entity';
+import JwtStrategy from '../src/auth/strategies/jwt.strategy';
 import commonConfig from '../src/config/common.config';
 import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
@@ -26,7 +26,7 @@ describe('DeviceController (e2e)', () => {
   const deviceId3 = 'rc-box-test-b2a61';
   const rawDevices = {
     deviceId: deviceId1,
-    ownerUserId: ownerUserId,
+    ownerUserId,
     alias: 'tsutaya',
   };
 
@@ -46,7 +46,7 @@ describe('DeviceController (e2e)', () => {
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
               type: configService.get('DB.type'),
-              host: configService.get('DB_host'),
+              host: configService.get('DB_HOST'),
               port: configService.get('DB.port'),
               username: configService.get('DB.username'),
               password: configService.get('DB.password'),
@@ -95,29 +95,29 @@ describe('DeviceController (e2e)', () => {
 
     const response = await request(app.getHttpServer())
       .put('/devices/bind')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send(rawDevices)
       .expect(200);
     await request(app.getHttpServer())
       .put('/devices/bind')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send({ ...rawDevices, deviceId: deviceId2, alias: '' })
       .expect(200);
     await request(app.getHttpServer())
       .put('/devices/bind')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send({ ...rawDevices, deviceId: deviceId3, alias: '' })
       .expect(200);
 
     myDevice = response.body;
-    expect(myDevice.createdTime).toBeDefined;
+    expect(myDevice.createdTime).toBeDefined();
   });
 
   it('/devices/update (PATCH)', () => {
     const newDevice = { ...myDevice, alias: 'lounge' };
     return request(app.getHttpServer())
       .patch('/devices/update')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200)
       .send(newDevice)
       .then((response) => {
@@ -128,23 +128,23 @@ describe('DeviceController (e2e)', () => {
   it('/devices/findAllByUser/ (GET)', async () => {
     const response = await request(app.getHttpServer())
       .get('/devices/findAllByUser/')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(Array.isArray(response.body)).toEqual(true);
   });
 
   it('/devices/checkDeviceWithUser/:deviceId (GET)', async () => {
     const response = await request(app.getHttpServer())
-      .get('/devices/checkDeviceWithUser/' + rawDevices.deviceId)
-      .set('Authorization', 'Bearer ' + accessToken)
+      .get(`/devices/checkDeviceWithUser/${rawDevices.deviceId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response.text).toBe('true');
   });
 
   it('/devices/unbind/:deviceId (DELETE)', async () => {
     const response = await request(app.getHttpServer())
-      .delete('/devices/unbind/' + deviceId3)
-      .set('Authorization', 'Bearer ' + accessToken)
+      .delete(`/devices/unbind/${deviceId3}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response.text).toBe('true');
   });

@@ -6,13 +6,13 @@ import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 
-import { PushModule } from '../src/push/push.module';
-import { ChromeClient } from '../src/push/entity/chrome.client.entity';
-import { iOSClient } from '../src/push/entity/ios.client.entity';
-import { DevicesModule } from '../src/devices/devices.module';
-import { DevicesService } from '../src/devices/devices.service';
-import { Device } from '../src/devices/entities/device.entity';
-import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
+import PushModule from '../src/push/push.module';
+import ChromeClient from '../src/push/entity/chrome.client.entity';
+import IOSClient from '../src/push/entity/ios.client.entity';
+import DevicesModule from '../src/devices/devices.module';
+import DevicesService from '../src/devices/devices.service';
+import Device from '../src/devices/entities/device.entity';
+import JwtStrategy from '../src/auth/strategies/jwt.strategy';
 import commonConfig from '../src/config/common.config';
 import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
@@ -21,7 +21,7 @@ import rawUser from './raw-uer';
 describe('PushController (e2e)', () => {
   let app: INestApplication;
   let chromeClientRepo: Repository<ChromeClient>;
-  let iOSClientRepo: Repository<iOSClient>;
+  let IOSClientRepo: Repository<IOSClient>;
   let jwtService: JwtService;
   let accessToken: string;
   const deviceId1 = 'rc-box-test-12301';
@@ -57,13 +57,13 @@ describe('PushController (e2e)', () => {
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
               type: configService.get('DB.type'),
-              host: configService.get('DB_host'),
+              host: configService.get('DB_HOST'),
               port: configService.get('DB.port'),
               username: configService.get('DB.username'),
               password: configService.get('DB.password'),
               database: 'rc-box-test',
               // entities: ['dist/**/*.entity{.ts,.js}'],
-              entities: [Device, ChromeClient, iOSClient],
+              entities: [Device, ChromeClient, IOSClient],
               synchronize: true,
             };
             return dbInfo;
@@ -93,8 +93,8 @@ describe('PushController (e2e)', () => {
     chromeClientRepo = app.get<Repository<ChromeClient>>(
       getRepositoryToken(ChromeClient),
     );
-    iOSClientRepo = app.get<Repository<iOSClient>>(
-      getRepositoryToken(iOSClient),
+    IOSClientRepo = app.get<Repository<IOSClient>>(
+      getRepositoryToken(IOSClient),
     );
     jwtService = moduleFixture.get<JwtService>(JwtService);
     await app.init();
@@ -113,7 +113,7 @@ describe('PushController (e2e)', () => {
       .send({
         deviceId: deviceId1,
       })
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response.body).toHaveProperty('publicKey');
     expect(response.body).toHaveProperty('privateKey');
@@ -123,7 +123,7 @@ describe('PushController (e2e)', () => {
     await chromeClientRepo.clear();
     const response = await request(app.getHttpServer())
       .post('/push/subscribe/chrome')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send(registerChromeDto)
       .expect(201);
     const client = response.body;
@@ -134,10 +134,10 @@ describe('PushController (e2e)', () => {
   });
 
   it('/push/subscribe/ios (POST)', async () => {
-    await iOSClientRepo.clear();
+    await IOSClientRepo.clear();
     const response = await request(app.getHttpServer())
       .post('/push/subscribe/ios')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .send(registerIPhoneDto)
       .expect(201);
     const client = response.body;
@@ -149,7 +149,7 @@ describe('PushController (e2e)', () => {
 
   it('/push/send/:deviceId (GET)', async () => {
     const response = await request(app.getHttpServer())
-      .get('/push/send/' + deviceId1)
+      .get(`/push/send/${deviceId1}`)
       .send(registerIPhoneDto)
       .expect(200);
     const clients = response.body;

@@ -1,4 +1,4 @@
-export interface PushClientInterface {
+export default interface PushClientInterface {
   id: number;
   deviceId: string;
   clientType: string;

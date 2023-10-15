@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entity/user.entity';
-import { UsersService } from './users.service';
+import User from './entity/user.entity';
+import UsersService from './users.service';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -36,11 +36,11 @@ describe('UsersService', () => {
           useValue: {
             findOneBy: jest.fn().mockResolvedValue(testUser),
             save: (user) => {
-              user.createdTime = new Date();
-              if (user?.isEmailVerified === undefined) {
-                user.isEmailVerified = false;
-              }
-              return Promise.resolve(user);
+              return Promise.resolve({
+                ...user,
+                createdTime: new Date(),
+                isEmailVerified: false,
+              });
             },
             update: jest.fn().mockResolvedValue({ affected: 1 }),
             delete: jest.fn().mockResolvedValue({ affected: 1 }),
@@ -65,7 +65,7 @@ describe('UsersService', () => {
     });
     it('password should be hashed', async () => {
       const user = await service.addOne(rawUser);
-      expect(user.password == rawUser.password).toBeFalsy();
+      expect(user.password === rawUser.password).toBeFalsy();
     });
   });
 

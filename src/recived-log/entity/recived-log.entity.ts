@@ -5,7 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
   name: 'received_log',
   engine: 'MyISAM',
 })
-export class ReceivedLog {
+export default class ReceivedLog {
   @ApiProperty({ example: 1 })
   @PrimaryGeneratedColumn({
     unsigned: true,

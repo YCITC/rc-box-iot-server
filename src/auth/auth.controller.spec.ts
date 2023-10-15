@@ -4,11 +4,11 @@ import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
-import { EmailService } from '../email/email.service';
-import { User } from '../users/entity/user.entity';
-import { UsersService } from '../users/users.service';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import EmailService from '../email/email.service';
+import User from '../users/entity/user.entity';
+import UsersService from '../users/users.service';
+import AuthController from './auth.controller';
+import AuthService from './auth.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -57,11 +57,12 @@ describe('AuthController', () => {
           useValue: {
             findOneBy: jest.fn().mockResolvedValue(testUser),
             save: (user) => {
-              user.createdTime = new Date();
+              const newUserInfo = { ...user };
+              newUserInfo.createdTime = new Date();
               if (user?.isEmailVerified === undefined) {
-                user.isEmailVerified = false;
+                newUserInfo.isEmailVerified = false;
               }
-              return Promise.resolve(user);
+              return Promise.resolve(newUserInfo);
             },
             update: jest.fn().mockResolvedValue({ affected: 1 }),
             delete: jest.fn().mockResolvedValue({ affected: 1 }),

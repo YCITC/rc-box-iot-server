@@ -4,7 +4,7 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
   name: 'push_client_chrome',
   engine: 'MyISAM',
 })
-export class ChromeClient {
+export default class ChromeClient {
   @PrimaryGeneratedColumn({
     unsigned: true,
   })

@@ -2,13 +2,13 @@ import { Controller, Body, Param } from '@nestjs/common';
 import { Get, Put, Delete } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { UserRegisterDto } from './dto/user.register.dto';
-import { User } from './entity/user.entity';
-import { UsersService } from './users.service';
+import UserRegisterDto from './dto/user.register.dto';
+import User from './entity/user.entity';
+import UsersService from './users.service';
 
 @ApiTags('Users')
 @Controller('users')
-export class UsersController {
+export default class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Get('findByMail/:email')
@@ -57,10 +57,7 @@ export class UsersController {
     await this.usersService.deleteOne(id);
     return Promise.resolve({
       statusCode: 200,
-      message:
-        'The user has been successfully deleted using the provided ID ' +
-        id +
-        '.',
+      message: `The user has been successfully deleted using the provided ID ${id}.`,
     });
   }
 }

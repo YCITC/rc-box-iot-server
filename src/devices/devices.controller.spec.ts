@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { DevicesController } from './devices.controller';
-import { DevicesService } from './devices.service';
-import { Device } from './entities/device.entity';
+
+import DevicesController from './devices.controller';
+import DevicesService from './devices.service';
+import Device from './entities/device.entity';
 
 describe('DevicesController', () => {
   let controller: DevicesController;
@@ -12,7 +13,7 @@ describe('DevicesController', () => {
   const ownerUserId = 1;
   const rawDevices = {
     deviceId: 'rc-box-test-12301',
-    ownerUserId: ownerUserId,
+    ownerUserId,
     alias: 'tsutaya',
   };
 
@@ -25,17 +26,15 @@ describe('DevicesController', () => {
           provide: getRepositoryToken(Device),
           useValue: {
             save: (device) => {
-              device.id = 1;
-              device.createdTime = new Date();
-              mockDeviceInDB = { ...device };
-              return Promise.resolve(device);
+              mockDeviceInDB = { ...device, id: 1, createdTime: new Date() };
+              return Promise.resolve(mockDeviceInDB);
             },
             update: jest.fn().mockImplementation((deviceId, obj) => {
               mockDeviceInDB.alias = obj.alias;
               return Promise.resolve({ raw: [], affected: 1 });
             }),
             findOneBy: jest.fn().mockResolvedValue(mockDeviceInDB),
-            find: jest.fn().mockResolvedValue([myDevice]),
+            find: jest.fn().mockResolvedValue([mockDeviceInDB]),
             delete: jest.fn().mockResolvedValue({ raw: [], affected: 1 }),
           },
         },
@@ -57,8 +56,8 @@ describe('DevicesController', () => {
           id: 1,
         },
       });
-      expect(myDevice).toBeDefined;
-      expect(myDevice.createdTime).toBeDefined;
+      expect(myDevice).toBeDefined();
+      expect(myDevice.createdTime).toBeDefined();
     });
   });
 
@@ -94,7 +93,7 @@ describe('DevicesController', () => {
       const device = await controller.update(newDevice, {
         user: {
           username: 'user',
-          id: '1',
+          id: 1,
         },
       });
       expect(device.alias).toBe('lounge');
@@ -104,7 +103,7 @@ describe('DevicesController', () => {
   describe('findAllByUser', () => {
     it("Should return all of user's devices", async () => {
       const deviceArray = await controller.findAllWithUserId({
-        user: { username: 'user', id: '1' },
+        user: { username: 'user', id: 1 },
       });
       expect(Array.isArray(deviceArray)).toBe(true);
     });
@@ -115,7 +114,7 @@ describe('DevicesController', () => {
       const result = await controller.unbind(myDevice.deviceId, {
         user: {
           username: 'user',
-          id: '1',
+          id: 1,
         },
       });
       expect(result).toBe(true);

@@ -2,36 +2,38 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { UserRegisterDto } from './dto/user.register.dto';
-import { User } from './entity/user.entity';
-import { UserProfileDto } from './dto/user.profile.dto';
-
-export type UserObj = any;
+import UserRegisterDto from './dto/user.register.dto';
+import User from './entity/user.entity';
+import UserProfileDto from './dto/user.profile.dto';
 
 @Injectable()
-export class UsersService {
+export default class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
   ) {}
 
   async addOne(userRegisterDto: UserRegisterDto): Promise<User> {
-    let hashedPassword = '';
-    if (userRegisterDto.password) {
-      hashedPassword = await bcrypt.hash(userRegisterDto.password, 5);
+    if (userRegisterDto.email === undefined) {
+      throw new BadRequestException('Require email');
     }
+    if (userRegisterDto.username === undefined) {
+      throw new BadRequestException('Require username');
+    }
+
+    const hashedPassword = await bcrypt.hash(userRegisterDto.password, 5);
+    let user;
     try {
-      const user = await this.usersRepository.save({
+      user = await this.usersRepository.save({
         ...userRegisterDto,
         password: hashedPassword,
       });
-      return Promise.resolve(user);
     } catch (error) {
       if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
         throw new BadRequestException(`Email [${userRegisterDto.email}] exist`);
       }
-      console.log(error);
     }
+    return Promise.resolve(user);
   }
 
   async updateProfile(userProfileDto: UserProfileDto): Promise<User> {
@@ -39,13 +41,13 @@ export class UsersService {
     return Promise.resolve(user);
   }
 
-  async deleteOne(id: number): Promise<any> {
+  async deleteOne(id: number): Promise<boolean> {
     const response = await this.usersRepository.delete({ id });
     /*
      * usersRepository response like this
      * DeleteResult { raw: [], affected: 1 }
      */
-    if (response.affected == 1) {
+    if (response.affected === 1) {
       return Promise.resolve(true);
     }
     throw new BadRequestException('User not found');
@@ -85,11 +87,10 @@ export class UsersService {
         id,
         isEmailVerified: true,
       });
-      return Promise.resolve(true);
+      return await Promise.resolve(true);
     } catch (error) {
-      console.log(error);
       if (error.message.indexOf('Cannot set properties of null') > -1) {
-        throw new BadRequestException('Cannot find user with id:' + id);
+        throw new BadRequestException(`Cannot find user with id:${id}`);
       }
       throw new BadRequestException(error.message);
     }

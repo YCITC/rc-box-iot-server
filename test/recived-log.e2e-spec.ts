@@ -6,12 +6,12 @@ import * as request from 'supertest';
 import { Repository } from 'typeorm';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 
-import { ReceivedLog } from '../src/recived-log/entity/recived-log.entity';
-import { ReceivedLogModule } from '../src/recived-log/recived-log.module';
-import { DevicesModule } from '../src/devices/devices.module';
-import { DevicesService } from '../src/devices/devices.service';
-import { Device } from '../src/devices/entities/device.entity';
-import { JwtStrategy } from '../src/auth/strategies/jwt.strategy';
+import ReceivedLog from '../src/recived-log/entity/recived-log.entity';
+import ReceivedLogModule from '../src/recived-log/recived-log.module';
+import DevicesModule from '../src/devices/devices.module';
+import DevicesService from '../src/devices/devices.service';
+import Device from '../src/devices/entities/device.entity';
+import JwtStrategy from '../src/auth/strategies/jwt.strategy';
 import commonConfig from '../src/config/common.config';
 import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
@@ -42,7 +42,7 @@ describe('ReceivedLogController (e2e)', () => {
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
               type: configService.get('DB.type'),
-              host: configService.get('DB_host'),
+              host: configService.get('DB_HOST'),
               port: configService.get('DB.port'),
               username: configService.get('DB.username'),
               password: configService.get('DB.password'),
@@ -114,13 +114,13 @@ describe('ReceivedLogController (e2e)', () => {
 
   it('/log/get/:deviceId (GET)', async () => {
     const response1 = await request(app.getHttpServer())
-      .get('/log/get/' + deviceId1)
-      .set('Authorization', 'Bearer ' + accessToken)
+      .get(`/log/get/${deviceId1}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response1.body[0].deviceId).toBe(deviceId1);
     const response2 = await request(app.getHttpServer())
-      .get('/log/get/' + deviceId2)
-      .set('Authorization', 'Bearer ' + accessToken)
+      .get(`/log/get/${deviceId2}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response2.body[0].deviceId).toBe(deviceId2);
   });
@@ -128,7 +128,7 @@ describe('ReceivedLogController (e2e)', () => {
   it('/log/getAllByUser (GET)', async () => {
     const response1 = await request(app.getHttpServer())
       .get('/log/getAllByUser')
-      .set('Authorization', 'Bearer ' + accessToken)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response1.body[0].deviceId).toBe(deviceId2);
     expect(response1.body[1].deviceId).toBe(deviceId1);
@@ -136,8 +136,8 @@ describe('ReceivedLogController (e2e)', () => {
 
   it('/log/clean/ (DELETE)', async () => {
     const response = await request(app.getHttpServer())
-      .delete('/log/clean/' + deviceId1)
-      .set('Authorization', 'Bearer ' + accessToken)
+      .delete(`/log/clean/${deviceId1}`)
+      .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response.body.statusCode).toEqual(200);
 

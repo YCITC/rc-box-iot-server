@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ReceivedLogDto {
+export default class ReceivedLogDto {
   @ApiProperty({ example: 'rc-box-JixujH$zf' })
   deviceId: string;
 }

@@ -8,6 +8,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import User from '../users/entity/user.entity';
 import UsersService from '../users/users.service';
 import AuthService from './auth.service';
+import TokenType from './enum/token-type';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -98,6 +99,7 @@ describe('AuthService', () => {
       const res = await authService.createToken({
         username: 'john',
         id: 1,
+        type: TokenType.SINGIN,
       });
       expect(res).toBeDefined();
     });
@@ -107,6 +109,7 @@ describe('AuthService', () => {
       token = await authService.createToken({
         username: 'john',
         id: 1,
+        type: TokenType.SINGIN,
       });
       expect(token.length).toBeGreaterThan(0);
     });

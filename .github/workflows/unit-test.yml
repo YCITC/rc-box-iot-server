@@ -3,7 +3,7 @@ run-name: Unit-test - ${{ github.actor }}
 on: 
   pull_request:
     branches:
-      - 'feature/*'
+      - 'release/*'
 concurrency: 
   group: development
   cancel-in-progress: true

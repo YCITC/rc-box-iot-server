@@ -132,6 +132,33 @@ describe('AuthService', () => {
       );
     });
   });
+  describe('resetPassword', () => {
+    const dto = {
+      newPassword: 'Abc123%*dga',
+      confirmNewPassword: 'Abc123%*dga',
+    };
+    it('should return true', async () => {
+      const res = await authService.resetPassword(1, dto);
+      expect(res).toEqual(true);
+    });
+    it('should throw Exceptions', async () => {
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          newPassword: 'Abcdef12',
+        }),
+      ).rejects.toThrowError(new BadRequestException('Password policy failed'));
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          newPassword: 'Abcdef12%$',
+          confirmNewPassword: 'Abcdef1234',
+        }),
+      ).rejects.toThrowError(
+        new BadRequestException('New password verification failed'),
+      );
+    });
+  });
   describe('createToken', () => {
     it('should return JWT object when credentials are valid', async () => {
       const res = await authService.createToken({

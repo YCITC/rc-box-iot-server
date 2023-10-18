@@ -11,10 +11,12 @@ import AuthModule from '../src/auth/auth.module';
 import User from '../src/users/entity/user.entity';
 import UsersService from '../src/users/users.service';
 import UsersModule from '../src/users/users.module';
-import rawUser from './raw-uer';
+import rawUser from './raw-user';
 import commonConfig from '../src/config/common.config';
 import dbConfig from '../src/config/db.config';
 import UserProfileDto from '../src/users/dto/user.profile.dto';
+import AuthService from '../src/auth/auth.service';
+import TokenType from '../src/auth/enum/token-type';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -22,6 +24,7 @@ describe('AuthController (e2e)', () => {
   let emailVerifyToken: string;
   let accessToken: string;
   let repo: Repository<User>;
+  let authService: AuthService;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -58,7 +61,7 @@ describe('AuthController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     repo = app.get<Repository<User>>(getRepositoryToken(User));
-
+    authService = app.get<AuthService>(AuthService);
     await app.init();
   });
   afterEach(async () => {
@@ -102,7 +105,7 @@ describe('AuthController (e2e)', () => {
     expect(response.body).toBeTruthy();
   });
 
-  it('/auth/login/ (post)', async () => {
+  it('/auth/login/ (POST)', async () => {
     const response = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ ...rawUser })
@@ -113,22 +116,46 @@ describe('AuthController (e2e)', () => {
     expect(response.body.user).toHaveProperty('avatarUrl');
   });
 
-  it('/auth/changePasswrod/ (post)', async () => {
-    const userResetPasswrodDto = {
+  it('/auth/changePassword/ (POST)', async () => {
+    const dto = {
       oldPassword: rawUser.password,
       newPassword: 'Abc123%*dga',
       confirmNewPassword: 'Abc123%*dga',
     };
     const response = await request(app.getHttpServer())
-      .post('/auth/changePasswrod')
-      .send(userResetPasswrodDto)
+      .post('/auth/changePassword')
+      .send(dto)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response.text).toBe('true');
   });
 
+  it('/auth/requestResetPassword/ (GET)', async () => {
+    const response = await request(app.getHttpServer())
+      .get(`/auth/requestResetPassword/${rawUser.email}`)
+      .expect(200);
+    expect(response.text).toBe('true');
+  });
+  it('/auth/resetPassword (POST)', async () => {
+    const userResetPasswrodDto = {
+      newPassword: '123BBB%*dga',
+      confirmNewPassword: '123BBB%*dga',
+    };
+    const payload = {
+      id: userId,
+      username: rawUser.username,
+      type: TokenType.RESET_PASSWORD,
+    };
+    const token = authService.createOneDayToken(payload);
+    const response = await request(app.getHttpServer())
+      .post('/auth/resetPassword')
+      .send(userResetPasswrodDto)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(response.text).toBe('true');
+  });
   let proflie = new UserProfileDto();
-  it('/auth/profile (Get)', async () => {
+  it('/auth/profile (GET)', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/profile')
       .set('Authorization', `Bearer ${accessToken}`)
@@ -137,7 +164,7 @@ describe('AuthController (e2e)', () => {
     expect(response.body.id).toBe(userId);
   });
 
-  it('/auth/updateProfile (Post)', async () => {
+  it('/auth/updateProfile (POST)', async () => {
     const response = await request(app.getHttpServer())
       .post('/auth/updateProfile')
       .send({ ...proflie, username: 'Tim' })
@@ -147,7 +174,7 @@ describe('AuthController (e2e)', () => {
     expect(response.body.username).toBe('Tim');
   });
 
-  it('/auth/updateToken (Get)', async () => {
+  it('/auth/updateToken (GET)', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/updateToken')
       .set('Authorization', `Bearer ${accessToken}`)

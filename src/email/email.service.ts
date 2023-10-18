@@ -13,15 +13,54 @@ export default class EmailService {
     });
   }
 
-  sendVerificationEmail(to: string, verificationURL: string) {
-    const subject = 'RC-Box Verification Mail';
-    let content =
-      'This is a verification email. Please click on the URL provided to verify your account.\n';
-    content += verificationURL;
+  sendResetPasswordEmail(to: string, verificationURL: string) {
+    const subject = 'RC-Box Reset Password';
+    const html = `
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tbody>
+          <tr>
+            <td>
+              You requested a password reset for your RC-Box account.<br>
+              Please visit the following link to enter your new password:
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="${verificationURL}" target="_blank" title="RC-Box Reset Password" >RC-Box Reset Password</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    `;
     return this.mailerService.sendMail({
       to,
       subject,
-      text: content,
+      html,
+    });
+  }
+
+  sendVerificationEmail(to: string, verificationURL: string) {
+    const subject = 'RC-Box Verification Mail';
+    const html = `
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tbody>
+          <tr>
+            <td>
+              This is a verification email. Please click on the URL provided to verify your account.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <a href="${verificationURL}" target="_blank" title="RC-Box Verification" >RC-Box Verification/a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+    return this.mailerService.sendMail({
+      to,
+      subject,
+      html,
     });
   }
 }

@@ -56,6 +56,23 @@ export default class AuthService {
     return this.usersService.changePassword(userId, dto.newPassword);
   }
 
+  async resetPassword(
+    userId: number,
+    dto: UserChangePasswrodDto,
+  ): Promise<boolean> {
+    const passwordPolicy =
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*#?&]).{8,}/.test(
+        dto.newPassword,
+      );
+    if (passwordPolicy === false)
+      throw new BadRequestException('Password policy failed');
+
+    if (dto.newPassword !== dto.confirmNewPassword)
+      throw new BadRequestException('New password verification failed');
+
+    return this.usersService.changePassword(userId, dto.newPassword);
+  }
+
   async validateGoogleUser(details): Promise<any> {
     try {
       return await this.usersService.findOneByMail(details.email);
@@ -67,6 +84,7 @@ export default class AuthService {
 
   createToken(payload: JwtPayload<TokenType>): string {
     const signOptions = {
+      // issuer: this.configService.get('JWT.ISSUER'),
       secret: this.configService.get('JWT.SECRET'),
     };
     const token = this.jwtService.sign(payload, signOptions);
@@ -76,7 +94,7 @@ export default class AuthService {
   createOneDayToken(payload: JwtPayload<TokenType>): string {
     const signOptions = {
       expiresIn: '1d',
-      issuer: this.configService.get('JWT.ISSUER'),
+      // issuer: this.configService.get('JWT.ISSUER'),
       secret: this.configService.get('JWT.SECRET'),
     };
     const token = this.jwtService.sign(payload, signOptions);

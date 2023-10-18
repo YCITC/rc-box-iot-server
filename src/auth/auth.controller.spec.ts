@@ -125,6 +125,27 @@ describe('AuthController', () => {
       expect(res).toEqual(true);
     });
   });
+  describe('requestResetPassword', () => {
+    it('should return true', async () => {
+      const res = await controller.requestResetPassword(rawUser.email);
+      expect(res).toEqual(true);
+    });
+  });
+  describe('resetPassword', () => {
+    it('should return true', async () => {
+      const dto = {
+        newPassword: 'AbcEfg123%$',
+        confirmNewPassword: 'AbcEfg123%$',
+      };
+      const jwtPayload = { 
+        id: testUser.id,
+        username: testUser.username,
+        type: TokenType.RESET_PASSWORD
+      };
+      const res = await controller.resetPassword({ user: jwtPayload }, dto);
+      expect(res).toEqual(true);
+    });
+  });
   describe('createUser', () => {
     it('should send a mail and return true', async () => {
       const payload = { id: testUser.id, username: testUser.username };

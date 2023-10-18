@@ -12,7 +12,7 @@ import JwtStrategy from '../src/auth/strategies/jwt.strategy';
 import commonConfig from '../src/config/common.config';
 import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
-import rawUser from './raw-uer';
+import rawUser from './raw-user';
 
 describe('DeviceController (e2e)', () => {
   let app: INestApplication;

@@ -14,6 +14,7 @@ import UsersModule from '../src/users/users.module';
 import rawUser from './raw-uer';
 import commonConfig from '../src/config/common.config';
 import dbConfig from '../src/config/db.config';
+import UserProfileDto from '../src/users/dto/user.profile.dto';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -105,19 +106,45 @@ describe('AuthController (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ ...rawUser })
-      .expect(201);
+      .expect(200);
     accessToken = response.body.access_token;
     expect(response.body.access_token).toBeDefined();
     expect(response.body.user).toBeDefined();
     expect(response.body.user).toHaveProperty('avatarUrl');
   });
 
+  it('/auth/changePasswrod/ (post)', async () => {
+    const userResetPasswrodDto = {
+      oldPassword: rawUser.password,
+      newPassword: 'Abc123%*dga',
+      confirmNewPassword: 'Abc123%*dga',
+    };
+    const response = await request(app.getHttpServer())
+      .post('/auth/changePasswrod')
+      .send(userResetPasswrodDto)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+    expect(response.text).toBe('true');
+  });
+
+  let proflie = new UserProfileDto();
   it('/auth/profile (Get)', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/profile')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
+    proflie = { ...response.body };
     expect(response.body.id).toBe(userId);
+  });
+
+  it('/auth/updateProfile (Post)', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/updateProfile')
+      .send({ ...proflie, username: 'Tim' })
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+    expect(response.body.id).toBe(userId);
+    expect(response.body.username).toBe('Tim');
   });
 
   it('/auth/updateToken (Get)', async () => {

@@ -2,8 +2,9 @@ import * as console from 'console';
 import * as crypto from 'crypto';
 import * as https from 'https';
 
-import { Controller, UseGuards, BadRequestException } from '@nestjs/common';
-import { Get, Post, Put } from '@nestjs/common';
+import { Controller, UseGuards } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { HttpCode, Get, Post, Put } from '@nestjs/common';
 import { Req, Body, Param } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -14,6 +15,7 @@ import AuthService from './auth.service';
 import User from '../users/entity/user.entity';
 import UserRegisterDto from '../users/dto/user.register.dto';
 import UserProfileDto from '../users/dto/user.profile.dto';
+import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import UsersService from '../users/users.service';
 import EmailService from '../email/email.service';
@@ -71,6 +73,28 @@ export default class AuthController {
       console.error('[auth/login][error]\n', error);
       return Promise.reject(error);
     }
+  }
+
+  @Post('changePassword')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({
+    status: 200,
+    description: 'Reset password successed.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: `"New password verification failed" or "Password policy failed"`,
+  })
+  @ApiResponse({
+    status: 401,
+    description: `Old password incorrect`,
+  })
+  changePassword(
+    @Req() req,
+    @Body() dto: UserChangePasswrodDto,
+  ): Promise<boolean> {
+    return this.authService.changePassword(req.user.id, dto);
   }
 
   @Get('profile')

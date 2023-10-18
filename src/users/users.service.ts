@@ -1,10 +1,11 @@
+import * as bcrypt from 'bcrypt';
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import UserRegisterDto from './dto/user.register.dto';
-import User from './entity/user.entity';
 import UserProfileDto from './dto/user.profile.dto';
+import User from './entity/user.entity';
 
 @Injectable()
 export default class UsersService {
@@ -34,6 +35,18 @@ export default class UsersService {
       }
     }
     return Promise.resolve(user);
+  }
+
+  async changePassword(id: number, password: string): Promise<boolean> {
+    try {
+      const hashedPassword = await bcrypt.hash(password, 5);
+      await this.usersRepository.save({ id, password: hashedPassword });
+    } catch (error) {
+      return Promise.reject(
+        new InternalServerErrorException('Can not change user password'),
+      );
+    }
+    return Promise.resolve(true);
   }
 
   async updateProfile(userProfileDto: UserProfileDto): Promise<User> {

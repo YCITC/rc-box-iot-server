@@ -9,6 +9,8 @@ import User from '../users/entity/user.entity';
 import UsersService from '../users/users.service';
 import AuthController from './auth.controller';
 import AuthService from './auth.service';
+import { MailerService } from '@nestjs-modules/mailer';
+import TokenType from './enum/token-type';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -52,6 +54,7 @@ describe('AuthController', () => {
       providers: [
         AuthService,
         UsersService,
+        EmailService,
         {
           provide: getRepositoryToken(User),
           useValue: {
@@ -82,11 +85,9 @@ describe('AuthController', () => {
           },
         },
         {
-          provide: EmailService,
+          provide: MailerService,
           useValue: {
-            sendVerificationEmail: jest
-              .fn()
-              .mockResolvedValue({ accepted: [testUser.email] }),
+            sendMail: jest.fn().mockResolvedValue({ accepted: [testUser.email] }),
           },
         },
         JwtService,
@@ -108,6 +109,20 @@ describe('AuthController', () => {
       currentUser = res;
       expect(res.access_token).toBeDefined();
       expect(res.user).toHaveProperty('avatarUrl');
+    });
+  });
+  describe('changePassword', () => {
+    const dto = {
+      oldPassword: '1234',
+      newPassword: 'AbcEfg123%$',
+      confirmNewPassword: 'AbcEfg123%$',
+    };
+    it('should return true', async () => {
+      const res = await controller.changePassword(
+        { user: { id: testUser.id } },
+        dto,
+      );
+      expect(res).toEqual(true);
     });
   });
   describe('createUser', () => {

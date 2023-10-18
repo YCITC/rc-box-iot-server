@@ -1,4 +1,6 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { Injectable } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
@@ -25,7 +27,33 @@ export default class AuthService {
     }
     throw new UnauthorizedException('email or password incorrect');
   }
+
+  async changePassword(
+    userId: number,
+    dto: UserChangePasswrodDto,
+  ): Promise<boolean> {
+    const passwordPolicy =
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*#?&]).{8,}/.test(
+        dto.newPassword,
+      );
+    if (passwordPolicy === false)
+      throw new BadRequestException('Password policy failed');
+
+    if (dto.newPassword !== dto.confirmNewPassword)
+      throw new BadRequestException('New password verification failed');
+
+    if (dto.newPassword === dto.oldPassword)
+      throw new BadRequestException('Can not use same password');
+
+    const user = await this.usersService.findOneById(userId);
+    const oldPasswordVerification = await bcrypt.compare(
+      dto.oldPassword,
+      user.password,
     );
+    if (oldPasswordVerification === false)
+      throw new UnauthorizedException('Old password incorrect');
+
+    return this.usersService.changePassword(userId, dto.newPassword);
   }
 
   async validateGoogleUser(details): Promise<any> {

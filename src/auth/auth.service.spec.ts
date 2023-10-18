@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -66,6 +66,7 @@ describe('AuthService', () => {
           provide: getRepositoryToken(User),
           useValue: {
             findOneBy: jest.fn().mockResolvedValue(testUser),
+            save: jest.fn().mockResolvedValue(testUser),
           },
         },
       ],
@@ -91,6 +92,43 @@ describe('AuthService', () => {
       const user = { email: 'zz', password: 'zzz' };
       await expect(authService.validateUser(user)).rejects.toThrowError(
         UnauthorizedException,
+      );
+    });
+  });
+  describe('changePassword', () => {
+    const dto = {
+      oldPassword: '1234',
+      newPassword: 'Abc123%*dga',
+      confirmNewPassword: 'Abc123%*dga',
+    };
+    it('should return true', async () => {
+      const res = await authService.changePassword(1, dto);
+      expect(res).toEqual(true);
+    });
+    it('should throw Exceptions', async () => {
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          newPassword: 'Abcdef12',
+        }),
+      ).rejects.toThrowError(new BadRequestException('Password policy failed'));
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          oldPassword: '0000',
+        }),
+      ).rejects.toThrowError(
+        new UnauthorizedException('Old password incorrect'),
+      );
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          oldPassword: '1234',
+          newPassword: 'Abcdef12%$',
+          confirmNewPassword: 'Abcdef1234',
+        }),
+      ).rejects.toThrowError(
+        new BadRequestException('New password verification failed'),
       );
     });
   });

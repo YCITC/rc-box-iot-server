@@ -19,4 +19,6 @@ export default class UserRegisterDto extends PartialType(UserLoginDto) {
 
   @ApiProperty({ example: '110' })
   zipCode: string;
+
+  isEmailVerified?: boolean;
 }

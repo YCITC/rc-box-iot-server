@@ -116,7 +116,7 @@ export default class AuthController {
     });
     const url = `https://${this.configService.get(
       'SERVER_HOSTNAME',
-    )}/resetPassword?t=${token}`;
+    )}/reset-password?t=${token}`;
     const result = await this.emailService.sendResetPasswordEmail(
       user.email,
       url,

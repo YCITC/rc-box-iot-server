@@ -33,7 +33,7 @@ export default class AuthService {
     dto: UserChangePasswrodDto,
   ): Promise<boolean> {
     const passwordPolicy =
-      /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*#?&]).{8,}/.test(
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*#?&_+=]).{8,}/.test(
         dto.newPassword,
       );
     if (passwordPolicy === false)
@@ -42,17 +42,18 @@ export default class AuthService {
     if (dto.newPassword !== dto.confirmNewPassword)
       throw new BadRequestException('New password verification failed');
 
-    if (dto.newPassword === dto.oldPassword)
+    if (dto.oldPassword === dto.newPassword)
       throw new BadRequestException('Can not use same password');
 
     const user = await this.usersService.findOneById(userId);
-    const oldPasswordVerification = await bcrypt.compare(
-      dto.oldPassword,
-      user.password,
-    );
-    if (oldPasswordVerification === false)
-      throw new UnauthorizedException('Old password incorrect');
-
+    if (user.password.length > 0) {
+      const oldPasswordVerification = await bcrypt.compare(
+        dto.oldPassword,
+        user.password,
+      );
+      if (oldPasswordVerification === false)
+        throw new UnauthorizedException('Old password incorrect');
+    }
     return this.usersService.changePassword(userId, dto.newPassword);
   }
 
@@ -84,7 +85,6 @@ export default class AuthService {
 
   createToken(payload: JwtPayload<TokenType>): string {
     const signOptions = {
-      // issuer: this.configService.get('JWT.ISSUER'),
       secret: this.configService.get('JWT.SECRET'),
     };
     const token = this.jwtService.sign(payload, signOptions);
@@ -94,7 +94,6 @@ export default class AuthService {
   createOneDayToken(payload: JwtPayload<TokenType>): string {
     const signOptions = {
       expiresIn: '1d',
-      // issuer: this.configService.get('JWT.ISSUER'),
       secret: this.configService.get('JWT.SECRET'),
     };
     const token = this.jwtService.sign(payload, signOptions);

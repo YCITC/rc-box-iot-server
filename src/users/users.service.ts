@@ -41,12 +41,12 @@ export default class UsersService {
     try {
       const hashedPassword = await bcrypt.hash(password, 5);
       await this.usersRepository.save({ id, password: hashedPassword });
+      return await Promise.resolve(true);
     } catch (error) {
       return Promise.reject(
         new InternalServerErrorException('Can not change user password'),
       );
     }
-    return Promise.resolve(true);
   }
 
   async updateProfile(userProfileDto: UserProfileDto): Promise<User> {
@@ -69,8 +69,7 @@ export default class UsersService {
   async findOneById(id: number): Promise<User> {
     const userObj = await this.usersRepository.findOneBy({ id });
     if (userObj) {
-      const returnUser = { ...userObj };
-      return Promise.resolve(returnUser);
+      return Promise.resolve(userObj);
     }
     throw new BadRequestException('Cannot find user');
   }
@@ -78,8 +77,7 @@ export default class UsersService {
   async findOneByMail(email: string): Promise<User> {
     const userObj = await this.usersRepository.findOneBy({ email });
     if (userObj) {
-      const returnUser = { ...userObj };
-      return Promise.resolve(returnUser);
+      return Promise.resolve(userObj);
     }
     throw new BadRequestException('Cannot find user');
   }

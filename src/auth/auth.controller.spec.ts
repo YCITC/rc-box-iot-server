@@ -3,13 +3,13 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { MailerService } from '@nestjs-modules/mailer';
 
 import EmailService from '../email/email.service';
 import User from '../users/entity/user.entity';
 import UsersService from '../users/users.service';
 import AuthController from './auth.controller';
 import AuthService from './auth.service';
-import { MailerService } from '@nestjs-modules/mailer';
 import TokenType from './enum/token-type';
 
 describe('AuthController', () => {
@@ -87,7 +87,9 @@ describe('AuthController', () => {
         {
           provide: MailerService,
           useValue: {
-            sendMail: jest.fn().mockResolvedValue({ accepted: [testUser.email] }),
+            sendMail: jest
+              .fn()
+              .mockResolvedValue({ accepted: [testUser.email] }),
           },
         },
         JwtService,
@@ -102,7 +104,7 @@ describe('AuthController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('login', () => {
+  describe.only('login', () => {
     it('should return user and token when credentials are valid', async () => {
       const user = { email: '1@2.3', password: '1234' };
       const res = await controller.login(user);

@@ -1,9 +1,14 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { Injectable } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
+import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
+import JwtPayload from './interface/jwt-payload';
 import UsersService from '../users/users.service';
+import UserInterface from '../users/interface/user.interface';
+import TokenType from './enum/token-type';
 
 @Injectable()
 export default class AuthService {
@@ -13,16 +18,60 @@ export default class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async validateUser(userDto: UserLoginDto): Promise<any> {
-    const user = await this.usersService.findOneByMail(userDto.email);
-    const result = await bcrypt.compare(userDto.password, user.password);
+  async validateUser(dto: UserLoginDto): Promise<UserInterface> {
+    const user = await this.usersService.findOneByMail(dto.email);
+    const result = await bcrypt.compare(dto.password, user.password);
     if (user && result === true) {
       delete user.password;
       return Promise.resolve(user);
     }
-    return Promise.reject(
-      new UnauthorizedException('email or password incorrect'),
-    );
+    throw new UnauthorizedException('email or password incorrect');
+  }
+
+  async changePassword(
+    userId: number,
+    dto: UserChangePasswrodDto,
+  ): Promise<boolean> {
+    const passwordPolicy =
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*#?&_+=]).{8,}/.test(
+        dto.newPassword,
+      );
+    if (passwordPolicy === false)
+      throw new BadRequestException('Password policy failed');
+
+    if (dto.newPassword !== dto.confirmNewPassword)
+      throw new BadRequestException('New password verification failed');
+
+    if (dto.oldPassword === dto.newPassword)
+      throw new BadRequestException('Can not use same password');
+
+    const user = await this.usersService.findOneById(userId);
+    if (user.password.length > 0) {
+      const oldPasswordVerification = await bcrypt.compare(
+        dto.oldPassword,
+        user.password,
+      );
+      if (oldPasswordVerification === false)
+        throw new UnauthorizedException('Old password incorrect');
+    }
+    return this.usersService.changePassword(userId, dto.newPassword);
+  }
+
+  async resetPassword(
+    userId: number,
+    dto: UserChangePasswrodDto,
+  ): Promise<boolean> {
+    const passwordPolicy =
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*#?&]).{8,}/.test(
+        dto.newPassword,
+      );
+    if (passwordPolicy === false)
+      throw new BadRequestException('Password policy failed');
+
+    if (dto.newPassword !== dto.confirmNewPassword)
+      throw new BadRequestException('New password verification failed');
+
+    return this.usersService.changePassword(userId, dto.newPassword);
   }
 
   async validateGoogleUser(details): Promise<any> {
@@ -34,29 +83,24 @@ export default class AuthService {
     }
   }
 
-  createToken(user: any) {
+  createToken(payload: JwtPayload<TokenType>): string {
     const signOptions = {
       secret: this.configService.get('JWT.SECRET'),
     };
-    const payload = { id: user.id, username: user.username };
     const token = this.jwtService.sign(payload, signOptions);
     return token;
   }
 
-  // TODO: createRefreshToken, setcookie, httponly
-
-  createOneDayToken(user: any) {
+  createOneDayToken(payload: JwtPayload<TokenType>): string {
     const signOptions = {
       expiresIn: '1d',
-      issuer: this.configService.get('JWT.ISSUER'),
       secret: this.configService.get('JWT.SECRET'),
     };
-    const payload = { id: user.id, username: user.username };
     const token = this.jwtService.sign(payload, signOptions);
     return token;
   }
 
-  async verifyToken(token: string): Promise<any> {
+  async verifyToken(token: string): Promise<JwtPayload<TokenType>> {
     const payload = await this.jwtService.verify(token, {
       secret: this.configService.get('JWT.SECRET'),
     });

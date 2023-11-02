@@ -1,5 +1,7 @@
 import { Entity, PrimaryColumn, Column } from 'typeorm';
+// import { JoinColumn, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+// import User from '../../users/entity/user.entity';
 
 @Entity({
   name: 'devices',
@@ -31,6 +33,10 @@ export default class Device {
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdTime: Date;
+
+  // @ManyToOne(() => User, (user) => user.devices)
+  // @JoinColumn({ name: 'ownerUserId' })
+  // ownerUser: User;
 
   constructor(deviceId: string, ownerUserId: number, alias: string);
   constructor(deviceId: string, ownerUserId: number, alias: string) {

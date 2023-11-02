@@ -1,5 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+// import { OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+// import Device from '../../devices/entities/device.entity';
 
 @Entity({
   name: 'users',
@@ -63,9 +65,11 @@ export default class User {
 
   @Column({
     type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)',
   })
   createdTime: Date;
+
+  // @OneToMany(() => Device, (device: Device) => device.ownerUserId)
+  // devices: Device[];
 
   constructor(
     email: string,

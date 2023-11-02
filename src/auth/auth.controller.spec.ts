@@ -3,12 +3,14 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { MailerService } from '@nestjs-modules/mailer';
 
 import EmailService from '../email/email.service';
 import User from '../users/entity/user.entity';
 import UsersService from '../users/users.service';
 import AuthController from './auth.controller';
 import AuthService from './auth.service';
+import TokenType from './enum/token-type';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -52,6 +54,7 @@ describe('AuthController', () => {
       providers: [
         AuthService,
         UsersService,
+        EmailService,
         {
           provide: getRepositoryToken(User),
           useValue: {
@@ -82,9 +85,9 @@ describe('AuthController', () => {
           },
         },
         {
-          provide: EmailService,
+          provide: MailerService,
           useValue: {
-            sendVerificationEmail: jest
+            sendMail: jest
               .fn()
               .mockResolvedValue({ accepted: [testUser.email] }),
           },
@@ -101,13 +104,48 @@ describe('AuthController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('login', () => {
+  describe.only('login', () => {
     it('should return user and token when credentials are valid', async () => {
       const user = { email: '1@2.3', password: '1234' };
       const res = await controller.login(user);
       currentUser = res;
       expect(res.access_token).toBeDefined();
       expect(res.user).toHaveProperty('avatarUrl');
+    });
+  });
+  describe('changePassword', () => {
+    const dto = {
+      oldPassword: '1234',
+      newPassword: 'AbcEfg123%$',
+      confirmNewPassword: 'AbcEfg123%$',
+    };
+    it('should return true', async () => {
+      const res = await controller.changePassword(
+        { user: { id: testUser.id } },
+        dto,
+      );
+      expect(res).toEqual(true);
+    });
+  });
+  describe('requestResetPassword', () => {
+    it('should return true', async () => {
+      const res = await controller.requestResetPassword(rawUser.email);
+      expect(res).toEqual(true);
+    });
+  });
+  describe('resetPassword', () => {
+    it('should return true', async () => {
+      const dto = {
+        newPassword: 'AbcEfg123%$',
+        confirmNewPassword: 'AbcEfg123%$',
+      };
+      const jwtPayload = { 
+        id: testUser.id,
+        username: testUser.username,
+        type: TokenType.RESET_PASSWORD
+      };
+      const res = await controller.resetPassword({ user: jwtPayload }, dto);
+      expect(res).toEqual(true);
     });
   });
   describe('createUser', () => {

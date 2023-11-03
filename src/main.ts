@@ -1,4 +1,4 @@
-import express from 'express';
+import * as express from 'express';
 import * as fs from 'fs';
 import * as https from 'https';
 import * as http from 'http';

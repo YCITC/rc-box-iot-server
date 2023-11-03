@@ -2,12 +2,14 @@
   "name": "iot-server",
   "version": "0.3.4",
   "description": "",
-  "author": "",
+  "author": "Tid Huang <yesseecity@gmail.com>",
   "private": true,
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=18 <19"
+    "node": ">=18 <19",
+    "yarn": "3.6.4"
   },
+  "packageManager": "yarn@3.6.4",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
@@ -100,6 +102,5 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  },
-  "packageManager": "yarn@3.6.3"
+  }
 }

@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -8,6 +8,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import User from '../users/entity/user.entity';
 import UsersService from '../users/users.service';
 import AuthService from './auth.service';
+import TokenType from './enum/token-type';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -65,6 +66,7 @@ describe('AuthService', () => {
           provide: getRepositoryToken(User),
           useValue: {
             findOneBy: jest.fn().mockResolvedValue(testUser),
+            save: jest.fn().mockResolvedValue(testUser),
           },
         },
       ],
@@ -93,11 +95,76 @@ describe('AuthService', () => {
       );
     });
   });
+  describe('changePassword', () => {
+    const dto = {
+      oldPassword: '1234',
+      newPassword: 'Abc123%*dga',
+      confirmNewPassword: 'Abc123%*dga',
+    };
+    it('should return true', async () => {
+      const res = await authService.changePassword(1, dto);
+      expect(res).toEqual(true);
+    });
+    it('should throw Exceptions', async () => {
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          newPassword: 'Abcdef12',
+        }),
+      ).rejects.toThrowError(new BadRequestException('Password policy failed'));
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          oldPassword: '0000',
+        }),
+      ).rejects.toThrowError(
+        new UnauthorizedException('Old password incorrect'),
+      );
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          oldPassword: '1234',
+          newPassword: 'Abcdef12%$',
+          confirmNewPassword: 'Abcdef1234',
+        }),
+      ).rejects.toThrowError(
+        new BadRequestException('New password verification failed'),
+      );
+    });
+  });
+  describe('resetPassword', () => {
+    const dto = {
+      newPassword: 'Abc123%*dga',
+      confirmNewPassword: 'Abc123%*dga',
+    };
+    it('should return true', async () => {
+      const res = await authService.resetPassword(1, dto);
+      expect(res).toEqual(true);
+    });
+    it('should throw Exceptions', async () => {
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          newPassword: 'Abcdef12',
+        }),
+      ).rejects.toThrowError(new BadRequestException('Password policy failed'));
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
+          newPassword: 'Abcdef12%$',
+          confirmNewPassword: 'Abcdef1234',
+        }),
+      ).rejects.toThrowError(
+        new BadRequestException('New password verification failed'),
+      );
+    });
+  });
   describe('createToken', () => {
     it('should return JWT object when credentials are valid', async () => {
       const res = await authService.createToken({
         username: 'john',
         id: 1,
+        type: TokenType.SINGIN,
       });
       expect(res).toBeDefined();
     });
@@ -107,6 +174,7 @@ describe('AuthService', () => {
       token = await authService.createToken({
         username: 'john',
         id: 1,
+        type: TokenType.SINGIN,
       });
       expect(token.length).toBeGreaterThan(0);
     });

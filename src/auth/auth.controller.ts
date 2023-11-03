@@ -2,8 +2,9 @@ import * as console from 'console';
 import * as crypto from 'crypto';
 import * as https from 'https';
 
-import { Controller, UseGuards, BadRequestException } from '@nestjs/common';
-import { Get, Post, Put } from '@nestjs/common';
+import { Controller, UseGuards } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { HttpCode, Get, Post, Put } from '@nestjs/common';
 import { Req, Body, Param } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -14,10 +15,12 @@ import AuthService from './auth.service';
 import User from '../users/entity/user.entity';
 import UserRegisterDto from '../users/dto/user.register.dto';
 import UserProfileDto from '../users/dto/user.profile.dto';
+import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import UsersService from '../users/users.service';
 import EmailService from '../email/email.service';
 import GoogleOauthGuard from './guards/google-auth.guard';
+import TokenType from './enum/token-type';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -31,6 +34,7 @@ export default class AuthController {
   ) {}
 
   @Post('login')
+  @HttpCode(200)
   @ApiResponse({
     status: 200,
     description: 'User found.',
@@ -44,10 +48,16 @@ export default class AuthController {
     status: 400,
     description: '[auth/login][error].....',
   })
-  async login(@Body() userLoginDto: UserLoginDto): Promise<any | undefined> {
+  async login(
+    @Body() userLoginDto: UserLoginDto,
+  ): Promise<{ user: User; access_token: string }> {
     try {
       const user = await this.authService.validateUser(userLoginDto);
-      const token = this.authService.createToken(user);
+      const token = this.authService.createToken({
+        id: user.id,
+        username: user.username,
+        type: TokenType.SINGIN,
+      });
 
       return await new Promise((resolve) => {
         const hash = crypto.createHash('md5').update(user.email).digest('hex');
@@ -68,9 +78,64 @@ export default class AuthController {
         });
       });
     } catch (error) {
-      console.error('[auth/login][error]\n', error);
       return Promise.reject(error);
     }
+  }
+
+  @Post('changePassword')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({
+    status: 200,
+    description: 'Reset password successed.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: `"New password verification failed" or "Password policy failed"`,
+  })
+  @ApiResponse({
+    status: 401,
+    description: `Old password incorrect`,
+  })
+  changePassword(
+    @Req() req,
+    @Body() dto: UserChangePasswrodDto,
+  ): Promise<boolean> {
+    return this.authService.changePassword(req.user.id, dto);
+  }
+
+  @Get('requestResetPassword/:email')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Send an email to reset password' })
+  async requestResetPassword(@Param('email') email: string): Promise<boolean> {
+    const user = await this.usersService.findOneByMail(email);
+    const token = this.authService.createOneDayToken({
+      id: user.id,
+      username: user.username,
+      type: TokenType.RESET_PASSWORD,
+    });
+    const url = `https://${this.configService.get(
+      'SERVER_HOSTNAME',
+    )}/reset-password?t=${token}`;
+    const result = await this.emailService.sendResetPasswordEmail(
+      user.email,
+      url,
+    );
+    if (result.accepted.length > 0) return Promise.resolve(true);
+    return Promise.resolve(false);
+  }
+
+  @Post('resetPassword')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Reset password' })
+  resetPassword(
+    @Req() req,
+    @Body() dto: UserChangePasswrodDto,
+  ): Promise<boolean> {
+    if (req.user.type !== TokenType.RESET_PASSWORD)
+      throw new UnauthorizedException('Token incorrect');
+    return this.authService.resetPassword(req.user.id, dto);
   }
 
   @Get('profile')
@@ -87,17 +152,14 @@ export default class AuthController {
     description: 'Unauthorized.',
   })
   async getProfile(@Req() req): Promise<User> {
-    if (req.user?.id) {
-      const user = await this.usersService.findOneById(req.user.id);
-      delete user.password;
-      delete user.isEmailVerified;
-      return Promise.resolve(user);
-    }
-
-    throw new BadRequestException('Lost user information');
+    const user = await this.usersService.findOneById(req.user.id);
+    delete user.password;
+    delete user.isEmailVerified;
+    return Promise.resolve(user);
   }
 
   @Post('updateProfile')
+  @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Update user profile',
@@ -134,8 +196,12 @@ export default class AuthController {
     status: 401,
     description: 'Unauthorized.',
   })
-  async updateToken(@Req() req): Promise<any | undefined> {
-    const token = this.authService.createToken(req.user);
+  async updateToken(@Req() req): Promise<{ access_token: string }> {
+    const token = this.authService.createToken({
+      id: req.user.id,
+      username: req.user.username,
+      type: TokenType.SINGIN,
+    });
     return Promise.resolve({
       access_token: token,
     });
@@ -168,10 +234,14 @@ export default class AuthController {
 
     try {
       const user = await this.usersService.addOne(userDto);
-      const token = this.authService.createOneDayToken(user);
-      const url =
-        'https://' +
-        `${this.configService.get('SERVER_HOSTNAME')}/email-verify?t=${token}`;
+      const token = this.authService.createOneDayToken({
+        id: user.id,
+        username: user.username,
+        type: TokenType.EMAIL_VERIFY,
+      });
+      const url = `https://${this.configService.get(
+        'SERVER_HOSTNAME',
+      )}/email-verify?t=${token}`;
 
       const result = await this.emailService.sendVerificationEmail(
         user.email,
@@ -224,6 +294,7 @@ export default class AuthController {
     }
   }
 
+  // TODO: Maybe it can be changed to request different types of emails
   @Get('emailResend/:email')
   @ApiResponse({
     status: 200,
@@ -239,7 +310,11 @@ export default class AuthController {
       if (user.isEmailVerified) {
         return await Promise.reject(new BadRequestException(`EmailVerified`));
       }
-      const token = this.authService.createOneDayToken(user);
+      const token = this.authService.createOneDayToken({
+        id: user.id,
+        username: user.username,
+        type: TokenType.EMAIL_VERIFY,
+      });
       const url =
         'https://' +
         `this.configService.get('SERVER_HOSTNAME')/email-verify?t=${token}`;

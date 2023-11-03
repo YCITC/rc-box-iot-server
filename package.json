@@ -1,12 +1,12 @@
 {
   "name": "iot-server",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
   "engines": {
-    "node": ">=18"
+    "node": ">=18 <19"
   },
   "scripts": {
     "prebuild": "rimraf dist",

@@ -6,6 +6,7 @@ import UsersService from './users.service';
 
 describe('Users controller', () => {
   let controller: UsersController;
+  let service: UsersService;
   const rawUser = {
     email: '1@2.3',
     username: 'Tester',
@@ -15,17 +16,17 @@ describe('Users controller', () => {
     address: 'No. 7, Section 5, Xinyi Road, Xinyi District · Taipei · Taiwan',
     zipCode: '110',
   };
+  const testUser = new User(
+    rawUser.email,
+    rawUser.username,
+    rawUser.fullName,
+    rawUser.password,
+    rawUser.phoneNumber,
+    rawUser.address,
+    rawUser.zipCode,
+  );
 
   beforeEach(async () => {
-    const testUser = new User(
-      rawUser.email,
-      rawUser.username,
-      rawUser.fullName,
-      rawUser.password,
-      rawUser.phoneNumber,
-      rawUser.address,
-      rawUser.zipCode,
-    );
     const app: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
       providers: [
@@ -48,36 +49,48 @@ describe('Users controller', () => {
     }).compile();
 
     controller = app.get<UsersController>(UsersController);
+    service = app.get<UsersService>(UsersService);
   });
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
 
   describe('addOne', () => {
-    it('should return a user', async () => {
-      const user = await controller.addOne(rawUser);
-      expect(user.createdTime).toBeDefined();
-      expect(user.isEmailVerified).toBeDefined();
-    });
-
-    it('password should be hashed', async () => {
-      const user = await controller.addOne(rawUser);
-      expect(user.password === rawUser.password).toBeFalsy();
+    it('UsersService.addOne should be called', async () => {
+      const spy = jest.spyOn(service, 'addOne').mockResolvedValue(testUser);
+      await controller.addOne(rawUser);
+      expect(spy).toBeCalled();
     });
   });
 
   describe('findByMail', () => {
-    it('should return a user', async () => {
+    it('UsersService.findOneByMail should be called', async () => {
+      const spy = jest
+        .spyOn(service, 'findOneByMail')
+        .mockResolvedValue(testUser);
       const user = await controller.findByMail('1@.2.3');
-      expect(user.isEmailVerified).toBeFalsy();
-      expect(user.createdTime).toBeDefined();
+      expect(user).toBe(testUser);
+      expect(spy).toBeCalled();
+    });
+  });
+
+  describe('findById', () => {
+    it('should return a user', async () => {
+      const spy = jest
+        .spyOn(service, 'findOneById')
+        .mockResolvedValue(testUser);
+      const user = await controller.findById(1);
+      expect(user).toBe(testUser);
+      expect(spy).toBeCalled();
     });
   });
 
   describe('delete', () => {
-    it('should delete an user', async () => {
+    it('UserService.deleteOne should delete an user', async () => {
+      const spy = jest.spyOn(service, 'deleteOne').mockResolvedValue(true);
       const response = await controller.deleteOne(1);
       expect(response).toBeTruthy();
+      expect(spy).toBeCalled();
     });
   });
 });

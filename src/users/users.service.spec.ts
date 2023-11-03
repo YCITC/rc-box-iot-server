@@ -69,6 +69,13 @@ describe('UsersService', () => {
     });
   });
 
+  describe('changePasswosrd', () => {
+    it('should return true', async () => {
+      const result = await service.changePassword(rawUser.id, rawUser.password);
+      expect(result).toEqual(true);
+    });
+  });
+
   describe('updateProfile', () => {
     it('should trigger repo save', async () => {
       const newData = { ...rawUser, zipCode: '11005' };

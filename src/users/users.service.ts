@@ -1,10 +1,11 @@
+import * as bcrypt from 'bcrypt';
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
 import UserRegisterDto from './dto/user.register.dto';
-import User from './entity/user.entity';
 import UserProfileDto from './dto/user.profile.dto';
+import User from './entity/user.entity';
 
 @Injectable()
 export default class UsersService {
@@ -36,6 +37,18 @@ export default class UsersService {
     return Promise.resolve(user);
   }
 
+  async changePassword(id: number, password: string): Promise<boolean> {
+    try {
+      const hashedPassword = await bcrypt.hash(password, 5);
+      await this.usersRepository.save({ id, password: hashedPassword });
+      return await Promise.resolve(true);
+    } catch (error) {
+      return Promise.reject(
+        new InternalServerErrorException('Can not change user password'),
+      );
+    }
+  }
+
   async updateProfile(userProfileDto: UserProfileDto): Promise<User> {
     const user = await this.usersRepository.save(userProfileDto);
     return Promise.resolve(user);
@@ -56,8 +69,7 @@ export default class UsersService {
   async findOneById(id: number): Promise<User> {
     const userObj = await this.usersRepository.findOneBy({ id });
     if (userObj) {
-      const returnUser = { ...userObj };
-      return Promise.resolve(returnUser);
+      return Promise.resolve(userObj);
     }
     throw new BadRequestException('Cannot find user');
   }
@@ -65,8 +77,7 @@ export default class UsersService {
   async findOneByMail(email: string): Promise<User> {
     const userObj = await this.usersRepository.findOneBy({ email });
     if (userObj) {
-      const returnUser = { ...userObj };
-      return Promise.resolve(returnUser);
+      return Promise.resolve(userObj);
     }
     throw new BadRequestException('Cannot find user');
   }

@@ -29,7 +29,7 @@ export default class UsersController {
     type: User,
   })
   @ApiResponse({ status: 400, description: 'Cannot find user.' })
-  findByUid(@Param('id') id: number): Promise<User> {
+  findById(@Param('id') id: number): Promise<User> {
     return this.usersService.findOneById(id);
   }
 

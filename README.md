@@ -46,7 +46,7 @@ TypeORM automatically creates a repository for your entity, but it cannot create
 So in your test DB, you have to create a table `rc-box`.
 
 ### Use jwtService
-We want the "validate" function in "jwt.strategy.ts" to return an object with "userId" and "username" keys.
+We want the "validate" function in "jwt.strategy.ts" to return an object with "id", "username" and "type" keys.
 
 When we use "jwtService.sign(payload, signOptions)", the "payload" object will be passed into the "validate" function in "jwt.strategy.ts". The object that is returned by "validate" will be used to populate the "user" field in the request object for the controller.
 
@@ -59,3 +59,17 @@ We useing three workflow
   When feature/* branch pushed, it will test the branch.
 3. deploy.yml
   When release/* branch pushed, it will build this project and deploy to server.
+
+## Notice for throw Expression
+* In the controller
+  using ```Promise.reject(new Expression())```
+* In the service 
+  using ```throw new Expression()```
+
+
+## Unit Test
+Test single file  
+
+```
+yarn test -- [filename]
+```

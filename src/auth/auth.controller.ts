@@ -21,6 +21,7 @@ import UsersService from '../users/users.service';
 import EmailService from '../email/email.service';
 import GoogleOauthGuard from './guards/google-auth.guard';
 import TokenType from './enum/token-type';
+import UserInterface from '../users/interface/user.interface';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -50,7 +51,7 @@ export default class AuthController {
   })
   async login(
     @Body() userLoginDto: UserLoginDto,
-  ): Promise<{ user: User; access_token: string }> {
+  ): Promise<{ user: UserInterface; access_token: string }> {
     try {
       const user = await this.authService.validateUser(userLoginDto);
       const token = this.authService.createToken({
@@ -117,12 +118,8 @@ export default class AuthController {
     const url = `https://${this.configService.get(
       'SERVER_HOSTNAME',
     )}/reset-password?t=${token}`;
-    const result = await this.emailService.sendResetPasswordEmail(
-      user.email,
-      url,
-    );
-    if (result.accepted.length > 0) return Promise.resolve(true);
-    return Promise.resolve(false);
+    await this.emailService.sendResetPasswordEmail(user.email, url);
+    return Promise.resolve(true);
   }
 
   @Post('resetPassword')
@@ -134,7 +131,7 @@ export default class AuthController {
     @Body() dto: UserChangePasswrodDto,
   ): Promise<boolean> {
     if (req.user.type !== TokenType.RESET_PASSWORD)
-      throw new UnauthorizedException('Token incorrect');
+      return Promise.reject(new UnauthorizedException('Token incorrect'));
     return this.authService.resetPassword(req.user.id, dto);
   }
 
@@ -177,13 +174,8 @@ export default class AuthController {
     description: 'Unauthorized.',
   })
   async updateProfile(@Body() userProfileDto: UserProfileDto): Promise<User> {
-    try {
-      const user = this.usersService.updateProfile(userProfileDto);
-      return await Promise.resolve(user);
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
+    const user = this.usersService.updateProfile(userProfileDto);
+    return Promise.resolve(user);
   }
 
   @Get('updateToken')
@@ -222,38 +214,34 @@ export default class AuthController {
     description: 'Email [ ****** ] exist',
   })
   async createUser(@Body() userDto: UserRegisterDto): Promise<User | any> {
-    if (userDto.password === undefined) {
-      throw new BadRequestException('Require password');
+    if (!userDto.password) {
+      return Promise.reject(new BadRequestException('Require password'));
     }
-    if (userDto.email === undefined) {
-      throw new BadRequestException('Require email');
+    if (!userDto.email) {
+      return Promise.reject(new BadRequestException('Require email'));
     }
-    if (userDto.username === undefined) {
-      throw new BadRequestException('Require username');
+    if (!userDto.username) {
+      return Promise.reject(new BadRequestException('Require username'));
     }
 
-    try {
-      const user = await this.usersService.addOne(userDto);
-      const token = this.authService.createOneDayToken({
-        id: user.id,
-        username: user.username,
-        type: TokenType.EMAIL_VERIFY,
-      });
-      const url = `https://${this.configService.get(
-        'SERVER_HOSTNAME',
-      )}/email-verify?t=${token}`;
+    const user = await this.usersService.addOne(userDto);
+    const token = this.authService.createOneDayToken({
+      id: user.id,
+      username: user.username,
+      type: TokenType.EMAIL_VERIFY,
+    });
+    const url = `https://${this.configService.get(
+      'SERVER_HOSTNAME',
+    )}/email-verify?t=${token}`;
 
-      const result = await this.emailService.sendVerificationEmail(
-        user.email,
-        url,
-      );
-      if (result.accepted.length > 0)
-        return await Promise.resolve({ ...user, token });
-      return await Promise.resolve(false);
-    } catch (error) {
-      console.error(error);
-      throw error;
+    const result = await this.emailService.sendVerificationEmail(
+      user.email,
+      url,
+    );
+    if (result.accepted.length > 0) {
+      return Promise.resolve({ ...user, token });
     }
+    return Promise.resolve(false);
   }
 
   @Get('emailVerify/:token')
@@ -268,10 +256,6 @@ export default class AuthController {
       return await this.usersService.emailVerify(userInfo.id);
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
-        // const url =
-        //   this.configService.get('common.VERIFY_FAILED_URL') +
-        //   '?error=TokenExpiredError';
-        // return res.redirect(url);
         return Promise.reject(new BadRequestException('TokenExpiredError'));
       }
 
@@ -281,7 +265,7 @@ export default class AuthController {
         //   '?error=JsonWebTokenError';
         // return res.redirect(url);
         error.message = 'JsonWebTokenError';
-        return Promise.reject(new BadRequestException('TokenExpiredError'));
+        return Promise.reject(new BadRequestException('JsonWebTokenError'));
       }
 
       // console.log(error);
@@ -303,12 +287,8 @@ export default class AuthController {
   async emailResend(@Param('email') email: string): Promise<string> {
     try {
       const user = await this.usersService.findOneByMail(email);
-      if (!user)
-        return await Promise.reject(
-          new BadRequestException(`Could not find user`),
-        );
       if (user.isEmailVerified) {
-        return await Promise.reject(new BadRequestException(`EmailVerified`));
+        return await Promise.reject(new BadRequestException('EmailVerified'));
       }
       const token = this.authService.createOneDayToken({
         id: user.id,
@@ -326,15 +306,6 @@ export default class AuthController {
       if (result.accepted.length > 0) return await Promise.resolve(token);
       return await Promise.resolve('send mail failed');
     } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        return Promise.reject(new BadRequestException('TokenExpiredError'));
-      }
-
-      if (error.name === 'JsonWebTokenError') {
-        error.message = 'JsonWebTokenError';
-        return Promise.reject(new BadRequestException('TokenExpiredError'));
-      }
-
       return Promise.reject(new BadRequestException(error.message));
     }
   }

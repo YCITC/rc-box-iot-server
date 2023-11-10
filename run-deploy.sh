@@ -27,7 +27,7 @@ echo  -e
 # Deploy test with rsync.
 echo -e 
 while true; do
-    read -p "==> Do you wnat to run deploy test? (Y/N) " 
+    read -p "==> Do you want to run deploy test? (Y/N) " 
     case $REPLY in
         [Yy] )
             # Change entire owner/group to deploy account in order to have the proper permissions.

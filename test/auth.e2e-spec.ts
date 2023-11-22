@@ -25,6 +25,7 @@ describe('AuthController (e2e)', () => {
   let accessToken: string;
   let repo: Repository<User>;
   let authService: AuthService;
+  let proflie = new UserProfileDto();
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -41,13 +42,9 @@ describe('AuthController (e2e)', () => {
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
-              type: configService.get('DB.type'),
+              ...configService.get('DB'),
               host: configService.get('DB_HOST'),
-              port: configService.get('DB.port'),
-              username: configService.get('DB.username'),
-              password: configService.get('DB.password'),
               database: 'rc-box-test',
-              // entities: ['dist/**/*.entity{.ts,.js}'],
               entities: [User],
               synchronize: true,
             };
@@ -64,6 +61,7 @@ describe('AuthController (e2e)', () => {
     authService = app.get<AuthService>(AuthService);
     await app.init();
   });
+
   afterEach(async () => {
     await app.close();
   });
@@ -119,8 +117,8 @@ describe('AuthController (e2e)', () => {
   it('/auth/changePassword/ (POST)', async () => {
     const dto = {
       oldPassword: rawUser.password,
-      newPassword: 'Abc123%*dga',
-      confirmNewPassword: 'Abc123%*dga',
+      newPassword: 'Abc123%*Eee',
+      confirmNewPassword: 'Abc123%*Eee',
     };
     const response = await request(app.getHttpServer())
       .post('/auth/changePassword')
@@ -136,6 +134,7 @@ describe('AuthController (e2e)', () => {
       .expect(200);
     expect(response.text).toBe('true');
   });
+
   it('/auth/resetPassword (POST)', async () => {
     const userResetPasswrodDto = {
       newPassword: '123BBB%*dga',
@@ -154,7 +153,7 @@ describe('AuthController (e2e)', () => {
       .expect(200);
     expect(response.text).toBe('true');
   });
-  let proflie = new UserProfileDto();
+
   it('/auth/profile (GET)', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/profile')

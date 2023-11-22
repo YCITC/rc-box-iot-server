@@ -17,7 +17,7 @@ async function buildDocument(app) {
   const config = new DocumentBuilder()
     .setTitle('RC-Box API documents')
     // .setDescription('')
-    .setVersion(configService.get('common.VERSION'))
+    .setVersion(configService.get('COMMON.VERSION'))
     .addBearerAuth()
     .build();
 
@@ -34,11 +34,11 @@ async function buildDocument(app) {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function httpServer() {
   const app = await NestFactory.create(AppModule, { cors: true });
+  const configService = app.get(ConfigService);
   app.setGlobalPrefix('api');
   // app.enableCors(); //enable CORS
 
-  const configService = app.get(ConfigService);
-  if (configService.get('common.DOCUMENT_ENABLE') === true) {
+  if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
     buildDocument(app);
   }
   await app.listen(3000);
@@ -54,7 +54,12 @@ async function httpsServer() {
   const app = await NestFactory.create(AppModule, {
     httpsOptions,
   });
+  const configService = app.get(ConfigService);
   app.setGlobalPrefix('api');
+
+  if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
+    buildDocument(app);
+  }
   await app.listen(1443);
 }
 
@@ -67,12 +72,12 @@ async function multipleServers() {
 
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+  const configService = app.get(ConfigService);
   app.setGlobalPrefix('api');
-  app.enableCors(); // enable CORS
+  // app.enableCors(); // enable CORS
   // TODO enable CORS need white list.
 
-  const configService = app.get(ConfigService);
-  if (configService.get('common.DOCUMENT_ENABLE') === true) {
+  if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
     buildDocument(app);
   }
 

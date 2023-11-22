@@ -28,13 +28,9 @@ describe('UserController (e2e)', () => {
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
-              type: configService.get('DB.type'),
+              ...configService.get('DB'),
               host: configService.get('DB_HOST'),
-              port: configService.get('DB.port'),
-              username: configService.get('DB.username'),
-              password: configService.get('DB.password'),
               database: 'rc-box-test',
-              // entities: ['dist/**/*.entity{.ts,.js}'],
               entities: [User],
               synchronize: true,
             };

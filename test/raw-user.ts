@@ -1,6 +1,6 @@
 const rawUser = {
   email: 'yesseecity@icloud.com',
-  password: 'jidiizllewnicvjgiowddjoi',
+  password: 'Abc123%*dga',
   fullName: 'Tid Huang',
   username: 'Tid',
   phoneNumber: '0900123456',

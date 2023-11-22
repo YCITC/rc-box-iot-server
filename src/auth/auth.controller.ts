@@ -262,7 +262,7 @@ export default class AuthController {
 
       if (error.name === 'JsonWebTokenError') {
         // const url =
-        //   this.configService.get('common.VERIFY_FAILED_URL') +
+        //   this.configService.get('COMMON.VERIFY_FAILED_URL') +
         //   '?error=JsonWebTokenError';
         // return res.redirect(url);
         error.message = 'JsonWebTokenError';

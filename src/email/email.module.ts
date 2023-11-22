@@ -11,7 +11,7 @@ import emailConfig from '../config/email.config';
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        return configService.get('email');
+        return configService.get('EMAIL');
       },
       inject: [ConfigService],
     }),

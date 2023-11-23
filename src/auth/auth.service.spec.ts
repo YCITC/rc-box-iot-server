@@ -10,7 +10,7 @@ import UsersService from '../users/users.service';
 import AuthService from './auth.service';
 import TokenType from './enum/token-type';
 
-describe('AuthService', () => {
+describe.only('AuthService', () => {
   let authService: AuthService;
   let usersService: UsersService;
   let token: string;
@@ -161,12 +161,12 @@ describe('AuthService', () => {
   });
   describe('createToken', () => {
     it('should return JWT object when credentials are valid', async () => {
-      const res = await authService.createToken({
+      token = await authService.createToken({
         username: 'john',
         id: 1,
         type: TokenType.AUTH,
       });
-      expect(res).toBeDefined();
+      expect(token).toBeDefined();
     });
   });
   describe('verifyToken', () => {

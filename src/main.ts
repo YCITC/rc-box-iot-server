@@ -2,6 +2,8 @@ import * as express from 'express';
 import * as fs from 'fs';
 import * as https from 'https';
 import * as http from 'http';
+import * as session from 'express-session';
+import * as cookieParser from 'cookie-parser';
 
 import { SwaggerModule, SwaggerDocumentOptions } from '@nestjs/swagger';
 import { DocumentBuilder } from '@nestjs/swagger';
@@ -38,6 +40,9 @@ async function httpServer() {
   app.setGlobalPrefix('api');
   // app.enableCors(); //enable CORS
 
+  app.use(cookieParser());
+  app.use(session(configService.get('SESSION')));
+
   if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
     buildDocument(app);
   }
@@ -56,6 +61,9 @@ async function httpsServer() {
   });
   const configService = app.get(ConfigService);
   app.setGlobalPrefix('api');
+
+  app.use(cookieParser());
+  app.use(session(configService.get('SESSION')));
 
   if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
     buildDocument(app);
@@ -77,6 +85,9 @@ async function multipleServers() {
   // app.enableCors(); // enable CORS
   // TODO enable CORS need white list.
 
+  app.use(cookieParser());
+  app.use(session(configService.get('SESSION')));
+
   if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
     buildDocument(app);
   }
@@ -87,6 +98,6 @@ async function multipleServers() {
   https.createServer(httpsOptions, server).listen(443);
 }
 
-// httpServer();
+httpServer();
 // httpsServer();
-multipleServers();
+// multipleServers();

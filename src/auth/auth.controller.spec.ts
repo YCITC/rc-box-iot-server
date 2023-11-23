@@ -1,6 +1,7 @@
 import * as https from 'https';
 import * as jwt from 'jsonwebtoken';
 
+import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -48,6 +49,10 @@ describe('AuthController', () => {
   );
   let currentUser = null;
 
+  const mockLoginResponse: Partial<Response> = {
+    cookie: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -71,7 +76,7 @@ describe('AuthController', () => {
               }
               return Promise.resolve(testUser);
             }),
-            createToken: jest.fn().mockResolvedValue({ token: 'tokenString' }),
+            createToken: jest.fn().mockResolvedValue('tokenString'),
             changePassword: jest.fn().mockResolvedValue(true),
             resetPassword: jest.fn().mockResolvedValue(true),
             verifyToken: jest.fn().mockResolvedValue(true),
@@ -150,8 +155,10 @@ describe('AuthController', () => {
         callback(mockResponse as any); // Casting to 'any' for simplicity
       });
       const user = { email: '1@2.3', password: '1234' };
-      const res = await controller.login(user);
+
+      const res = await controller.login(user, mockLoginResponse as Response);
       expect(res.user.avatarUrl).toBeNull();
+      expect(mockLoginResponse.cookie).toHaveBeenCalled();
     });
     it('should return user and token when credentials are valid', async () => {
       (https.get as jest.Mock).mockImplementation((url, callback) => {
@@ -161,9 +168,9 @@ describe('AuthController', () => {
         callback(mockResponse as any); // Casting to 'any' for simplicity
       });
       const user = { email: '1@2.3', password: '1234' };
-      const res = await controller.login(user);
+      const res = await controller.login(user, mockLoginResponse as Response);
       currentUser = res;
-      expect(res.access_token).toBeDefined();
+      expect(res.accessToken).toBeDefined();
       expect(res.user.avatarUrl).toBeTruthy();
     });
   });
@@ -194,9 +201,9 @@ describe('AuthController', () => {
         callback(mockResponse as any); // Casting to 'any' for simplicity
       });
       const user = { email: '1@2.3', password: '' };
-      await expect(controller.login(user)).rejects.toThrowError(
-        UnauthorizedException,
-      );
+      await expect(
+        controller.login(user, mockLoginResponse as Response),
+      ).rejects.toThrowError(UnauthorizedException);
     });
   });
   describe('resetPassword', () => {
@@ -367,9 +374,12 @@ describe('AuthController', () => {
   });
   describe('updateToken', () => {
     it('should return a token', async () => {
-      const newToekn = await controller.updateToken({
-        user: { id: 1, username: 'testUser' },
-      });
+      const mockRequest = {
+        cookies: {
+          rtk: 'fackToken',
+        }
+      }
+      const newToekn = await controller.updateToken(mockRequest);
       expect(newToekn).toBeDefined();
     });
   });

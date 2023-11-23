@@ -5,7 +5,8 @@ import * as https from 'https';
 import { Controller, UseGuards } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { HttpCode, Get, Post, Put } from '@nestjs/common';
-import { Req, Body, Param } from '@nestjs/common';
+import { Req, Res, Body, Param } from '@nestjs/common';
+import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -22,6 +23,7 @@ import EmailService from '../email/email.service';
 import GoogleOauthGuard from './guards/google-auth.guard';
 import TokenType from './enum/token-type';
 import UserInterface from '../users/interface/user.interface';
+import JwtPayload from './interface/jwt-payload';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -51,32 +53,38 @@ export default class AuthController {
   })
   async login(
     @Body() userLoginDto: UserLoginDto,
-  ): Promise<{ user: UserInterface; access_token: string }> {
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ user: UserInterface; accessToken: string }> {
     try {
       const user = await this.authService.validateUser(userLoginDto);
-      const token = this.authService.createToken({
+      const accessToken = this.authService.createToken({
         id: user.id,
         username: user.username,
         type: TokenType.AUTH,
       });
+      const refreshToken = this.authService.createToken({
+        id: user.id,
+        username: user.username,
+        type: TokenType.REFRESH,
+      });
+      res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
 
       return await new Promise((resolve) => {
         const hash = crypto.createHash('md5').update(user.email).digest('hex');
-        https.get(`https://www.gravatar.com/avatar/${hash}?d=404`, (res) => {
-          if (res.statusCode === 404) {
-            user.avatarUrl = null;
+        https.get(
+          `https://www.gravatar.com/avatar/${hash}?d=404`,
+          (avatarRes) => {
+            if (avatarRes.statusCode === 404) {
+              user.avatarUrl = null;
+            } else {
+              user.avatarUrl = `https://www.gravatar.com/avatar/${hash}`;
+            }
             resolve({
-              access_token: token,
+              accessToken,
               user,
             });
-          } else {
-            user.avatarUrl = `https://www.gravatar.com/avatar/${hash}`;
-            resolve({
-              access_token: token,
-              user,
-            });
-          }
-        });
+          },
+        );
       });
     } catch (error) {
       return Promise.reject(error);
@@ -180,7 +188,7 @@ export default class AuthController {
   }
 
   @Get('updateToken')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary:
       'Update jwtToken, Front-End must add "Authorization: Bearer ****token*****" in header',
@@ -189,14 +197,26 @@ export default class AuthController {
     status: 401,
     description: 'Unauthorized.',
   })
-  async updateToken(@Req() req): Promise<{ access_token: string }> {
+  async updateToken(@Req() req): Promise<{ accessToken: string }> {
+    let userInfo: JwtPayload<TokenType>;
+    try {
+      userInfo = await this.authService.verifyToken(req.cookies.rtk);
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
+      }
+      if (error.name === 'JsonWebTokenError') {
+        return Promise.reject(new BadRequestException('JsonWebTokenError'));
+      }
+      return Promise.reject(new BadRequestException(error.message));
+    }
     const token = this.authService.createToken({
-      id: req.user.id,
-      username: req.user.username,
+      id: userInfo.id,
+      username: userInfo.username,
       type: TokenType.AUTH,
     });
     return Promise.resolve({
-      access_token: token,
+      accessToken: token,
     });
   }
 
@@ -265,7 +285,6 @@ export default class AuthController {
         //   this.configService.get('COMMON.VERIFY_FAILED_URL') +
         //   '?error=JsonWebTokenError';
         // return res.redirect(url);
-        error.message = 'JsonWebTokenError';
         return Promise.reject(new BadRequestException('JsonWebTokenError'));
       }
 

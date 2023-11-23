@@ -85,7 +85,7 @@ describe('DeviceController (e2e)', () => {
     const payload = {
       id: 1,
       username: rawUser.username,
-      type: TokenType.SINGIN,
+      type: TokenType.AUTH,
     };
     accessToken = jwtService.sign(payload, signOptions);
   });

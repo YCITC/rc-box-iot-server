@@ -164,19 +164,9 @@ describe('AuthService', () => {
       const res = await authService.createToken({
         username: 'john',
         id: 1,
-        type: TokenType.SINGIN,
+        type: TokenType.AUTH,
       });
       expect(res).toBeDefined();
-    });
-  });
-  describe('createOneDayToken', () => {
-    it('should return JWT object when credentials are valid', async () => {
-      token = await authService.createToken({
-        username: 'john',
-        id: 1,
-        type: TokenType.SINGIN,
-      });
-      expect(token.length).toBeGreaterThan(0);
     });
   });
   describe('verifyToken', () => {

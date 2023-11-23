@@ -57,7 +57,7 @@ export default class AuthController {
       const token = this.authService.createToken({
         id: user.id,
         username: user.username,
-        type: TokenType.SINGIN,
+        type: TokenType.AUTH,
       });
 
       return await new Promise((resolve) => {
@@ -110,7 +110,7 @@ export default class AuthController {
   @ApiOperation({ summary: 'Send an email to reset password' })
   async requestResetPassword(@Param('email') email: string): Promise<boolean> {
     const user = await this.usersService.findOneByMail(email);
-    const token = this.authService.createOneDayToken({
+    const token = this.authService.createToken({
       id: user.id,
       username: user.username,
       type: TokenType.RESET_PASSWORD,
@@ -193,7 +193,7 @@ export default class AuthController {
     const token = this.authService.createToken({
       id: req.user.id,
       username: req.user.username,
-      type: TokenType.SINGIN,
+      type: TokenType.AUTH,
     });
     return Promise.resolve({
       access_token: token,
@@ -226,7 +226,7 @@ export default class AuthController {
     }
 
     const user = await this.usersService.addOne(userDto);
-    const token = this.authService.createOneDayToken({
+    const token = this.authService.createToken({
       id: user.id,
       username: user.username,
       type: TokenType.EMAIL_VERIFY,
@@ -291,7 +291,7 @@ export default class AuthController {
       if (user.isEmailVerified) {
         return await Promise.reject(new BadRequestException('EmailVerified'));
       }
-      const token = this.authService.createOneDayToken({
+      const token = this.authService.createToken({
         id: user.id,
         username: user.username,
         type: TokenType.EMAIL_VERIFY,

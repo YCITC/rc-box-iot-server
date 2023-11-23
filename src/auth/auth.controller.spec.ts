@@ -73,9 +73,6 @@ describe('AuthController', () => {
             }),
             createToken: jest.fn().mockResolvedValue({ token: 'tokenString' }),
             changePassword: jest.fn().mockResolvedValue(true),
-            createOneDayToken: jest
-              .fn()
-              .mockResolvedValue({ token: 'tokenString' }),
             resetPassword: jest.fn().mockResolvedValue(true),
             verifyToken: jest.fn().mockResolvedValue(true),
           },
@@ -220,7 +217,7 @@ describe('AuthController', () => {
       const jwtPayload = {
         id: testUser.id,
         username: testUser.username,
-        type: TokenType.SINGIN,
+        type: TokenType.AUTH,
       };
 
       await expect(

@@ -145,7 +145,7 @@ describe('AuthController (e2e)', () => {
       username: rawUser.username,
       type: TokenType.RESET_PASSWORD,
     };
-    const token = authService.createOneDayToken(payload);
+    const token = authService.createToken(payload);
     const response = await request(app.getHttpServer())
       .post('/auth/resetPassword')
       .send(userResetPasswrodDto)

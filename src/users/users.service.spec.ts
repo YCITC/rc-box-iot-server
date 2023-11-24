@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BadRequestException } from '@nestjs/common';
 import User from './entity/user.entity';
 import UsersService from './users.service';
 
@@ -62,11 +63,33 @@ describe('UsersService', () => {
       const user = await service.addOne(rawUser);
       expect(user.createdTime).toBeDefined();
       expect(user.isEmailVerified).toBeDefined();
-    });
-    it('password should be hashed', async () => {
-      const user = await service.addOne(rawUser);
       expect(user.password === rawUser.password).toBeFalsy();
     });
+    it('should throw Exception with "Require email"', async () => {
+      const userData = { ...rawUser };
+      delete userData.email;
+      const process = service.addOne(userData)
+      await expect(process).rejects.toThrowError(
+        new BadRequestException('Require email'),
+      );
+    });
+    it('should throw Exception with "Require username"', async () => {
+      const userData = { ...rawUser };
+      delete userData.username;
+      const process = service.addOne(userData)
+      await expect(process).rejects.toThrowError(
+        new BadRequestException('Require username'),
+      );
+    });
+    it('should throw Exception when save user failed', async () => {
+      jest.spyOn(repo, 'save').mockRejectedValueOnce({
+        sqlMessage: 'Duplicate entry',
+      });
+      const userData = { ...rawUser };
+      const process = service.addOne(userData);
+      await expect(process).rejects.toThrow(BadRequestException);
+    });
+
   });
 
   describe('changePasswosrd', () => {

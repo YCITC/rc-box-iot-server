@@ -5,7 +5,7 @@ import * as https from 'https';
 import { Controller, UseGuards } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { HttpCode, Get, Post, Put } from '@nestjs/common';
-import { Req, Res, Body, Param } from '@nestjs/common';
+import { Req, Res, Body, Param, Session } from '@nestjs/common';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -89,6 +89,29 @@ export default class AuthController {
     } catch (error) {
       return Promise.reject(error);
     }
+  }
+
+  @Get('logout')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    description: 'Logout and clean cookie and session.',
+  })
+  async logout(
+    @Session() session: Record<string, any>,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<boolean> {
+    let error;
+    session.destroy((err) => {
+      if (err) {
+        error = err;
+      }
+    });
+    if (error) {
+      return Promise.reject(error);
+    }
+    res.clearCookie('rtk');
+    return Promise.resolve(true);
   }
 
   @Post('changePassword')

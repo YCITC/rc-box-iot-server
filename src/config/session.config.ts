@@ -4,7 +4,7 @@ export default registerAs('SESSION', () => ({
   secret: 'your-secret-key',
   resave: false,
   rolling: true,
-  saveUninitialized: false,
+  saveUninitialized: true,
   name: 'tid',
   cookie: {
     // maxAge: 60000, // 1分

@@ -174,6 +174,39 @@ describe('AuthController', () => {
       expect(res.user.avatarUrl).toBeTruthy();
     });
   });
+  describe('logout', () => {
+    const mockResponse = {
+      clearCookie: jest.fn(),
+    } as Partial<Response>;
+
+    it('should clean cookie and destory session', async () => {
+      const mockSession = {
+        destroy: jest.fn(),
+      };
+
+      await controller.logout(
+        mockSession as Record<string, any>,
+        mockResponse as Response,
+      );
+
+      expect(mockSession.destroy).toHaveBeenCalled();
+      expect(mockResponse.clearCookie).toHaveBeenCalled();
+    });
+    it('should reject with error', async () => {
+      const mockSession = {
+        destroy: jest.fn((callback) =>
+          callback(new Error('Session destroy error')),
+        ),
+      };
+
+      await expect(
+        controller.logout(
+          mockSession as Record<string, any>,
+          mockResponse as Response,
+        )
+      ).rejects.toThrowError(Error);
+    });
+  });
   describe('changePassword', () => {
     const dto = {
       oldPassword: '1234',
@@ -381,6 +414,12 @@ describe('AuthController', () => {
       }
       const newToekn = await controller.updateToken(mockRequest);
       expect(newToekn).toBeDefined();
+    });
+  });
+  describe('google', () => {
+    it('should return true', async () => {
+      const result = await controller.googleOAuth();
+      expect(result).toBeTruthy();
     });
   });
 });

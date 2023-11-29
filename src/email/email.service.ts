@@ -51,7 +51,7 @@ export default class EmailService {
           </tr>
           <tr>
             <td>
-              <a href="${verificationURL}" target="_blank" title="RC-Box Verification" >RC-Box Verification/a>
+              <a href="${verificationURL}" target="_blank" title="RC-Box Verification" >RC-Box Verification </a>
             </td>
           </tr>
         </tbody>

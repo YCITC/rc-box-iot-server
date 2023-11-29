@@ -9,6 +9,6 @@ export default registerAs('google', () => ({
     clientID:
       '633936908307-atiu6bpu8iaf7uf2jk4abllm7b2s77sj.apps.googleusercontent.com',
     clientSecret: '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',
-    callbackURL: 'http://localhost:3000/api/auth/google/callback',
+    callbackRoute: '/api/auth/google/callback',
   },
 }));

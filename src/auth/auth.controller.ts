@@ -115,9 +115,10 @@ export default class AuthController {
       username: user.username,
       type: TokenType.RESET_PASSWORD,
     });
-    const url = `https://${this.configService.get(
-      'SERVER_HOSTNAME',
-    )}/reset-password?t=${token}`;
+    let url =
+      this.configService.get('PROTOCOL') +
+      this.configService.get('SERVER_HOSTNAME');
+    url += `/reset-password?t=${token}`;
     await this.emailService.sendResetPasswordEmail(user.email, url);
     return Promise.resolve(true);
   }
@@ -295,9 +296,10 @@ export default class AuthController {
         username: user.username,
         type: TokenType.EMAIL_VERIFY,
       });
-      const url =
-        'https://' +
-        `this.configService.get('SERVER_HOSTNAME')/email-verify?t=${token}`;
+      let url =
+        this.configService.get('PROTOCOL') +
+        this.configService.get('SERVER_HOSTNAME');
+      url += `/email-verify?t=${token}`;
 
       const result = await this.emailService.sendVerificationEmail(
         user.email,

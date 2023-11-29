@@ -1,12 +1,12 @@
+import { join } from 'path';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import ExampleAppController from './example/example.controller';
 import ExampleAppService from './example/example.service';
-import VersionController from './example/version.controller';
+import VersionController from './version.controller';
 import ReceivedLogModule from './recived-log/recived-log.module';
 import PushModule from './push/push.module';
 import AuthModule from './auth/auth.module';

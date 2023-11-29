@@ -4,8 +4,6 @@ import { ConfigService } from '@nestjs/config';
 import { Profile, Strategy } from 'passport-google-oauth20';
 import AuthService from '../auth.service';
 
-// TODO 弄懂 @Inject(config.KEY) 和 直接用 configService 的差異
-
 @Injectable()
 export default class GoogleStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -15,7 +13,10 @@ export default class GoogleStrategy extends PassportStrategy(Strategy) {
     super({
       clientID: configService.get('google.OAuth2.clientID'),
       clientSecret: configService.get('google.OAuth2.clientSecret'),
-      callbackURL: configService.get('google.OAuth2.callbackURL'),
+      callbackURL:
+        configService.get('PROTOCOL') +
+        configService.get('SERVER_HOSTNAME') +
+        configService.get('google.OAuth2.callbackRoute'),
       scope: ['profile', 'email'],
       // passReqToCallback: true,
     });

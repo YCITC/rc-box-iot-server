@@ -1,17 +1,20 @@
 import * as bcrypt from 'bcrypt';
+import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import UserRegisterDto from './dto/user.register.dto';
 import UserProfileDto from './dto/user.profile.dto';
 import User from './entity/user.entity';
+import UserAction from './entity/user-aciton.entity';
 
 @Injectable()
 export default class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(UserAction)
+    private usersAcitonRepository: Repository<UserAction>,
   ) {}
 
   async addOne(userRegisterDto: UserRegisterDto): Promise<User> {
@@ -53,6 +56,26 @@ export default class UsersService {
   async updateProfile(userProfileDto: UserProfileDto): Promise<User> {
     const user = await this.usersRepository.save(userProfileDto);
     return Promise.resolve(user);
+  }
+
+  async updateUserAction(user: User, sessionId: string): Promise<boolean> {
+    let userAction: UserAction;
+    userAction = await this.usersAcitonRepository.findOneBy({
+      user,
+    });
+    if (userAction) {
+      userAction.loginTimes += 1;
+      userAction.sessionId = sessionId;
+      // TODO remove old sessionId from redis
+    } else {
+      userAction = {
+        loginTimes: 1,
+        sessionId,
+        user,
+      } as UserAction;
+    }
+    await this.usersAcitonRepository.save(userAction);
+    return Promise.resolve(true);
   }
 
   async deleteOne(id: number): Promise<boolean> {

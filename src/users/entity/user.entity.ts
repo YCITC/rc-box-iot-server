@@ -1,12 +1,15 @@
+/* eslint-disable import/no-cycle */
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  JoinColumn,
+  Relation,
 } from 'typeorm';
-// import { OneToMany } from 'typeorm';
+import { OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-// import Device from '../../devices/entities/device.entity';
+import UserAction from './user-aciton.entity';
 
 @Entity({
   name: 'users',
@@ -71,8 +74,11 @@ export default class User {
   @CreateDateColumn({ type: 'timestamp' })
   createdTime: Date;
 
-  // @OneToMany(() => Device, (device: Device) => device.ownerUserId)
-  // devices: Device[];
+  @OneToOne(() => UserAction, (userAction: UserAction) => userAction.user, {
+    cascade: false,
+  })
+  @JoinColumn()
+  userAction: Relation<UserAction>;
 
   constructor(
     email: string,

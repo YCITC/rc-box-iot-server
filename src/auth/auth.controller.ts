@@ -6,7 +6,7 @@ import { Controller, UseGuards } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { HttpCode, Get, Post, Put } from '@nestjs/common';
 import { Req, Res, Body, Param, Session } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -53,6 +53,7 @@ export default class AuthController {
   })
   async login(
     @Body() userLoginDto: UserLoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: UserInterface; accessToken: string }> {
     try {
@@ -68,6 +69,8 @@ export default class AuthController {
         type: TokenType.REFRESH,
       });
       res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
+
+      await this.usersService.updateUserAction(user, req.sessionID);
 
       return await new Promise((resolve) => {
         const hash = crypto.createHash('md5').update(user.email).digest('hex');

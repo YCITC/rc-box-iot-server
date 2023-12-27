@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import User from './entity/user.entity';
 import UsersService from './users.service';
+import UserAction from './entity/user-aciton.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -45,6 +47,18 @@ describe('UsersService', () => {
             },
             update: jest.fn().mockResolvedValue({ affected: 1 }),
             delete: jest.fn().mockResolvedValue({ affected: 1 }),
+          },
+        },
+        {
+          provide: getRepositoryToken(UserAction),
+          useValue: {
+            findOneBy: jest.fn().mockResolvedValue(testUser),
+            save: (userAction) => {
+              return Promise.resolve({
+                ...userAction,
+                id: 1,
+              });
+            },
           },
         },
       ],
@@ -100,6 +114,15 @@ describe('UsersService', () => {
   });
 
   describe('updateProfile', () => {
+    it('should trigger repo save', async () => {
+      const newData = { ...rawUser, zipCode: '11005' };
+      const repoSpy = jest.spyOn(repo, 'save');
+      await service.updateProfile(newData);
+      expect(repoSpy).toBeCalled();
+    });
+  });
+
+  describe('updateUserAction', () => {
     it('should trigger repo save', async () => {
       const newData = { ...rawUser, zipCode: '11005' };
       const repoSpy = jest.spyOn(repo, 'save');

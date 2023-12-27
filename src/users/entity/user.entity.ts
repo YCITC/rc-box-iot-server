@@ -17,8 +17,9 @@ import UserAction from './user-aciton.entity';
 })
 export default class User {
   @ApiProperty({ example: 1 })
-  @PrimaryGeneratedColumn({
+  @PrimaryGeneratedColumn('increment', {
     unsigned: true,
+    type: 'integer',
   })
   id: number;
 
@@ -35,6 +36,7 @@ export default class User {
     type: 'varchar',
     length: 16,
     nullable: false,
+    comment: 'AKA display Name',
   })
   username: string;
 
@@ -75,10 +77,10 @@ export default class User {
   createdTime: Date;
 
   @OneToOne(() => UserAction, (userAction: UserAction) => userAction.user, {
-    cascade: false,
+    nullable: false,
+    cascade: ['insert'],
   })
-  @JoinColumn()
-  userAction: Relation<UserAction>;
+  userAction: UserAction;
 
   constructor(
     email: string,
@@ -89,6 +91,7 @@ export default class User {
     address: string,
     zipCode: string,
     id?: number,
+    userAction?: UserAction,
   );
   constructor(
     email: string,
@@ -99,6 +102,7 @@ export default class User {
     address: string,
     zipCode: string,
     id?: number,
+    userAction?: UserAction,
   ) {
     this.email = email;
     this.username = username;
@@ -109,8 +113,8 @@ export default class User {
     this.zipCode = zipCode;
     this.isEmailVerified = false;
     if (id) this.id = id;
+    if (userAction) this.userAction = userAction;
 
-    const now = new Date();
-    this.createdTime = new Date(now.toLocaleDateString());
+    this.createdTime = new Date();
   }
 }

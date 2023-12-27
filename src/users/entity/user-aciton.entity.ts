@@ -16,27 +16,30 @@ import User from './user.entity';
 })
 export default class UserAction {
   @ApiProperty({ example: 1 })
-  @PrimaryGeneratedColumn({
-    unsigned: true,
+  @PrimaryGeneratedColumn('increment', {
+    type: 'integer',
   })
   id: number;
 
   // loginTimes (including update Token)
   @ApiProperty({ example: 5 })
-  @Column({ default: false })
+  @Column({ default: 0 })
   loginTimes: number;
 
   // last session id,
   @ApiProperty({ example: 'we6KJBaj0bDGlN-9GTXa9cDKMsSicWrU' })
-  @Column({ unique: true, type: 'varchar', length: 32, nullable: false })
+  @Column({ type: 'varchar', length: 32, nullable: false })
   sessionId: string;
 
   // Timestamp of the last user session
   @UpdateDateColumn({ type: 'timestamp', onUpdate: 'CURRENT_TIMESTAMP' })
   lastSessionTime?: Date;
 
-  @OneToOne(() => User, (user: User) => user.userAction, { nullable: false })
-  @JoinColumn()
+  @OneToOne(() => User, (user: User) => user.userAction, {
+    nullable: false,
+    cascade: ['insert', 'update'],
+  })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   constructor(

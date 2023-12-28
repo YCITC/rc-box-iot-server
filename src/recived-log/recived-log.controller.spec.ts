@@ -89,7 +89,7 @@ describe('ReceivedLog Controller', () => {
   //   });
   // });
 
-  describe('create', () => {
+  describe('add', () => {
     it('should return a log', async () => {
       const dto: ReceivedLogDto = {
         deviceId: deviceId1,

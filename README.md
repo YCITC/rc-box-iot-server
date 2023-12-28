@@ -83,7 +83,5 @@ yarn test [filename.spec.ts]
 
 Coverage test single file
 ```
-yarn test:cov [filename.spec.ts] --collectCoverageFrom=[filepath.ts]
-# Example: 
-yarn test:cov users.service.spec.ts --collectCoverageFrom=src/users/users.service.ts
+yarn test:cov [filename.spec.ts] --collectCoverageFrom="**/[filename.spec.ts]"
 ```

@@ -10,6 +10,9 @@ import { OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import User from './user.entity';
 
+export const typeFunctionOrTarget = () => User;
+export const inverseSide = (user: User) => user.userAction;
+
 @Entity({
   name: 'users_action',
   engine: 'MyISAM',
@@ -35,7 +38,7 @@ export default class UserAction {
   @UpdateDateColumn({ type: 'timestamp', onUpdate: 'CURRENT_TIMESTAMP' })
   lastSessionTime?: Date;
 
-  @OneToOne(() => User, (user: User) => user.userAction, {
+  @OneToOne(typeFunctionOrTarget, inverseSide, {
     nullable: false,
     cascade: ['insert', 'update'],
   })
@@ -47,16 +50,19 @@ export default class UserAction {
     sessionId: string,
     lastSessionTime?: Date,
     id?: number,
+    user?: User,
   );
   constructor(
     loginTimes: number,
     sessionId: string,
     lastSessionTime?: Date,
     id?: number,
+    user?: User,
   ) {
     this.loginTimes = loginTimes;
     this.sessionId = sessionId;
     if (id) this.id = id;
     if (lastSessionTime) this.lastSessionTime = lastSessionTime;
+    if (user) this.user = user;
   }
 }

@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import UserRegisterDto from './dto/user.register.dto';
 import UserProfileDto from './dto/user.profile.dto';
 import User from './entity/user.entity';
-import UserAction from './entity/user-aciton.entity';
+import UserAction from './entity/user-action.entity';
 
 @Injectable()
 export default class UsersService {
@@ -14,7 +14,7 @@ export default class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     @InjectRepository(UserAction)
-    private usersAcitonRepository: Repository<UserAction>,
+    private userActionRepository: Repository<UserAction>,
   ) {}
 
   async addOne(userRegisterDto: UserRegisterDto): Promise<User> {
@@ -36,7 +36,7 @@ export default class UsersService {
       if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
         throw new BadRequestException(`Email [${userRegisterDto.email}] exist`);
       }
-      console.error('error: ', error)
+      throw error;
     }
     return Promise.resolve(user);
   }
@@ -53,16 +53,33 @@ export default class UsersService {
     }
   }
 
+  async getUser(userId: number): Promise<User> {
+    return this.usersRepository.findOneBy({ id: userId });
+  }
+
+  async getUserAndUserAction(userId: number): Promise<User> {
+    return this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['userAction'],
+    });
+  }
+
   async updateProfile(userProfileDto: UserProfileDto): Promise<User> {
     const user = await this.usersRepository.save(userProfileDto);
     return Promise.resolve(user);
   }
 
-  async updateUserAction(user: User, sessionId: string): Promise<boolean> {
-    let userAction: UserAction;
-    userAction = await this.usersAcitonRepository.findOneBy({
+  async getUserAction(user: User): Promise<UserAction> {
+    return this.userActionRepository.findOneBy({
       user,
     });
+  }
+
+  async updateUserAction(user: User, sessionId: string): Promise<boolean> {
+    let userAction = await this.userActionRepository.findOneBy({
+      user,
+    });
+
     if (userAction) {
       userAction.loginTimes += 1;
       userAction.sessionId = sessionId;
@@ -74,7 +91,8 @@ export default class UsersService {
         user,
       } as UserAction;
     }
-    await this.usersAcitonRepository.save(userAction);
+
+    await this.userActionRepository.save(userAction);
     return Promise.resolve(true);
   }
 
@@ -129,5 +147,9 @@ export default class UsersService {
       }
       throw new BadRequestException(error.message);
     }
+  }
+
+  async countAllUsers(): Promise<number> {
+    return this.usersRepository.count();
   }
 }

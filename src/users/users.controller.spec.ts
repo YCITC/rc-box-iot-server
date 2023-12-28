@@ -30,7 +30,16 @@ describe('Users controller', () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
       providers: [
-        UsersService,
+        {
+          provide: UsersService,
+          useValue: {
+            findOneByMail: jest.fn().mockResolvedValue(testUser),
+            findOneById: jest.fn().mockResolvedValue(testUser),
+            changePassword: jest.fn().mockResolvedValue(true),
+            addOne: jest.fn().mockResolvedValue(testUser),
+            deleteOne: jest.fn(),
+          },
+        },
         {
           provide: getRepositoryToken(User),
           useValue: {

@@ -9,6 +9,7 @@ import JwtPayload from './interface/jwt-payload';
 import UsersService from '../users/users.service';
 import UserInterface from '../users/interface/user.interface';
 import TokenType from './enum/token-type';
+import User from '../users/entity/user.entity';
 
 @Injectable()
 export default class AuthService {
@@ -74,7 +75,7 @@ export default class AuthService {
     return this.usersService.changePassword(userId, dto.newPassword);
   }
 
-  async validateGoogleUser(details): Promise<any> {
+  async validateGoogleUser(details): Promise<User> {
     try {
       return await this.usersService.findOneByMail(details.email);
     } catch (error) {
@@ -88,11 +89,21 @@ export default class AuthService {
       secret: this.configService.get('JWT.SECRET'),
     } as JwtSignOptions;
 
-    if (payload.type === TokenType.EMAIL_VERIFY) signOptions.expiresIn = '1d';
-    if (payload.type === TokenType.REFRESH) signOptions.expiresIn = '60d';
-    if (payload.type === TokenType.AUTH) signOptions.expiresIn = '1hr';
-    if (payload.type === TokenType.RESET_PASSWORD)
-      signOptions.expiresIn = '12hr';
+    switch (payload.type) {
+      case TokenType.RESET_PASSWORD:
+        signOptions.expiresIn = '12hr';
+        break;
+      case TokenType.EMAIL_VERIFY:
+        signOptions.expiresIn = '1d';
+        break;
+      case TokenType.REFRESH:
+        signOptions.expiresIn = '60d';
+        break;
+      case TokenType.AUTH:
+      default:
+        signOptions.expiresIn = '1hr';
+        break;
+    }
 
     const token = this.jwtService.sign(payload, signOptions);
     return token;

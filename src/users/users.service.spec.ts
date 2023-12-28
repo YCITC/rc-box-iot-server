@@ -5,11 +5,13 @@ import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import User from './entity/user.entity';
 import UsersService from './users.service';
-import UserAction from './entity/user-aciton.entity';
+import UserAction from './entity/user-action.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let repo: Repository<User>;
+  let user: User;
+  let userRepository: Repository<User>;
+  let userActionRepository: Repository<UserAction>;
   const rawUser = {
     id: 1,
     email: '1@2.3',
@@ -38,15 +40,18 @@ describe('UsersService', () => {
           provide: getRepositoryToken(User),
           useValue: {
             findOneBy: jest.fn().mockResolvedValue(testUser),
-            save: (user) => {
+            findOne: jest.fn().mockResolvedValue(testUser),
+            create: jest.fn().mockResolvedValue(testUser),
+            save: (inputUser: User) => {
               return Promise.resolve({
-                ...user,
+                ...inputUser,
                 createdTime: new Date(),
                 isEmailVerified: false,
               });
             },
             update: jest.fn().mockResolvedValue({ affected: 1 }),
             delete: jest.fn().mockResolvedValue({ affected: 1 }),
+            count: jest.fn().mockResolvedValue(10),
           },
         },
         {
@@ -65,7 +70,10 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    repo = module.get<Repository<User>>(getRepositoryToken(User));
+    userRepository = module.get<Repository<User>>(getRepositoryToken(User));
+    userActionRepository = module.get<Repository<UserAction>>(
+      getRepositoryToken(UserAction),
+    );
   });
 
   it('should be defined', () => {
@@ -74,7 +82,7 @@ describe('UsersService', () => {
 
   describe('addOne', () => {
     it('should return a user', async () => {
-      const user = await service.addOne(rawUser);
+      user = await service.addOne(rawUser);
       expect(user.createdTime).toBeDefined();
       expect(user.isEmailVerified).toBeDefined();
       expect(user.password === rawUser.password).toBeFalsy();
@@ -96,14 +104,13 @@ describe('UsersService', () => {
       );
     });
     it('should throw Exception when save user failed', async () => {
-      jest.spyOn(repo, 'save').mockRejectedValueOnce({
+      jest.spyOn(userRepository, 'save').mockRejectedValueOnce({
         sqlMessage: 'Duplicate entry',
       });
       const userData = { ...rawUser };
       const process = service.addOne(userData);
       await expect(process).rejects.toThrow(BadRequestException);
     });
-
   });
 
   describe('changePasswosrd', () => {
@@ -113,44 +120,68 @@ describe('UsersService', () => {
     });
   });
 
+  describe('getUser', () => {
+    it('should trigger userRepository findOneBy', async () => {
+      const repoSpy = jest.spyOn(userRepository, 'findOneBy');
+      user = await service.getUser(rawUser.id);
+      expect(repoSpy).toBeCalled();
+    });
+  });
+
+  describe('getUserAndUserAction', () => {
+    it('should trigger userRepository findOne', async () => {
+      const repoSpy = jest.spyOn(userRepository, 'findOne');
+      await service.getUserAndUserAction(rawUser.id);
+      expect(repoSpy).toBeCalled();
+    });
+  });
+
   describe('updateProfile', () => {
-    it('should trigger repo save', async () => {
+    it('should trigger userRepository save', async () => {
       const newData = { ...rawUser, zipCode: '11005' };
-      const repoSpy = jest.spyOn(repo, 'save');
+      const repoSpy = jest.spyOn(userRepository, 'save');
       await service.updateProfile(newData);
+      expect(repoSpy).toBeCalled();
+    });
+  });
+
+  describe('getUserAction', () => {
+    it('should trigger userActionRepository findOne', async () => {
+      const repoSpy = jest.spyOn(userActionRepository, 'findOneBy');
+      await service.getUserAction(user);
       expect(repoSpy).toBeCalled();
     });
   });
 
   describe('updateUserAction', () => {
-    it('should trigger repo save', async () => {
-      const newData = { ...rawUser, zipCode: '11005' };
-      const repoSpy = jest.spyOn(repo, 'save');
-      await service.updateProfile(newData);
+    it('should trigger userRepository save', async () => {
+      const repoSpy = jest.spyOn(userActionRepository, 'save');
+      await service.updateUserAction(user, 'fake-sessionId-1');
+      await service.updateUserAction(user, 'fake-sessionId-2');
       expect(repoSpy).toBeCalled();
     });
   });
 
   describe('findOneById', () => {
-    it('should trigger repo findOneBy', async () => {
-      const repoSpy = jest.spyOn(repo, 'findOneBy');
+    it('should trigger userRepository findOneBy', async () => {
+      const repoSpy = jest.spyOn(userRepository, 'findOneBy');
       await service.findOneById(1);
       expect(repoSpy).toBeCalled();
     });
   });
 
   describe('findByMail', () => {
-    it('should trigger repo findOneBy', async () => {
-      const repoSpy = jest.spyOn(repo, 'findOneBy');
+    it('should trigger userRepository findOneBy', async () => {
+      const repoSpy = jest.spyOn(userRepository, 'findOneBy');
       await service.findOneByMail('1@.2.3');
       expect(repoSpy).toBeCalled();
     });
   });
 
   describe('emailVerify', () => {
-    it('should trigger repo findOneBy & save', async () => {
-      const repoSpyFind = jest.spyOn(repo, 'findOneBy');
-      const updateSpy = jest.spyOn(repo, 'save');
+    it('should trigger userRepository findOneBy & save', async () => {
+      const repoSpyFind = jest.spyOn(userRepository, 'findOneBy');
+      const updateSpy = jest.spyOn(userRepository, 'save');
       await service.emailVerify(1);
 
       expect(repoSpyFind).toBeCalled();
@@ -162,6 +193,15 @@ describe('UsersService', () => {
     it('should delete an user', async () => {
       const response = await service.deleteOne(1);
       expect(response).toBeTruthy();
+    });
+  });
+
+  describe('countAllUsers', () => {
+    it('should call usersRepository.count', async () => {
+      const spy = jest.spyOn(userRepository, 'count');
+      const response = await service.countAllUsers();
+      expect(response).toBe(10);
+      expect(spy).toBeCalled();
     });
   });
 });

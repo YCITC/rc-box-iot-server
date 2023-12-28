@@ -4,12 +4,13 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  JoinColumn,
-  Relation,
 } from 'typeorm';
 import { OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import UserAction from './user-aciton.entity';
+import UserAction from './user-action.entity';
+
+export const typeFunctionOrTarget = () => UserAction;
+export const inverseSide = (userAction: UserAction) => userAction.user;
 
 @Entity({
   name: 'users',
@@ -76,9 +77,9 @@ export default class User {
   @CreateDateColumn({ type: 'timestamp' })
   createdTime: Date;
 
-  @OneToOne(() => UserAction, (userAction: UserAction) => userAction.user, {
+  @OneToOne(typeFunctionOrTarget, inverseSide, {
     nullable: false,
-    cascade: ['insert'],
+    cascade: ['insert', 'update'],
   })
   userAction: UserAction;
 

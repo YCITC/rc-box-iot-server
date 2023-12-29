@@ -33,6 +33,7 @@ export default class UsersService {
       if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
         throw new BadRequestException(`Email [${userRegisterDto.email}] exist`);
       }
+      console.error('error: ', error)
     }
     return Promise.resolve(user);
   }

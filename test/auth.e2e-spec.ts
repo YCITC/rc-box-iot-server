@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as request from 'supertest';
+import * as cookieParser from 'cookie-parser';
 import { Repository } from 'typeorm';
 import { PassportModule } from '@nestjs/passport';
 
@@ -23,7 +24,8 @@ describe('AuthController (e2e)', () => {
   let userId: number;
   let emailVerifyToken: string;
   let accessToken: string;
-  let repo: Repository<User>;
+  let reflashToken: string;
+  let userRepostory: Repository<User>;
   let authService: AuthService;
   let proflie = new UserProfileDto();
 
@@ -57,7 +59,9 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    repo = app.get<Repository<User>>(getRepositoryToken(User));
+    app.use(cookieParser()); // Use cookie-parser middleware
+
+    userRepostory = app.get<Repository<User>>(getRepositoryToken(User));
     authService = app.get<AuthService>(AuthService);
     await app.init();
   });
@@ -67,7 +71,7 @@ describe('AuthController (e2e)', () => {
   });
 
   it('/auth/createUser/ (PUT)', async () => {
-    await repo.clear();
+    await userRepostory.clear();
     const response = await request(app.getHttpServer())
       .put('/auth/createUser')
       .send(rawUser)
@@ -108,8 +112,10 @@ describe('AuthController (e2e)', () => {
       .post('/auth/login')
       .send({ ...rawUser })
       .expect(200);
-    accessToken = response.body.access_token;
-    expect(response.body.access_token).toBeDefined();
+    const cookies = response.header['set-cookie'][0];
+    reflashToken = cookies.split('; ')[0].split('=')[1] as string;
+    accessToken = response.body.accessToken;
+    expect(response.body.accessToken).toBeDefined();
     expect(response.body.user).toBeDefined();
     expect(response.body.user).toHaveProperty('avatarUrl');
   });
@@ -176,8 +182,9 @@ describe('AuthController (e2e)', () => {
   it('/auth/updateToken (GET)', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/updateToken')
+      .set('Cookie', `rtk=${reflashToken};`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(response.body.access_token).toBeDefined();
+    expect(response.body.accessToken).toBeDefined();
   });
 });

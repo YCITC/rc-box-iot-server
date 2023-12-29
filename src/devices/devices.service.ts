@@ -27,7 +27,7 @@ export default class DevicesService {
   }
 
   async checkDeviceWithUser(userId, deviceId): Promise<boolean> {
-    const device = await this.devicesRepository.findOneBy({ deviceId }); 
+    const device = await this.devicesRepository.findOneBy({ deviceId });
     if (device.ownerUserId === userId) return Promise.resolve(true);
     return Promise.resolve(false);
   }

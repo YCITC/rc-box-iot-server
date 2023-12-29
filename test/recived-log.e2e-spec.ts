@@ -44,6 +44,7 @@ describe('ReceivedLogController (e2e)', () => {
             const dbInfo = {
               ...configService.get('DB'),
               host: configService.get('DB_HOST'),
+              database: 'rc-box-test',
               entities: [Device, ReceivedLog],
               synchronize: true,
             };
@@ -102,7 +103,6 @@ describe('ReceivedLogController (e2e)', () => {
         deviceId: deviceId2,
       })
       .expect(200);
-
     expect(response1.body.deviceId).toEqual(deviceId1);
   });
 
@@ -121,6 +121,7 @@ describe('ReceivedLogController (e2e)', () => {
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
     expect(response1.body[0].deviceId).toBe(deviceId1);
+
     const response2 = await request(app.getHttpServer())
       .get(`/log/get/${deviceId2}`)
       .set('Authorization', `Bearer ${accessToken}`)

@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 // import { OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 // import Device from '../../devices/entities/device.entity';
@@ -63,9 +68,7 @@ export default class User {
   })
   zipCode: string;
 
-  @Column({
-    type: 'timestamp',
-  })
+  @CreateDateColumn({ type: 'timestamp' })
   createdTime: Date;
 
   // @OneToMany(() => Device, (device: Device) => device.ownerUserId)

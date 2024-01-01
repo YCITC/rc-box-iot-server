@@ -97,7 +97,7 @@ export default class ReceivedLogController {
       deviceId,
     );
     if (userHasDevice === false) {
-      throw new UnauthorizedException("You have no device 'deviceId'");
+      throw new UnauthorizedException(`You have no device ${deviceId}`);
     }
     return this.receiveService.findByDeviceId(deviceId);
   }

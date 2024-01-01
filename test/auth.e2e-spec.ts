@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as request from 'supertest';
+import * as cookieParser from 'cookie-parser';
 import { Repository } from 'typeorm';
 import { PassportModule } from '@nestjs/passport';
 
@@ -23,8 +24,10 @@ describe('AuthController (e2e)', () => {
   let userId: number;
   let emailVerifyToken: string;
   let accessToken: string;
-  let repo: Repository<User>;
+  let reflashToken: string;
+  let userRepostory: Repository<User>;
   let authService: AuthService;
+  let proflie = new UserProfileDto();
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -41,13 +44,9 @@ describe('AuthController (e2e)', () => {
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
-              type: configService.get('DB.type'),
+              ...configService.get('DB'),
               host: configService.get('DB_HOST'),
-              port: configService.get('DB.port'),
-              username: configService.get('DB.username'),
-              password: configService.get('DB.password'),
               database: 'rc-box-test',
-              // entities: ['dist/**/*.entity{.ts,.js}'],
               entities: [User],
               synchronize: true,
             };
@@ -60,16 +59,19 @@ describe('AuthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    repo = app.get<Repository<User>>(getRepositoryToken(User));
+    app.use(cookieParser()); // Use cookie-parser middleware
+
+    userRepostory = app.get<Repository<User>>(getRepositoryToken(User));
     authService = app.get<AuthService>(AuthService);
     await app.init();
   });
+
   afterEach(async () => {
     await app.close();
   });
 
   it('/auth/createUser/ (PUT)', async () => {
-    await repo.clear();
+    await userRepostory.clear();
     const response = await request(app.getHttpServer())
       .put('/auth/createUser')
       .send(rawUser)
@@ -110,8 +112,10 @@ describe('AuthController (e2e)', () => {
       .post('/auth/login')
       .send({ ...rawUser })
       .expect(200);
-    accessToken = response.body.access_token;
-    expect(response.body.access_token).toBeDefined();
+    const cookies = response.header['set-cookie'][0];
+    reflashToken = cookies.split('; ')[0].split('=')[1] as string;
+    accessToken = response.body.accessToken;
+    expect(response.body.accessToken).toBeDefined();
     expect(response.body.user).toBeDefined();
     expect(response.body.user).toHaveProperty('avatarUrl');
   });
@@ -119,8 +123,8 @@ describe('AuthController (e2e)', () => {
   it('/auth/changePassword/ (POST)', async () => {
     const dto = {
       oldPassword: rawUser.password,
-      newPassword: 'Abc123%*dga',
-      confirmNewPassword: 'Abc123%*dga',
+      newPassword: 'Abc123%*Eee',
+      confirmNewPassword: 'Abc123%*Eee',
     };
     const response = await request(app.getHttpServer())
       .post('/auth/changePassword')
@@ -136,6 +140,7 @@ describe('AuthController (e2e)', () => {
       .expect(200);
     expect(response.text).toBe('true');
   });
+
   it('/auth/resetPassword (POST)', async () => {
     const userResetPasswrodDto = {
       newPassword: '123BBB%*dga',
@@ -146,7 +151,7 @@ describe('AuthController (e2e)', () => {
       username: rawUser.username,
       type: TokenType.RESET_PASSWORD,
     };
-    const token = authService.createOneDayToken(payload);
+    const token = authService.createToken(payload);
     const response = await request(app.getHttpServer())
       .post('/auth/resetPassword')
       .send(userResetPasswrodDto)
@@ -154,7 +159,7 @@ describe('AuthController (e2e)', () => {
       .expect(200);
     expect(response.text).toBe('true');
   });
-  let proflie = new UserProfileDto();
+
   it('/auth/profile (GET)', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/profile')
@@ -177,8 +182,9 @@ describe('AuthController (e2e)', () => {
   it('/auth/updateToken (GET)', async () => {
     const response = await request(app.getHttpServer())
       .get('/auth/updateToken')
+      .set('Cookie', `rtk=${reflashToken};`)
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(response.body.access_token).toBeDefined();
+    expect(response.body.accessToken).toBeDefined();
   });
 });

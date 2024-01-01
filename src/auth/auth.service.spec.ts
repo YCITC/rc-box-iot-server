@@ -10,7 +10,7 @@ import UsersService from '../users/users.service';
 import AuthService from './auth.service';
 import TokenType from './enum/token-type';
 
-describe('AuthService', () => {
+describe.only('AuthService', () => {
   let authService: AuthService;
   let usersService: UsersService;
   let token: string;
@@ -161,22 +161,12 @@ describe('AuthService', () => {
   });
   describe('createToken', () => {
     it('should return JWT object when credentials are valid', async () => {
-      const res = await authService.createToken({
-        username: 'john',
-        id: 1,
-        type: TokenType.SINGIN,
-      });
-      expect(res).toBeDefined();
-    });
-  });
-  describe('createOneDayToken', () => {
-    it('should return JWT object when credentials are valid', async () => {
       token = await authService.createToken({
         username: 'john',
         id: 1,
-        type: TokenType.SINGIN,
+        type: TokenType.AUTH,
       });
-      expect(token.length).toBeGreaterThan(0);
+      expect(token).toBeDefined();
     });
   });
   describe('verifyToken', () => {

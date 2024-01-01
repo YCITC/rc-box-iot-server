@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
 
-export default registerAs('email', () => ({
+export default registerAs('EMAIL', () => ({
   transport: {
     host: 'smtp.gmail.com',
     port: 587,

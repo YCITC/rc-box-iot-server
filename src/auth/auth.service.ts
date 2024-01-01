@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import { Injectable } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
@@ -86,16 +86,14 @@ export default class AuthService {
   createToken(payload: JwtPayload<TokenType>): string {
     const signOptions = {
       secret: this.configService.get('JWT.SECRET'),
-    };
-    const token = this.jwtService.sign(payload, signOptions);
-    return token;
-  }
+    } as JwtSignOptions;
 
-  createOneDayToken(payload: JwtPayload<TokenType>): string {
-    const signOptions = {
-      expiresIn: '1d',
-      secret: this.configService.get('JWT.SECRET'),
-    };
+    if (payload.type === TokenType.EMAIL_VERIFY) signOptions.expiresIn = '1d';
+    if (payload.type === TokenType.REFRESH) signOptions.expiresIn = '60d';
+    if (payload.type === TokenType.AUTH) signOptions.expiresIn = '1hr';
+    if (payload.type === TokenType.RESET_PASSWORD)
+      signOptions.expiresIn = '12hr';
+
     const token = this.jwtService.sign(payload, signOptions);
     return token;
   }

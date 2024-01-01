@@ -6,7 +6,7 @@ on:
       - 'release/*'
 concurrency: 
   group: development
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   test-code:
     runs-on: ubuntu-22.04

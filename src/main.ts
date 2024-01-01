@@ -2,6 +2,8 @@ import * as express from 'express';
 import * as fs from 'fs';
 import * as https from 'https';
 import * as http from 'http';
+import * as session from 'express-session';
+import * as cookieParser from 'cookie-parser';
 
 import { SwaggerModule, SwaggerDocumentOptions } from '@nestjs/swagger';
 import { DocumentBuilder } from '@nestjs/swagger';
@@ -17,7 +19,7 @@ async function buildDocument(app) {
   const config = new DocumentBuilder()
     .setTitle('RC-Box API documents')
     // .setDescription('')
-    .setVersion(configService.get('common.VERSION'))
+    .setVersion(configService.get('COMMON.VERSION'))
     .addBearerAuth()
     .build();
 
@@ -34,11 +36,14 @@ async function buildDocument(app) {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function httpServer() {
   const app = await NestFactory.create(AppModule, { cors: true });
+  const configService = app.get(ConfigService);
   app.setGlobalPrefix('api');
   // app.enableCors(); //enable CORS
 
-  const configService = app.get(ConfigService);
-  if (configService.get('common.DOCUMENT_ENABLE') === true) {
+  app.use(cookieParser());
+  app.use(session(configService.get('SESSION')));
+
+  if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
     buildDocument(app);
   }
   await app.listen(3000);
@@ -54,7 +59,15 @@ async function httpsServer() {
   const app = await NestFactory.create(AppModule, {
     httpsOptions,
   });
+  const configService = app.get(ConfigService);
   app.setGlobalPrefix('api');
+
+  app.use(cookieParser());
+  app.use(session(configService.get('SESSION')));
+
+  if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
+    buildDocument(app);
+  }
   await app.listen(1443);
 }
 
@@ -67,12 +80,15 @@ async function multipleServers() {
 
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+  const configService = app.get(ConfigService);
   app.setGlobalPrefix('api');
-  app.enableCors(); // enable CORS
+  // app.enableCors(); // enable CORS
   // TODO enable CORS need white list.
 
-  const configService = app.get(ConfigService);
-  if (configService.get('common.DOCUMENT_ENABLE') === true) {
+  app.use(cookieParser());
+  app.use(session(configService.get('SESSION')));
+
+  if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
     buildDocument(app);
   }
 
@@ -82,6 +98,6 @@ async function multipleServers() {
   https.createServer(httpsOptions, server).listen(443);
 }
 
-// httpServer();
+httpServer();
 // httpsServer();
-multipleServers();
+// multipleServers();

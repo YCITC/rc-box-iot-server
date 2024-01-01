@@ -17,6 +17,7 @@ import commonConfig from '../src/config/common.config';
 import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
 import rawUser from './raw-user';
+import TokenType from '../src/auth/enum/token-type';
 
 describe('PushController (e2e)', () => {
   let app: INestApplication;
@@ -24,6 +25,7 @@ describe('PushController (e2e)', () => {
   let IOSClientRepo: Repository<IOSClient>;
   let jwtService: JwtService;
   let accessToken: string;
+
   const deviceId1 = 'rc-box-test-12301';
   const registerChromeDto = {
     deviceId: deviceId1,
@@ -56,13 +58,9 @@ describe('PushController (e2e)', () => {
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
             const dbInfo = {
-              type: configService.get('DB.type'),
+              ...configService.get('DB'),
               host: configService.get('DB_HOST'),
-              port: configService.get('DB.port'),
-              username: configService.get('DB.username'),
-              password: configService.get('DB.password'),
               database: 'rc-box-test',
-              // entities: ['dist/**/*.entity{.ts,.js}'],
               entities: [Device, ChromeClient, IOSClient],
               synchronize: true,
             };
@@ -97,10 +95,18 @@ describe('PushController (e2e)', () => {
       getRepositoryToken(IOSClient),
     );
     jwtService = moduleFixture.get<JwtService>(JwtService);
+
     await app.init();
 
-    const payload = { id: 1, username: rawUser.username };
-    accessToken = jwtService.sign(payload);
+    const signOptions = {
+      secret: app.get<ConfigService>(ConfigService).get('JWT.SECRET'),
+    };
+    const payload = {
+      id: 1,
+      username: rawUser.username,
+      type: TokenType.AUTH,
+    };
+    accessToken = jwtService.sign(payload, signOptions);
   });
 
   afterEach(async () => {

@@ -32,12 +32,8 @@ import dbConfig from './config/db.config';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
         const dbInfo = {
-          type: configService.get('DB.type'),
+          ...configService.get('DB'),
           host: configService.get('DB_HOST'), // Get DB_HOST from .env file
-          port: configService.get('DB.port'),
-          username: configService.get('DB.username'),
-          password: configService.get('DB.password'),
-          database: configService.get('DB.database'),
           entities: ['dist/**/*.entity{.ts,.js}'],
           synchronize: true,
         };

@@ -4,6 +4,7 @@ import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as request from 'supertest';
 import * as cookieParser from 'cookie-parser';
+import * as session from 'express-session';
 import { Repository } from 'typeorm';
 import { PassportModule } from '@nestjs/passport';
 
@@ -18,6 +19,7 @@ import dbConfig from '../src/config/db.config';
 import UserProfileDto from '../src/users/dto/user.profile.dto';
 import AuthService from '../src/auth/auth.service';
 import TokenType from '../src/auth/enum/token-type';
+import UserAction from '../src/users/entity/user-action.entity';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -25,7 +27,8 @@ describe('AuthController (e2e)', () => {
   let emailVerifyToken: string;
   let accessToken: string;
   let reflashToken: string;
-  let userRepostory: Repository<User>;
+  let userRepository: Repository<User>;
+  let userActionRepository: Repository<UserAction>;
   let authService: AuthService;
   let proflie = new UserProfileDto();
 
@@ -47,7 +50,7 @@ describe('AuthController (e2e)', () => {
               ...configService.get('DB'),
               host: configService.get('DB_HOST'),
               database: 'rc-box-test',
-              entities: [User],
+              entities: [User, UserAction],
               synchronize: true,
             };
             return dbInfo;
@@ -61,7 +64,13 @@ describe('AuthController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.use(cookieParser()); // Use cookie-parser middleware
 
-    userRepostory = app.get<Repository<User>>(getRepositoryToken(User));
+    const configService = app.get<ConfigService>(ConfigService);
+    app.use(session(configService.get('SESSION')));
+
+    userRepository = app.get<Repository<User>>(getRepositoryToken(User));
+    userActionRepository = app.get<Repository<UserAction>>(
+      getRepositoryToken(UserAction),
+    );
     authService = app.get<AuthService>(AuthService);
     await app.init();
   });
@@ -71,7 +80,8 @@ describe('AuthController (e2e)', () => {
   });
 
   it('/auth/createUser/ (PUT)', async () => {
-    await userRepostory.clear();
+    await userRepository.clear();
+    await userActionRepository.clear();
     const response = await request(app.getHttpServer())
       .put('/auth/createUser')
       .send(rawUser)

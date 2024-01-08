@@ -125,7 +125,7 @@ export default class ReceivedLogController {
   })
   async getAllByUser(@Req() req): Promise<ReceivedLog[]> {
     const devices = await this.devicesService.findAllWithUserId(req.user.id);
-    const allLogs: any[] = [];
+    const allLogs: ReceivedLog[] = [];
 
     const logPromises = devices.map(async (device) => {
       const logs = await this.receiveService.findByDeviceId(device.deviceId);

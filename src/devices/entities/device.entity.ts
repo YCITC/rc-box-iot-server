@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column } from 'typeorm';
+import { Entity, PrimaryColumn, Column, CreateDateColumn } from 'typeorm';
 // import { JoinColumn, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 // import User from '../../users/entity/user.entity';
@@ -28,10 +28,7 @@ export default class Device {
   alias: string;
 
   @ApiProperty({ example: '2023-03-21 08:46:11' })
-  @Column({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)',
-  })
+  @CreateDateColumn({ type: 'timestamp' })
   createdTime: Date;
 
   // @ManyToOne(() => User, (user) => user.devices)

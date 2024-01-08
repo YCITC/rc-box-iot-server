@@ -78,5 +78,10 @@ We useing three workflow
 Test single file  
 
 ```
-yarn test -- [filename]
+yarn test [filename.spec.ts]
+```
+
+Coverage test single file
+```
+yarn test:cov [filename.spec.ts] --collectCoverageFrom="**/[filename.spec.ts]"
 ```

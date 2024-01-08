@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity({
@@ -13,10 +18,7 @@ export default class ReceivedLog {
   id: number;
 
   @ApiProperty({ example: '2023-03-21 08:46:11' })
-  @Column({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP(6)',
-  })
+  @CreateDateColumn({ type: 'timestamp' })
   time: Date;
 
   @ApiProperty({ example: 'rc-box-test-12301' })

@@ -1,5 +1,5 @@
 import { Controller, Body, Param } from '@nestjs/common';
-import { Get, Put, Delete } from '@nestjs/common';
+import { Get, Post, Put, Delete } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import UserRegisterDto from './dto/user.register.dto';
@@ -10,6 +10,18 @@ import UsersService from './users.service';
 @Controller('users')
 export default class UsersController {
   constructor(private usersService: UsersService) {}
+
+  @Put('create')
+  @ApiOperation({ summary: 'Create User with out email verify ' })
+  @ApiResponse({
+    status: 200,
+    description: 'Create successed.',
+    type: User,
+  })
+  @ApiResponse({ status: 400, description: 'Email [useremail] exist' })
+  addOne(@Body() userDto: UserRegisterDto): Promise<User> {
+    return this.usersService.addOne(userDto);
+  }
 
   @Get('findByMail/:email')
   @ApiResponse({
@@ -29,20 +41,25 @@ export default class UsersController {
     type: User,
   })
   @ApiResponse({ status: 400, description: 'Cannot find user.' })
-  findById(@Param('id') id: number): Promise<User> {
+  async findById(@Param('id') id: number): Promise<User> {
     return this.usersService.findOneById(id);
+    // return this.usersService.getUserAndUserAction(id);
   }
 
-  @Put('create')
-  @ApiOperation({ summary: 'Create User with out email verify ' })
+  @Get('updateUserAction/:id/:sessionId')
   @ApiResponse({
     status: 200,
-    description: 'Create successed.',
+    description: 'Update UserAction successed.',
     type: User,
   })
-  @ApiResponse({ status: 400, description: 'Email [useremail] exist' })
-  addOne(@Body() userDto: UserRegisterDto): Promise<User> {
-    return this.usersService.addOne(userDto);
+  @ApiResponse({ status: 400, description: 'Cannot find user.' })
+  async updateUserAction(
+    @Param('id') id: number,
+    @Param('sessionId') sessionId: string,
+  ) {
+    const user = await this.usersService.findOneById(id);
+    this.usersService.updateUserAction(user, sessionId);
+    return true;
   }
 
   @Delete('delete/:id')
@@ -59,5 +76,14 @@ export default class UsersController {
       statusCode: 200,
       message: `The user has been successfully deleted using the provided ID ${id}.`,
     });
+  }
+
+  @Get('users/count')
+  @ApiResponse({
+    status: 200,
+    description: 'I will return total users count.',
+  })
+  async countAllUsers(): Promise<number> {
+    return this.usersService.countAllUsers();
   }
 }

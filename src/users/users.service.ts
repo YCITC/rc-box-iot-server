@@ -79,12 +79,17 @@ export default class UsersService {
     });
   }
 
-  async updateUserAction(user: User, sessionId: string): Promise<boolean> {
+  async updateUserAction(
+    user: User,
+    sessionId: string,
+  ): Promise<string | null> {
+    let oldSessionId: string | null = null;
     let userAction = await this.userActionRepository.findOneBy({
       user,
     });
 
     if (userAction) {
+      oldSessionId = userAction.sessionId;
       userAction.loginTimes += 1;
       userAction.sessionId = sessionId;
     } else {
@@ -96,7 +101,7 @@ export default class UsersService {
     }
 
     await this.userActionRepository.save(userAction);
-    return true;
+    return oldSessionId;
   }
 
   async deleteOne(id: number): Promise<boolean> {

@@ -20,6 +20,8 @@ import UserProfileDto from '../src/users/dto/user.profile.dto';
 import AuthService from '../src/auth/auth.service';
 import TokenType from '../src/auth/enum/token-type';
 import UserAction from '../src/users/entity/user-action.entity';
+import SessionModule from '../src/session/session.module';
+import SessionService from '../src/session/session.service';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -37,6 +39,7 @@ describe('AuthController (e2e)', () => {
       imports: [
         AuthModule,
         UsersModule,
+        SessionModule,
         PassportModule,
         ConfigModule.forRoot({
           envFilePath: ['.development.env'],
@@ -58,7 +61,7 @@ describe('AuthController (e2e)', () => {
           inject: [ConfigService],
         }),
       ],
-      providers: [UsersService, JwtService],
+      providers: [UsersService, JwtService, SessionService],
     }).compile();
 
     app = moduleFixture.createNestApplication();

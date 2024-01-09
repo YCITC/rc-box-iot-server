@@ -24,13 +24,15 @@ import GoogleOauthGuard from '../guards/google-auth.guard';
 import TokenType from './enum/token-type';
 import UserInterface from '../users/interface/user.interface';
 import JwtPayload from './interface/jwt-payload';
+import SessionService from '../session/session.service';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
 @Controller('auth')
 export default class AuthController {
   constructor(
-    private readonly authService: AuthService,
+    private sessionService: SessionService,
+    private authService: AuthService,
     private usersService: UsersService,
     private emailService: EmailService,
     private configService: ConfigService,
@@ -69,8 +71,13 @@ export default class AuthController {
         type: TokenType.REFRESH,
       });
       res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
+      const oldSessionId = await this.usersService.updateUserAction(
+        user,
+        req.sessionID,
+      );
+      await this.sessionService.addSession(req.sessionID);
 
-      await this.usersService.updateUserAction(user, req.sessionID);
+      if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
 
       return await new Promise((resolve) => {
         const hash = crypto.createHash('md5').update(user.email).digest('hex');

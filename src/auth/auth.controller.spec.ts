@@ -12,6 +12,7 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import EmailService from '../email/email.service';
 import User from '../users/entity/user.entity';
 import UsersService from '../users/users.service';
+import SessionService from '../session/session.service';
 import AuthController from './auth.controller';
 import AuthService from './auth.service';
 import TokenType from './enum/token-type';
@@ -25,6 +26,7 @@ describe('AuthController', () => {
   let usersService: UsersService;
   let authService: AuthService;
   let emailService: EmailService;
+  let sessionService: SessionService;
   let jwtService: JwtService;
   let token: string;
 
@@ -127,6 +129,13 @@ describe('AuthController', () => {
               if (key === 'common.VERIFY_SUCCESS_URL') return 'localhost:3000';
               return null;
             }),
+          },
+        },
+        {
+          provide: SessionService,
+          useValue: {
+            addSession: jest.fn(),
+            removeSession: jest.fn(),
           },
         },
         JwtService,

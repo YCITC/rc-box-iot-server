@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-import JwtAuthGuard from './guards/jwt-auth.guard';
+import JwtAuthGuard from '../guards/jwt-auth.guard';
 import AuthService from './auth.service';
 import User from '../users/entity/user.entity';
 import UserRegisterDto from '../users/dto/user.register.dto';
@@ -20,7 +20,7 @@ import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import UsersService from '../users/users.service';
 import EmailService from '../email/email.service';
-import GoogleOauthGuard from './guards/google-auth.guard';
+import GoogleOauthGuard from '../guards/google-auth.guard';
 import TokenType from './enum/token-type';
 import UserInterface from '../users/interface/user.interface';
 import JwtPayload from './interface/jwt-payload';

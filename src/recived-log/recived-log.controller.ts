@@ -9,7 +9,7 @@ import ReceivedLog from './entity/recived-log.entity';
 import ReceivedLogDto from './dto/recived-log.dto';
 import ReceivedLogService from './recived-log.service';
 import DevicesService from '../devices/devices.service';
-import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
+import JwtAuthGuard from '../guards/jwt-auth.guard';
 
 @ApiTags('Log')
 @ApiBearerAuth()

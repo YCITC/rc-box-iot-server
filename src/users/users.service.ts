@@ -31,6 +31,10 @@ export default class UsersService {
       user = await this.usersRepository.save({
         ...userRegisterDto,
         password: hashedPassword,
+        userAction: {
+          loginTimes: 0,
+          sessionId: '',
+        },
       });
     } catch (error) {
       if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
@@ -83,7 +87,6 @@ export default class UsersService {
     if (userAction) {
       userAction.loginTimes += 1;
       userAction.sessionId = sessionId;
-      // TODO remove old sessionId from redis
     } else {
       userAction = {
         loginTimes: 1,
@@ -93,7 +96,7 @@ export default class UsersService {
     }
 
     await this.userActionRepository.save(userAction);
-    return Promise.resolve(true);
+    return true;
   }
 
   async deleteOne(id: number): Promise<boolean> {
@@ -117,7 +120,10 @@ export default class UsersService {
   }
 
   async findOneByMail(email: string): Promise<User> {
-    const userObj = await this.usersRepository.findOneBy({ email });
+    const userObj = await this.usersRepository.findOne({
+      where: { email },
+      relations: ['userAction'],
+    });
     if (userObj) {
       return Promise.resolve(userObj);
     }

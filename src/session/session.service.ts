@@ -4,8 +4,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRedis } from '@liaoliaots/nestjs-redis';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import ActiveSession from './eneity/active-session.entity';
+import AverageActiveSession from './interface/session.interface';
 
 @Injectable()
 export default class SessionService {
@@ -26,10 +27,34 @@ export default class SessionService {
   async removeSession(sessionId: string) {
     await this.redis.del(`session:${sessionId}`);
     await this.redis.srem('sessions_sets', sessionId);
+    await this.redis.srem('daily_active_sessions', sessionId);
   }
 
-  async countSessions(): Promise<number> {
+  async todayActive(): Promise<number> {
     return this.redis.scard('sessions_sets');
+  }
+
+  async averageActive(day: number): Promise<AverageActiveSession> {
+    const result = await this.activeSessionRepository.find({
+      where: {
+        day: Between(
+          dayjs()
+            .subtract(day + 1, 'day')
+            .toDate(),
+          dayjs().toDate(),
+        ),
+      },
+    });
+
+    let sum = 0;
+    result.forEach((activeSession) => {
+      sum += activeSession.count;
+    });
+    const returnObj = {
+      days: result.length,
+      average: sum / result.length,
+    };
+    return returnObj;
   }
 
   // Every 00:01:00

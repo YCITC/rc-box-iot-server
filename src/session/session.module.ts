@@ -26,7 +26,7 @@ import ActiveSession from './eneity/active-session.entity';
     ScheduleModule.forRoot(),
   ],
   providers: [SessionService, SessionMiddleware],
-  // controllers: [SessionController],
+  controllers: [SessionController],
   exports: [SessionService],
 })
 export default class SessionModule {

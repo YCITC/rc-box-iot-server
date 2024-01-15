@@ -227,6 +227,14 @@ export default class AuthController {
       'Update jwtToken, Front-End must add "Authorization: Bearer ****token*****" in header',
   })
   @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        accessToken: 'new-token',
+      },
+    },
+  })
+  @ApiResponse({
     status: 401,
     description: 'Unauthorized.',
   })

@@ -27,7 +27,7 @@ import ActiveSession from './eneity/active-session.entity';
   ],
   providers: [SessionService, SessionMiddleware],
   controllers: [SessionController],
-  exports: [SessionService],
+  exports: [SessionService, TypeOrmModule],
 })
 export default class SessionModule {
   configure(consumer: MiddlewareConsumer) {

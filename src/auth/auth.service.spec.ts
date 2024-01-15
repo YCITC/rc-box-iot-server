@@ -9,7 +9,7 @@ import UsersService from '../users/users.service';
 import AuthService from './auth.service';
 import TokenType from './enum/token-type';
 
-describe.only('AuthService', () => {
+describe('AuthService', () => {
   let authService: AuthService;
   let usersService: UsersService;
   let jwtService: JwtService;

@@ -75,7 +75,7 @@ export default class UsersService {
 
   async getUserAction(user: User): Promise<UserAction> {
     return this.userActionRepository.findOneBy({
-      user,
+      id: user.id,
     });
   }
 
@@ -85,7 +85,7 @@ export default class UsersService {
   ): Promise<string | null> {
     let oldSessionId: string | null = null;
     let userAction = await this.userActionRepository.findOneBy({
-      user,
+      id: user.id,
     });
 
     if (userAction) {

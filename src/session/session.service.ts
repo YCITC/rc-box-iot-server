@@ -65,25 +65,25 @@ export default class SessionService {
       count,
       day: dayjs().subtract(1, 'day').toDate(),
     });
-    this.redis.del('daily_active_sessions');
+    await this.redis.del('daily_active_sessions');
   }
 
   // Every 00:05:00
   @Cron('* 5 0 * * *')
   async removeExpiredSession() {
-    let sessionId = await this.redis.lindex('sessions_list', 0);
-    const createTime = await this.redis.hmget(
-      `session:${sessionId}`,
-      'createTime',
-    )[0];
+    const sessionId = await this.redis.lindex('sessions_list', 0);
+    if (!sessionId) return;
+
+    const hmget = await this.redis.hmget(`session:${sessionId}`, 'createTime');
+    const createTime = hmget[0];
+    if (!createTime) return;
+
     const createDay = dayjs(createTime);
-    if (dayjs().diff(createDay) > 30) {
+    if (dayjs().diff(createDay, 'day') > 30) {
       await this.redis.del(`session:${sessionId}`);
       await this.redis.lpop('sessions_list');
       await this.redis.srem('sessions_sets', sessionId);
       this.removeExpiredSession();
-
-      sessionId = await this.redis.lindex('sessions_list', 0);
     }
   }
 }

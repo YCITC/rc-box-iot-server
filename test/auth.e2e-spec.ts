@@ -22,6 +22,9 @@ import TokenType from '../src/auth/enum/token-type';
 import UserAction from '../src/users/entity/user-action.entity';
 import SessionModule from '../src/session/session.module';
 import SessionService from '../src/session/session.service';
+import redisConfig from '../src/config/redis.config';
+import ActiveSession from '../src/session/eneity/active-session.entity';
+import EmailService from '../src/email/email.service';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -34,18 +37,15 @@ describe('AuthController (e2e)', () => {
   let authService: AuthService;
   let proflie = new UserProfileDto();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
-        AuthModule,
-        UsersModule,
-        SessionModule,
-        PassportModule,
         ConfigModule.forRoot({
           envFilePath: ['.development.env'],
         }),
         ConfigModule.forFeature(commonConfig),
         ConfigModule.forFeature(dbConfig),
+        ConfigModule.forFeature(redisConfig),
         TypeOrmModule.forRootAsync({
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
@@ -53,17 +53,45 @@ describe('AuthController (e2e)', () => {
               ...configService.get('DB'),
               host: configService.get('DB_HOST'),
               database: 'rc-box-test',
-              entities: [User, UserAction],
+              entities: [User, UserAction, ActiveSession],
               synchronize: true,
             };
             return dbInfo;
           },
           inject: [ConfigService],
         }),
+        AuthModule,
+        UsersModule,
+        SessionModule,
+        PassportModule,
       ],
-      providers: [UsersService, JwtService, SessionService],
+      providers: [
+        UsersService,
+        JwtService,
+        SessionService,
+        {
+          provide: EmailService,
+          useValue: {
+            sendResetPasswordEmail: (to) => {
+              return Promise.resolve({
+                messageId: 'abc123',
+                resopnse: 'OK',
+                accepted: [to],
+              });
+            },
+            sendVerificationEmail: (obj) => {
+              return Promise.resolve({
+                messageId: 'abc123',
+                resopnse: 'OK',
+                accepted: [obj.mailTo],
+              });
+            },
+          },
+        },
+      ],
     }).compile();
 
+    // TODO: sessionService 有用 redis，要想個辦法解決測試環境
     app = moduleFixture.createNestApplication();
     app.use(cookieParser()); // Use cookie-parser middleware
 
@@ -75,10 +103,11 @@ describe('AuthController (e2e)', () => {
       getRepositoryToken(UserAction),
     );
     authService = app.get<AuthService>(AuthService);
+
     await app.init();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
   });
 

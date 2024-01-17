@@ -112,7 +112,6 @@ describe('AuthController (e2e)', () => {
       }, 1000);
     });
     await app.close();
-
   });
 
   it('/auth/createUser/ (PUT)', async () => {

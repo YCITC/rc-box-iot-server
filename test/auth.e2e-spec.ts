@@ -21,8 +21,6 @@ import AuthService from '../src/auth/auth.service';
 import TokenType from '../src/auth/enum/token-type';
 import UserAction from '../src/users/entity/user-action.entity';
 import SessionModule from '../src/session/session.module';
-import SessionService from '../src/session/session.service';
-import redisConfig from '../src/config/redis.config';
 import ActiveSession from '../src/session/eneity/active-session.entity';
 import EmailService from '../src/email/email.service';
 
@@ -45,7 +43,6 @@ describe('AuthController (e2e)', () => {
         }),
         ConfigModule.forFeature(commonConfig),
         ConfigModule.forFeature(dbConfig),
-        ConfigModule.forFeature(redisConfig),
         TypeOrmModule.forRootAsync({
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
@@ -68,7 +65,6 @@ describe('AuthController (e2e)', () => {
       providers: [
         UsersService,
         JwtService,
-        SessionService,
         {
           provide: EmailService,
           useValue: {
@@ -91,7 +87,6 @@ describe('AuthController (e2e)', () => {
       ],
     }).compile();
 
-    // TODO: sessionService 有用 redis，要想個辦法解決測試環境
     app = moduleFixture.createNestApplication();
     app.use(cookieParser()); // Use cookie-parser middleware
 
@@ -108,7 +103,16 @@ describe('AuthController (e2e)', () => {
   });
 
   afterAll(async () => {
+    /*
+    ? 等 session.service裡面的 redis 跑完
+    */
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(true);
+      }, 1000);
+    });
     await app.close();
+
   });
 
   it('/auth/createUser/ (PUT)', async () => {
@@ -123,19 +127,14 @@ describe('AuthController (e2e)', () => {
     userId = response.body.id;
     expect(response.body.token).toBeDefined();
     expect(response.body.id).toBeDefined();
-  });
+  }, 6000);
 
   it('/auth/emailResend/ (GET)', async () => {
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true);
-      }, 1000);
-    });
     const response = await request(app.getHttpServer())
       .get(`/auth/emailResend/${rawUser.email}`)
       .expect(200);
     expect(response.body).toBeTruthy();
-  });
+  }, 6000);
 
   it('/auth/emailVerify/ (GET)', async () => {
     await new Promise((resolve) => {
@@ -147,7 +146,7 @@ describe('AuthController (e2e)', () => {
       .get(`/auth/emailVerify/${emailVerifyToken}`)
       .expect(200);
     expect(response.body).toBeTruthy();
-  });
+  }, 6000);
 
   it('/auth/login/ (POST)', async () => {
     const response = await request(app.getHttpServer())

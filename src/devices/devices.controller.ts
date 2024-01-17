@@ -7,7 +7,7 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import DevicesService from './devices.service';
 import DeviceDto from './dto/device.dto';
 import Device from './entities/device.entity';
-import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
+import JwtAuthGuard from '../guards/jwt-auth.guard';
 
 @ApiTags('Devices')
 @ApiBearerAuth()

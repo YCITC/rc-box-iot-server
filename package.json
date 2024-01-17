@@ -29,6 +29,7 @@
     "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch"
   },
   "dependencies": {
+    "@liaoliaots/nestjs-redis": "^9.0.5",
     "@nestjs-modules/mailer": "^1.8.1",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.3.1",
@@ -37,6 +38,7 @@
     "@nestjs/mapped-types": "^1.2.2",
     "@nestjs/passport": "^10.0.2",
     "@nestjs/platform-express": "^9.0.0",
+    "@nestjs/schedule": "^4.0.0",
     "@nestjs/serve-static": "^3.0.0",
     "@nestjs/swagger": "^6.2.1",
     "@nestjs/typeorm": "^9.0.1",
@@ -45,8 +47,10 @@
     "@types/passport-google-oauth20": "^2.0.11",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.6",
+    "dayjs": "^1.11.10",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
+    "ioredis": "^5.3.2",
     "mysql2": "^2.3.3",
     "nodemailer": "^6.9.1",
     "passport": "^0.6.0",
@@ -54,6 +58,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
+    "redis": "^4.6.12",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
@@ -106,11 +111,14 @@
       "**/*.controller.ts",
       "**/*.service.ts",
       "**/*.entity.ts",
+      "!**session/session.controller.ts",
       "!**example/**",
-      "!**/version.controller.ts" 
+      "!**/version.controller.ts"
     ],
     "coverageReporters": [
-      "json", "lcov", "text"
+      "json",
+      "lcov",
+      "text"
     ],
     "coverageThreshold": {
       "global": {

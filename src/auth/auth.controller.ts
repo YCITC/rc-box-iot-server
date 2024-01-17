@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-import JwtAuthGuard from './guards/jwt-auth.guard';
+import JwtAuthGuard from '../guards/jwt-auth.guard';
 import AuthService from './auth.service';
 import User from '../users/entity/user.entity';
 import UserRegisterDto from '../users/dto/user.register.dto';
@@ -20,17 +20,19 @@ import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import UsersService from '../users/users.service';
 import EmailService from '../email/email.service';
-import GoogleOauthGuard from './guards/google-auth.guard';
+import GoogleOauthGuard from '../guards/google-auth.guard';
 import TokenType from './enum/token-type';
 import UserInterface from '../users/interface/user.interface';
 import JwtPayload from './interface/jwt-payload';
+import SessionService from '../session/session.service';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
 @Controller('auth')
 export default class AuthController {
   constructor(
-    private readonly authService: AuthService,
+    private sessionService: SessionService,
+    private authService: AuthService,
     private usersService: UsersService,
     private emailService: EmailService,
     private configService: ConfigService,
@@ -69,8 +71,13 @@ export default class AuthController {
         type: TokenType.REFRESH,
       });
       res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
+      const oldSessionId = await this.usersService.updateUserAction(
+        user,
+        req.sessionID,
+      );
+      await this.sessionService.addSession(req.sessionID);
 
-      await this.usersService.updateUserAction(user, req.sessionID);
+      if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
 
       return await new Promise((resolve) => {
         const hash = crypto.createHash('md5').update(user.email).digest('hex');
@@ -218,6 +225,14 @@ export default class AuthController {
   @ApiOperation({
     summary:
       'Update jwtToken, Front-End must add "Authorization: Bearer ****token*****" in header',
+  })
+  @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        accessToken: 'new-token',
+      },
+    },
   })
   @ApiResponse({
     status: 401,

@@ -5,7 +5,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import jwtConfig from '../config/jwt.config';
 import googleConfig from '../config/google.config';
-import sessionConfig from '../config/session.config';
 import EmailService from '../email/email.service';
 import AuthService from './auth.service';
 import EmailModule from '../email/email.module';
@@ -13,14 +12,12 @@ import UsersModule from '../users/users.module';
 import GoogleStrategy from './strategies/google.strategy';
 import JwtStrategy from './strategies/jwt.strategy';
 import AuthController from './auth.controller';
+import SessionModule from '../session/session.module';
 
 @Module({
   imports: [
     ConfigModule.forFeature(jwtConfig),
     ConfigModule.forFeature(googleConfig),
-    ConfigModule.forFeature(sessionConfig),
-    UsersModule,
-    EmailModule,
     ConfigModule,
     PassportModule,
     JwtModule.registerAsync({
@@ -37,6 +34,9 @@ import AuthController from './auth.controller';
         return obj;
       },
     }),
+    UsersModule,
+    EmailModule,
+    SessionModule,
   ],
   providers: [AuthService, JwtStrategy, EmailService, GoogleStrategy],
   controllers: [AuthController],

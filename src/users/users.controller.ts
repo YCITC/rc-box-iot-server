@@ -1,4 +1,4 @@
-import { Controller, Body, Param } from '@nestjs/common';
+import { Controller, Body, Param, Query } from '@nestjs/common';
 import { Get, Post, Put, Delete } from '@nestjs/common';
 import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -46,7 +46,7 @@ export default class UsersController {
     // return this.usersService.getUserAndUserAction(id);
   }
 
-  @Get('updateUserAction/:id/:sessionId')
+  @Get('updateUserAction/:id')
   @ApiResponse({
     status: 200,
     description: 'Update UserAction successed.',
@@ -55,7 +55,7 @@ export default class UsersController {
   @ApiResponse({ status: 400, description: 'Cannot find user.' })
   async updateUserAction(
     @Param('id') id: number,
-    @Param('sessionId') sessionId: string,
+    @Query('sessionId') sessionId: string,
   ) {
     const user = await this.usersService.findOneById(id);
     this.usersService.updateUserAction(user, sessionId);

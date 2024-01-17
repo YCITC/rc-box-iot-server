@@ -172,7 +172,7 @@ describe('UsersService', () => {
 
   describe('findByMail', () => {
     it('should trigger userRepository findOneBy', async () => {
-      const repoSpy = jest.spyOn(userRepository, 'findOneBy');
+      const repoSpy = jest.spyOn(userRepository, 'findOne');
       await service.findOneByMail('1@.2.3');
       expect(repoSpy).toBeCalled();
     });

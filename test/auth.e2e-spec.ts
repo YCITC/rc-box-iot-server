@@ -20,6 +20,9 @@ import UserProfileDto from '../src/users/dto/user.profile.dto';
 import AuthService from '../src/auth/auth.service';
 import TokenType from '../src/auth/enum/token-type';
 import UserAction from '../src/users/entity/user-action.entity';
+import SessionModule from '../src/session/session.module';
+import ActiveSession from '../src/session/eneity/active-session.entity';
+import EmailService from '../src/email/email.service';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -32,12 +35,9 @@ describe('AuthController (e2e)', () => {
   let authService: AuthService;
   let proflie = new UserProfileDto();
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
-        AuthModule,
-        UsersModule,
-        PassportModule,
         ConfigModule.forRoot({
           envFilePath: ['.development.env'],
         }),
@@ -50,15 +50,41 @@ describe('AuthController (e2e)', () => {
               ...configService.get('DB'),
               host: configService.get('DB_HOST'),
               database: 'rc-box-test',
-              entities: [User, UserAction],
+              entities: [User, UserAction, ActiveSession],
               synchronize: true,
             };
             return dbInfo;
           },
           inject: [ConfigService],
         }),
+        AuthModule,
+        UsersModule,
+        SessionModule,
+        PassportModule,
       ],
-      providers: [UsersService, JwtService],
+      providers: [
+        UsersService,
+        JwtService,
+        {
+          provide: EmailService,
+          useValue: {
+            sendResetPasswordEmail: (to) => {
+              return Promise.resolve({
+                messageId: 'abc123',
+                resopnse: 'OK',
+                accepted: [to],
+              });
+            },
+            sendVerificationEmail: (obj) => {
+              return Promise.resolve({
+                messageId: 'abc123',
+                resopnse: 'OK',
+                accepted: [obj.mailTo],
+              });
+            },
+          },
+        },
+      ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -72,11 +98,21 @@ describe('AuthController (e2e)', () => {
       getRepositoryToken(UserAction),
     );
     authService = app.get<AuthService>(AuthService);
+
     await app.init();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
+    /*
+    ? 等 session.service裡面的 redis 跑完
+    */
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(true);
+      }, 1000);
+    });
     await app.close();
+
   });
 
   it('/auth/createUser/ (PUT)', async () => {
@@ -91,19 +127,14 @@ describe('AuthController (e2e)', () => {
     userId = response.body.id;
     expect(response.body.token).toBeDefined();
     expect(response.body.id).toBeDefined();
-  });
+  }, 6000);
 
   it('/auth/emailResend/ (GET)', async () => {
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true);
-      }, 1000);
-    });
     const response = await request(app.getHttpServer())
       .get(`/auth/emailResend/${rawUser.email}`)
       .expect(200);
     expect(response.body).toBeTruthy();
-  });
+  }, 6000);
 
   it('/auth/emailVerify/ (GET)', async () => {
     await new Promise((resolve) => {
@@ -115,7 +146,7 @@ describe('AuthController (e2e)', () => {
       .get(`/auth/emailVerify/${emailVerifyToken}`)
       .expect(200);
     expect(response.body).toBeTruthy();
-  });
+  }, 6000);
 
   it('/auth/login/ (POST)', async () => {
     const response = await request(app.getHttpServer())

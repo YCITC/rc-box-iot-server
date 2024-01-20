@@ -9,7 +9,7 @@ on:
       - 'v*'
 jobs:
   test-code:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     environment: production 
     services:
       redis:
@@ -18,16 +18,16 @@ jobs:
         - 6379/tcp
         options: --entrypoint redis-server
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: yarn
       - name: Update-yarn
         run: |
           corepack enable
           corepack prepare yarn@stable --activate
-          yarn set version 3.6.1
+          yarn set version 3.6.4
       - name: Restore yarn
         id: cache-restore-node-yarn
         uses: actions/cache/restore@v3
@@ -59,7 +59,7 @@ jobs:
     runs-on: ubuntu-22.04
     environment: production
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -68,7 +68,7 @@ jobs:
         run: |
           corepack enable
           corepack prepare yarn@stable --activate
-          yarn set version 3.6.1
+          yarn set version 3.6.4
       - name: Restore yarn
         id: cache-restore-node-yarn
         uses: actions/cache/restore@v3

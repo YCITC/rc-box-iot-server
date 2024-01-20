@@ -8,19 +8,19 @@ on:
       - 'main'
 jobs:
   create-catch:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     environment: development 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: yarn
       - name: Update-yarn
         run: |
           corepack enable
           corepack prepare yarn@stable --activate
-          yarn set version 3.6.1
+          yarn set version 3.6.4
       - name: Restore yarn
         id: cache-restore-node-yarn
         uses: actions/cache/restore@v3

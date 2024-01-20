@@ -1,7 +1,8 @@
-import User from './user.entity';
+import UserAction from './user-action.entity';
+import User, { inverseSide, typeFunctionOrTarget } from './user.entity';
 
-describe('User class', () => {
-  it('should make an user', () => {
+describe('User Entity', () => {
+  it('should careate user with userAction', () => {
     const email = '1@2.3';
     const username = 'Tester';
     const fullName = 'Tester Jest';
@@ -10,6 +11,12 @@ describe('User class', () => {
     const address =
       'No. 7, Section 5, Xinyi Road, Xinyi District · Taipei · Taiwan';
     const zipCode = '110';
+    const id = 1;
+    const loginTimes = 0;
+    const sessionId = '';
+    const lastSessionTime = new Date();
+    const userAction = new UserAction(loginTimes, sessionId, lastSessionTime);
+
     const user = new User(
       email,
       username,
@@ -18,7 +25,13 @@ describe('User class', () => {
       phoneNumber,
       address,
       zipCode,
+      id,
+      userAction,
     );
+
+    typeFunctionOrTarget();
+    inverseSide(userAction);
+
     expect(user).toBeTruthy();
     expect(user.createdTime).toBeDefined();
     expect(user.isEmailVerified).toBeFalsy();
@@ -28,5 +41,6 @@ describe('User class', () => {
     expect(user.phoneNumber).toBeDefined();
     expect(user.address).toBeDefined();
     expect(user.zipCode).toBeDefined();
+    expect(user.userAction).toBeDefined();
   });
 });

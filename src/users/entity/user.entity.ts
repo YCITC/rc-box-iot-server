@@ -1,7 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-// import { OneToMany } from 'typeorm';
+/* eslint-disable import/no-cycle */
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
+import { OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-// import Device from '../../devices/entities/device.entity';
+import UserAction from './user-action.entity';
+
+export const typeFunctionOrTarget = () => UserAction;
+export const inverseSide = (userAction: UserAction) => userAction.user;
 
 @Entity({
   name: 'users',
@@ -9,8 +18,9 @@ import { ApiProperty } from '@nestjs/swagger';
 })
 export default class User {
   @ApiProperty({ example: 1 })
-  @PrimaryGeneratedColumn({
+  @PrimaryGeneratedColumn('increment', {
     unsigned: true,
+    type: 'integer',
   })
   id: number;
 
@@ -27,6 +37,7 @@ export default class User {
     type: 'varchar',
     length: 16,
     nullable: false,
+    comment: 'AKA display Name',
   })
   username: string;
 
@@ -63,13 +74,14 @@ export default class User {
   })
   zipCode: string;
 
-  @Column({
-    type: 'timestamp',
-  })
+  @CreateDateColumn({ type: 'timestamp' })
   createdTime: Date;
 
-  // @OneToMany(() => Device, (device: Device) => device.ownerUserId)
-  // devices: Device[];
+  @OneToOne(typeFunctionOrTarget, inverseSide, {
+    nullable: false,
+    cascade: ['insert', 'update'],
+  })
+  userAction: UserAction;
 
   constructor(
     email: string,
@@ -80,6 +92,7 @@ export default class User {
     address: string,
     zipCode: string,
     id?: number,
+    userAction?: UserAction,
   );
   constructor(
     email: string,
@@ -90,6 +103,7 @@ export default class User {
     address: string,
     zipCode: string,
     id?: number,
+    userAction?: UserAction,
   ) {
     this.email = email;
     this.username = username;
@@ -100,8 +114,8 @@ export default class User {
     this.zipCode = zipCode;
     this.isEmailVerified = false;
     if (id) this.id = id;
+    if (userAction) this.userAction = userAction;
 
-    const now = new Date();
-    this.createdTime = new Date(now.toLocaleDateString());
+    this.createdTime = new Date();
   }
 }

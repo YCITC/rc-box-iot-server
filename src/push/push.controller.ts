@@ -10,7 +10,7 @@ import ChromeClient from './entity/chrome.client.entity';
 import iOSClient from './entity/ios.client.entity';
 import PushClientInterface from './interface/push-client.interface';
 import DevicesService from '../devices/devices.service';
-import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
+import JwtAuthGuard from '../guards/jwt-auth.guard';
 
 @ApiTags('PushNotification')
 @ApiBearerAuth()

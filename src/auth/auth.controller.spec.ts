@@ -1,6 +1,7 @@
 import * as https from 'https';
 import * as jwt from 'jsonwebtoken';
 
+import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -11,6 +12,7 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import EmailService from '../email/email.service';
 import User from '../users/entity/user.entity';
 import UsersService from '../users/users.service';
+import SessionService from '../session/session.service';
 import AuthController from './auth.controller';
 import AuthService from './auth.service';
 import TokenType from './enum/token-type';
@@ -24,6 +26,7 @@ describe('AuthController', () => {
   let usersService: UsersService;
   let authService: AuthService;
   let emailService: EmailService;
+  let sessionService: SessionService;
   let jwtService: JwtService;
   let token: string;
 
@@ -48,6 +51,13 @@ describe('AuthController', () => {
   );
   let currentUser = null;
 
+  const mockLoginResponse: Partial<Response> = {
+    cookie: jest.fn(),
+  };
+  const mockLoginRequest: Partial<Request> = {
+    sessionID: 'fake-sessionID',
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -71,16 +81,24 @@ describe('AuthController', () => {
               }
               return Promise.resolve(testUser);
             }),
-            createToken: jest.fn().mockResolvedValue({ token: 'tokenString' }),
+            createToken: jest.fn().mockResolvedValue('tokenString'),
             changePassword: jest.fn().mockResolvedValue(true),
-            createOneDayToken: jest
-              .fn()
-              .mockResolvedValue({ token: 'tokenString' }),
             resetPassword: jest.fn().mockResolvedValue(true),
             verifyToken: jest.fn().mockResolvedValue(true),
           },
         },
-        UsersService,
+        {
+          provide: UsersService,
+          useValue: {
+            findOneByMail: jest.fn().mockResolvedValue(testUser),
+            findOneById: jest.fn().mockResolvedValue(testUser),
+            updateUserAction: jest.fn(),
+            updateProfile: jest.fn().mockResolvedValue(testUser),
+            addOne: jest.fn().mockResolvedValue(testUser),
+            emailVerify: jest.fn(),
+            changePassword: jest.fn().mockResolvedValue(true),
+          },
+        },
         {
           provide: EmailService,
           useValue: {
@@ -101,22 +119,6 @@ describe('AuthController', () => {
           },
         },
         {
-          provide: getRepositoryToken(User),
-          useValue: {
-            findOneBy: jest.fn().mockResolvedValue(testUser),
-            save: (user) => {
-              const newUserInfo = { ...user };
-              newUserInfo.createdTime = new Date();
-              if (user?.isEmailVerified === undefined) {
-                newUserInfo.isEmailVerified = false;
-              }
-              return Promise.resolve(newUserInfo);
-            },
-            update: jest.fn().mockResolvedValue({ affected: 1 }),
-            delete: jest.fn().mockResolvedValue({ affected: 1 }),
-          },
-        },
-        {
           provide: ConfigService,
           useValue: {
             get: jest.fn((key: string) => {
@@ -127,6 +129,13 @@ describe('AuthController', () => {
               if (key === 'common.VERIFY_SUCCESS_URL') return 'localhost:3000';
               return null;
             }),
+          },
+        },
+        {
+          provide: SessionService,
+          useValue: {
+            addSession: jest.fn(),
+            removeSession: jest.fn(),
           },
         },
         JwtService,
@@ -153,8 +162,14 @@ describe('AuthController', () => {
         callback(mockResponse as any); // Casting to 'any' for simplicity
       });
       const user = { email: '1@2.3', password: '1234' };
-      const res = await controller.login(user);
+
+      const res = await controller.login(
+        user,
+        mockLoginRequest as Request,
+        mockLoginResponse as Response,
+      );
       expect(res.user.avatarUrl).toBeNull();
+      expect(mockLoginResponse.cookie).toHaveBeenCalled();
     });
     it('should return user and token when credentials are valid', async () => {
       (https.get as jest.Mock).mockImplementation((url, callback) => {
@@ -164,10 +179,47 @@ describe('AuthController', () => {
         callback(mockResponse as any); // Casting to 'any' for simplicity
       });
       const user = { email: '1@2.3', password: '1234' };
-      const res = await controller.login(user);
+      const res = await controller.login(
+        user,
+        mockLoginRequest as Request,
+        mockLoginResponse as Response,
+      );
       currentUser = res;
-      expect(res.access_token).toBeDefined();
+      expect(res.accessToken).toBeDefined();
       expect(res.user.avatarUrl).toBeTruthy();
+    });
+  });
+  describe('logout', () => {
+    const mockResponse = {
+      clearCookie: jest.fn(),
+    } as Partial<Response>;
+
+    it('should clean cookie and destory session', async () => {
+      const mockSession = {
+        destroy: jest.fn(),
+      };
+
+      await controller.logout(
+        mockSession as Record<string, any>,
+        mockResponse as Response,
+      );
+
+      expect(mockSession.destroy).toHaveBeenCalled();
+      expect(mockResponse.clearCookie).toHaveBeenCalled();
+    });
+    it('should reject with error', async () => {
+      const mockSession = {
+        destroy: jest.fn((callback) =>
+          callback(new Error('Session destroy error')),
+        ),
+      };
+
+      await expect(
+        controller.logout(
+          mockSession as Record<string, any>,
+          mockResponse as Response,
+        ),
+      ).rejects.toThrowError(Error);
     });
   });
   describe('changePassword', () => {
@@ -197,9 +249,13 @@ describe('AuthController', () => {
         callback(mockResponse as any); // Casting to 'any' for simplicity
       });
       const user = { email: '1@2.3', password: '' };
-      await expect(controller.login(user)).rejects.toThrowError(
-        UnauthorizedException,
-      );
+      await expect(
+        controller.login(
+          user,
+          mockLoginRequest as Request,
+          mockLoginResponse as Response,
+        ),
+      ).rejects.toThrowError(UnauthorizedException);
     });
   });
   describe('resetPassword', () => {
@@ -220,7 +276,7 @@ describe('AuthController', () => {
       const jwtPayload = {
         id: testUser.id,
         username: testUser.username,
-        type: TokenType.SINGIN,
+        type: TokenType.AUTH,
       };
 
       await expect(
@@ -358,22 +414,33 @@ describe('AuthController', () => {
     });
   });
   describe('updateProfile', () => {
-    it('should change user profile and return user', async () => {
-      const payload = { id: testUser.id, username: testUser.username };
-      token = jwtService.sign(payload);
-      const returnUser = await controller.updateProfile({
+    it('should call usersService.updateProfile', async () => {
+      const updateProfileSpy = jest.spyOn(usersService, 'updateProfile');
+      await controller.updateProfile({
         ...currentUser,
         zipCode: '70445',
       });
-      expect(returnUser.zipCode).toBe('70445');
+      expect(updateProfileSpy).toBeCalledWith({
+        ...currentUser,
+        zipCode: '70445',
+      });
     });
   });
   describe('updateToken', () => {
     it('should return a token', async () => {
-      const newToekn = await controller.updateToken({
-        user: { id: 1, username: 'testUser' },
-      });
+      const mockRequest = {
+        cookies: {
+          rtk: 'fackToken',
+        },
+      };
+      const newToekn = await controller.updateToken(mockRequest);
       expect(newToekn).toBeDefined();
+    });
+  });
+  describe('google', () => {
+    it('should return true', async () => {
+      const result = await controller.googleOAuth();
+      expect(result).toBeTruthy();
     });
   });
 });

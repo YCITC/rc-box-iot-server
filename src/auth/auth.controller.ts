@@ -5,12 +5,13 @@ import * as https from 'https';
 import { Controller, UseGuards } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { HttpCode, Get, Post, Put } from '@nestjs/common';
-import { Req, Body, Param } from '@nestjs/common';
+import { Req, Res, Body, Param, Session } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-import JwtAuthGuard from './guards/jwt-auth.guard';
+import JwtAuthGuard from '../guards/jwt-auth.guard';
 import AuthService from './auth.service';
 import User from '../users/entity/user.entity';
 import UserRegisterDto from '../users/dto/user.register.dto';
@@ -19,16 +20,19 @@ import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import UsersService from '../users/users.service';
 import EmailService from '../email/email.service';
-import GoogleOauthGuard from './guards/google-auth.guard';
+import GoogleOauthGuard from '../guards/google-auth.guard';
 import TokenType from './enum/token-type';
 import UserInterface from '../users/interface/user.interface';
+import JwtPayload from './interface/jwt-payload';
+import SessionService from '../session/session.service';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
 @Controller('auth')
 export default class AuthController {
   constructor(
-    private readonly authService: AuthService,
+    private sessionService: SessionService,
+    private authService: AuthService,
     private usersService: UsersService,
     private emailService: EmailService,
     private configService: ConfigService,
@@ -51,36 +55,73 @@ export default class AuthController {
   })
   async login(
     @Body() userLoginDto: UserLoginDto,
-  ): Promise<{ user: UserInterface; access_token: string }> {
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ user: UserInterface; accessToken: string }> {
     try {
       const user = await this.authService.validateUser(userLoginDto);
-      const token = this.authService.createToken({
+      const accessToken = this.authService.createToken({
         id: user.id,
         username: user.username,
-        type: TokenType.SINGIN,
+        type: TokenType.AUTH,
       });
+      const refreshToken = this.authService.createToken({
+        id: user.id,
+        username: user.username,
+        type: TokenType.REFRESH,
+      });
+      res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
+      const oldSessionId = await this.usersService.updateUserAction(
+        user,
+        req.sessionID,
+      );
+      await this.sessionService.addSession(req.sessionID);
+
+      if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
 
       return await new Promise((resolve) => {
         const hash = crypto.createHash('md5').update(user.email).digest('hex');
-        https.get(`https://www.gravatar.com/avatar/${hash}?d=404`, (res) => {
-          if (res.statusCode === 404) {
-            user.avatarUrl = null;
+        https.get(
+          `https://www.gravatar.com/avatar/${hash}?d=404`,
+          (avatarRes) => {
+            if (avatarRes.statusCode === 404) {
+              user.avatarUrl = null;
+            } else {
+              user.avatarUrl = `https://www.gravatar.com/avatar/${hash}`;
+            }
             resolve({
-              access_token: token,
+              accessToken,
               user,
             });
-          } else {
-            user.avatarUrl = `https://www.gravatar.com/avatar/${hash}`;
-            resolve({
-              access_token: token,
-              user,
-            });
-          }
-        });
+          },
+        );
       });
     } catch (error) {
       return Promise.reject(error);
     }
+  }
+
+  @Get('logout')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    description: 'Logout and clean cookie and session.',
+  })
+  async logout(
+    @Session() session: Record<string, any>,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<boolean> {
+    let error;
+    session.destroy((err) => {
+      if (err) {
+        error = err;
+      }
+    });
+    if (error) {
+      return Promise.reject(error);
+    }
+    res.clearCookie('rtk');
+    return Promise.resolve(true);
   }
 
   @Post('changePassword')
@@ -110,7 +151,7 @@ export default class AuthController {
   @ApiOperation({ summary: 'Send an email to reset password' })
   async requestResetPassword(@Param('email') email: string): Promise<boolean> {
     const user = await this.usersService.findOneByMail(email);
-    const token = this.authService.createOneDayToken({
+    const token = this.authService.createToken({
       id: user.id,
       username: user.username,
       type: TokenType.RESET_PASSWORD,
@@ -180,23 +221,43 @@ export default class AuthController {
   }
 
   @Get('updateToken')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary:
       'Update jwtToken, Front-End must add "Authorization: Bearer ****token*****" in header',
   })
   @ApiResponse({
+    status: 200,
+    schema: {
+      example: {
+        accessToken: 'new-token',
+      },
+    },
+  })
+  @ApiResponse({
     status: 401,
     description: 'Unauthorized.',
   })
-  async updateToken(@Req() req): Promise<{ access_token: string }> {
+  async updateToken(@Req() req): Promise<{ accessToken: string }> {
+    let userInfo: JwtPayload<TokenType>;
+    try {
+      userInfo = await this.authService.verifyToken(req.cookies.rtk);
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        return Promise.reject(new BadRequestException('TokenExpiredError'));
+      }
+      if (error.name === 'JsonWebTokenError') {
+        return Promise.reject(new BadRequestException('JsonWebTokenError'));
+      }
+      return Promise.reject(new BadRequestException(error.message));
+    }
     const token = this.authService.createToken({
-      id: req.user.id,
-      username: req.user.username,
-      type: TokenType.SINGIN,
+      id: userInfo.id,
+      username: userInfo.username,
+      type: TokenType.AUTH,
     });
     return Promise.resolve({
-      access_token: token,
+      accessToken: token,
     });
   }
 
@@ -226,7 +287,7 @@ export default class AuthController {
     }
 
     const user = await this.usersService.addOne(userDto);
-    const token = this.authService.createOneDayToken({
+    const token = this.authService.createToken({
       id: user.id,
       username: user.username,
       type: TokenType.EMAIL_VERIFY,
@@ -262,10 +323,9 @@ export default class AuthController {
 
       if (error.name === 'JsonWebTokenError') {
         // const url =
-        //   this.configService.get('common.VERIFY_FAILED_URL') +
+        //   this.configService.get('COMMON.VERIFY_FAILED_URL') +
         //   '?error=JsonWebTokenError';
         // return res.redirect(url);
-        error.message = 'JsonWebTokenError';
         return Promise.reject(new BadRequestException('JsonWebTokenError'));
       }
 
@@ -291,7 +351,7 @@ export default class AuthController {
       if (user.isEmailVerified) {
         return await Promise.reject(new BadRequestException('EmailVerified'));
       }
-      const token = this.authService.createOneDayToken({
+      const token = this.authService.createToken({
         id: user.id,
         username: user.username,
         type: TokenType.EMAIL_VERIFY,

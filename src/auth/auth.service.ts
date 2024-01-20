@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import { Injectable } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
@@ -9,6 +9,7 @@ import JwtPayload from './interface/jwt-payload';
 import UsersService from '../users/users.service';
 import UserInterface from '../users/interface/user.interface';
 import TokenType from './enum/token-type';
+import User from '../users/entity/user.entity';
 
 @Injectable()
 export default class AuthService {
@@ -74,7 +75,7 @@ export default class AuthService {
     return this.usersService.changePassword(userId, dto.newPassword);
   }
 
-  async validateGoogleUser(details): Promise<any> {
+  async validateGoogleUser(details): Promise<User> {
     try {
       return await this.usersService.findOneByMail(details.email);
     } catch (error) {
@@ -86,16 +87,24 @@ export default class AuthService {
   createToken(payload: JwtPayload<TokenType>): string {
     const signOptions = {
       secret: this.configService.get('JWT.SECRET'),
-    };
-    const token = this.jwtService.sign(payload, signOptions);
-    return token;
-  }
+    } as JwtSignOptions;
 
-  createOneDayToken(payload: JwtPayload<TokenType>): string {
-    const signOptions = {
-      expiresIn: '1d',
-      secret: this.configService.get('JWT.SECRET'),
-    };
+    switch (payload.type) {
+      case TokenType.RESET_PASSWORD:
+        signOptions.expiresIn = '12hr';
+        break;
+      case TokenType.EMAIL_VERIFY:
+        signOptions.expiresIn = '1d';
+        break;
+      case TokenType.REFRESH:
+        signOptions.expiresIn = '60d';
+        break;
+      case TokenType.AUTH:
+      default:
+        signOptions.expiresIn = '1hr';
+        break;
+    }
+
     const token = this.jwtService.sign(payload, signOptions);
     return token;
   }

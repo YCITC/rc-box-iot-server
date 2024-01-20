@@ -34,7 +34,7 @@ export default class GoogleStrategy extends PassportStrategy(Strategy) {
       // eslint-disable-next-line no-underscore-dangle
       isEmailVerified: profile._json.email_verified,
     });
-    user.avatarUrl = profile.photos[0].value;
-    return user || null;
+    const avatarUrl = profile.photos[0].value;
+    return { ...user, avatarUrl } || null;
   }
 }

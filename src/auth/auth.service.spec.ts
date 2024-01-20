@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 
 import User from '../users/entity/user.entity';
 import UsersService from '../users/users.service';
@@ -13,6 +12,7 @@ import TokenType from './enum/token-type';
 describe('AuthService', () => {
   let authService: AuthService;
   let usersService: UsersService;
+  let jwtService: JwtService;
   let token: string;
   const rawUser = {
     email: '1@2.3',
@@ -61,12 +61,13 @@ describe('AuthService', () => {
             }),
           },
         },
-        UsersService,
         {
-          provide: getRepositoryToken(User),
+          provide: UsersService,
           useValue: {
-            findOneBy: jest.fn().mockResolvedValue(testUser),
-            save: jest.fn().mockResolvedValue(testUser),
+            findOneByMail: jest.fn().mockResolvedValue(testUser),
+            findOneById: jest.fn().mockResolvedValue(testUser),
+            changePassword: jest.fn().mockResolvedValue(true),
+            addOne: jest.fn().mockResolvedValue(testUser),
           },
         },
       ],
@@ -74,6 +75,7 @@ describe('AuthService', () => {
 
     authService = module.get<AuthService>(AuthService);
     usersService = module.get<UsersService>(UsersService);
+    jwtService = module.get<JwtService>(JwtService);
   });
 
   it('should be defined', () => {
@@ -115,6 +117,14 @@ describe('AuthService', () => {
       await expect(
         authService.changePassword(1, {
           ...dto,
+          oldPassword: 'Abc123%*dga',
+        }),
+      ).rejects.toThrowError(
+        new UnauthorizedException('Can not use same password'),
+      );
+      await expect(
+        authService.changePassword(1, {
+          ...dto,
           oldPassword: '0000',
         }),
       ).rejects.toThrowError(
@@ -143,13 +153,13 @@ describe('AuthService', () => {
     });
     it('should throw Exceptions', async () => {
       await expect(
-        authService.changePassword(1, {
+        authService.resetPassword(1, {
           ...dto,
           newPassword: 'Abcdef12',
         }),
       ).rejects.toThrowError(new BadRequestException('Password policy failed'));
       await expect(
-        authService.changePassword(1, {
+        authService.resetPassword(1, {
           ...dto,
           newPassword: 'Abcdef12%$',
           confirmNewPassword: 'Abcdef1234',
@@ -159,24 +169,60 @@ describe('AuthService', () => {
       );
     });
   });
-  describe('createToken', () => {
-    it('should return JWT object when credentials are valid', async () => {
-      const res = await authService.createToken({
-        username: 'john',
-        id: 1,
-        type: TokenType.SINGIN,
+  describe('validateGoogleUser', () => {
+    it('should call usersService.findOneByMail', async () => {
+      const findOneByEmailSpy = jest.spyOn(usersService, 'findOneByMail');
+      await authService.validateGoogleUser({});
+      expect(findOneByEmailSpy).toBeCalled();
+    });
+    it('should call usersService.addOne', async () => {
+      jest.spyOn(usersService, 'findOneByMail').mockImplementation(() => {
+        throw new Error();
       });
-      expect(res).toBeDefined();
+      const addOneSpy = jest.spyOn(usersService, 'addOne');
+      await authService.validateGoogleUser({});
+      expect(addOneSpy).toBeCalled();
     });
   });
-  describe('createOneDayToken', () => {
-    it('should return JWT object when credentials are valid', async () => {
+  describe('createToken', () => {
+    it('should return JWT object with expiresIn 1hr ', async () => {
       token = await authService.createToken({
         username: 'john',
         id: 1,
-        type: TokenType.SINGIN,
+        type: TokenType.AUTH,
       });
-      expect(token.length).toBeGreaterThan(0);
+      const payload = jwtService.verify(token);
+      expect(payload.exp - payload.iat).toBe(60 * 60);
+    });
+
+    it('should return JWT object with expiresIn 12hr ', async () => {
+      token = await authService.createToken({
+        username: 'john',
+        id: 1,
+        type: TokenType.RESET_PASSWORD,
+      });
+      const payload = jwtService.verify(token);
+      expect(payload.exp - payload.iat).toBe(12 * 60 * 60);
+    });
+
+    it('should return JWT object with expiresIn 1d ', async () => {
+      token = await authService.createToken({
+        username: 'john',
+        id: 1,
+        type: TokenType.EMAIL_VERIFY,
+      });
+      const payload = jwtService.verify(token);
+      expect(payload.exp - payload.iat).toBe(24 * 60 * 60);
+    });
+
+    it('should return JWT object with expiresIn 60d ', async () => {
+      token = await authService.createToken({
+        username: 'john',
+        id: 1,
+        type: TokenType.REFRESH,
+      });
+      const payload = jwtService.verify(token);
+      expect(payload.exp - payload.iat).toBe(60 * 24 * 60 * 60);
     });
   });
   describe('verifyToken', () => {

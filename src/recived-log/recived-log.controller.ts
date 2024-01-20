@@ -9,7 +9,7 @@ import ReceivedLog from './entity/recived-log.entity';
 import ReceivedLogDto from './dto/recived-log.dto';
 import ReceivedLogService from './recived-log.service';
 import DevicesService from '../devices/devices.service';
-import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
+import JwtAuthGuard from '../guards/jwt-auth.guard';
 
 @ApiTags('Log')
 @ApiBearerAuth()
@@ -97,7 +97,7 @@ export default class ReceivedLogController {
       deviceId,
     );
     if (userHasDevice === false) {
-      throw new UnauthorizedException("You have no device 'deviceId'");
+      throw new UnauthorizedException(`You have no device ${deviceId}`);
     }
     return this.receiveService.findByDeviceId(deviceId);
   }
@@ -125,7 +125,7 @@ export default class ReceivedLogController {
   })
   async getAllByUser(@Req() req): Promise<ReceivedLog[]> {
     const devices = await this.devicesService.findAllWithUserId(req.user.id);
-    const allLogs: any[] = [];
+    const allLogs: ReceivedLog[] = [];
 
     const logPromises = devices.map(async (device) => {
       const logs = await this.receiveService.findByDeviceId(device.deviceId);

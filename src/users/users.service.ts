@@ -1,17 +1,20 @@
 import * as bcrypt from 'bcrypt';
+import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import UserRegisterDto from './dto/user.register.dto';
 import UserProfileDto from './dto/user.profile.dto';
 import User from './entity/user.entity';
+import UserAction from './entity/user-action.entity';
 
 @Injectable()
 export default class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(UserAction)
+    private userActionRepository: Repository<UserAction>,
   ) {}
 
   async addOne(userRegisterDto: UserRegisterDto): Promise<User> {
@@ -28,11 +31,16 @@ export default class UsersService {
       user = await this.usersRepository.save({
         ...userRegisterDto,
         password: hashedPassword,
+        userAction: {
+          loginTimes: 0,
+          sessionId: '',
+        },
       });
     } catch (error) {
       if (error.sqlMessage.indexOf('Duplicate entry') > -1) {
         throw new BadRequestException(`Email [${userRegisterDto.email}] exist`);
       }
+      throw error;
     }
     return Promise.resolve(user);
   }
@@ -49,9 +57,51 @@ export default class UsersService {
     }
   }
 
+  async getUser(userId: number): Promise<User> {
+    return this.usersRepository.findOneBy({ id: userId });
+  }
+
+  async getUserAndUserAction(userId: number): Promise<User> {
+    return this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['userAction'],
+    });
+  }
+
   async updateProfile(userProfileDto: UserProfileDto): Promise<User> {
     const user = await this.usersRepository.save(userProfileDto);
     return Promise.resolve(user);
+  }
+
+  async getUserAction(user: User): Promise<UserAction> {
+    return this.userActionRepository.findOneBy({
+      id: user.id,
+    });
+  }
+
+  async updateUserAction(
+    user: User,
+    sessionId: string,
+  ): Promise<string | null> {
+    let oldSessionId: string | null = null;
+    let userAction = await this.userActionRepository.findOneBy({
+      id: user.id,
+    });
+
+    if (userAction) {
+      oldSessionId = userAction.sessionId;
+      userAction.loginTimes += 1;
+      userAction.sessionId = sessionId;
+    } else {
+      userAction = {
+        loginTimes: 1,
+        sessionId,
+        user,
+      } as UserAction;
+    }
+
+    await this.userActionRepository.save(userAction);
+    return oldSessionId;
   }
 
   async deleteOne(id: number): Promise<boolean> {
@@ -75,7 +125,10 @@ export default class UsersService {
   }
 
   async findOneByMail(email: string): Promise<User> {
-    const userObj = await this.usersRepository.findOneBy({ email });
+    const userObj = await this.usersRepository.findOne({
+      where: { email },
+      relations: ['userAction'],
+    });
     if (userObj) {
       return Promise.resolve(userObj);
     }
@@ -105,5 +158,9 @@ export default class UsersService {
       }
       throw new BadRequestException(error.message);
     }
+  }
+
+  async countAllUsers(): Promise<number> {
+    return this.usersRepository.count();
   }
 }

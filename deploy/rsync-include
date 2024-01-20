@@ -6,3 +6,4 @@ package.json
 yarn.lock
 .development.env
 .production.env
+.yarnrc.yml

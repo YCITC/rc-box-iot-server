@@ -4,7 +4,7 @@
 ```bash
 $ corepack enable
 $ corepack prepare yarn@stable --activate 
-$ yarn set version 3.6.1
+$ yarn set version 3.6.4
 ```
 
 ## Installation

@@ -1,9 +1,20 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import ReceivedLogInterface from './interface/recived_log.interface';
+import {
+  paginate,
+  Pagination,
+  IPaginationOptions,
+  IPaginationMeta,
+} from 'nestjs-typeorm-paginate';
+
+import {
+  ReceivedLogInterface,
+  ReceivedLogsInterface,
+} from './interface/recived-log.interface';
 import ReceivedLogDto from './dto/recived-log.dto';
 import ReceivedLog from './entity/recived-log.entity';
+import GetByUserIdDto from './dto/get-by-user-id.dto';
 
 @Injectable()
 export default class ReceivedLogService {
@@ -29,6 +40,18 @@ export default class ReceivedLogService {
       },
       where: { deviceId },
     });
+  }
+
+  async getByUserId(dto: GetByUserIdDto): Promise<ReceivedLogsInterface> {
+    const queryBuilder = this.receivedLogRepository
+      .createQueryBuilder('received_log')
+      .innerJoin('devices', 'devices')
+      .where('devices.ownerUserId = :userId', { userId: dto.userId })
+      .andWhere('devices.deviceId = received_log.deviceId')
+      .orderBy('received_log.id', 'DESC');
+    // return queryBuilder.getMany();
+    const results = await paginate(queryBuilder, dto.paginateOptions);
+    return results;
   }
 
   async add(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {

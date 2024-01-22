@@ -1,8 +1,9 @@
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller, Query, UseGuards } from '@nestjs/common';
 import { Req, Body, Param } from '@nestjs/common';
 import { Get, Put, Delete } from '@nestjs/common';
+import { DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import ReceivedLog from './entity/recived-log.entity';
@@ -10,6 +11,7 @@ import ReceivedLogDto from './dto/recived-log.dto';
 import ReceivedLogService from './recived-log.service';
 import DevicesService from '../devices/devices.service';
 import JwtAuthGuard from '../guards/jwt-auth.guard';
+import { ReceivedLogsInterface } from './interface/recived-log.interface';
 
 @ApiTags('Log')
 @ApiBearerAuth()
@@ -102,6 +104,58 @@ export default class ReceivedLogController {
     return this.receiveService.findByDeviceId(deviceId);
   }
 
+  @Get('getByUser')
+  @UseGuards(JwtAuthGuard)
+  @ApiResponse({
+    status: 200,
+    description: 'Return logs',
+    schema: {
+      example: [
+        {
+          items: [
+            {
+              time: '2024-01-22T08:08:58.204Z',
+              id: 3,
+              deviceId: 'rc-box-test-a12302',
+            },
+            {
+              time: '2024-01-22T07:52:12.188Z',
+              id: 2,
+              deviceId: 'rc-box-test-a12302',
+            },
+            {
+              time: '2024-01-22T07:52:11.210Z',
+              id: 1,
+              deviceId: 'rc-box-test-a12303',
+            },
+          ],
+          meta: {
+            totalItems: 45,
+            itemCount: 10,
+            itemsPerPage: 10,
+            totalPages: 5,
+            currentPage: 1,
+          },
+        },
+      ],
+    },
+  })
+  @ApiQuery({ name: 'page', type: Number, required: false })
+  @ApiQuery({ name: 'limit', type: Number, required: false })
+  async getByUser(
+    @Req() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
+  ): Promise<ReceivedLogsInterface> {
+    return this.receiveService.getByUserId({
+      userId: req.user.id,
+      paginateOptions: {
+        page,
+        limit: limit > 100 ? 100 : limit,
+      },
+    });
+  }
+
   @Get('getAllByUser/')
   @UseGuards(JwtAuthGuard)
   @ApiResponse({
@@ -127,7 +181,7 @@ export default class ReceivedLogController {
     const devices = await this.devicesService.findAllWithUserId(req.user.id);
     const allLogs: ReceivedLog[] = [];
 
-    const logPromises = devices.map(async (device) => {
+    const logPromises = devices?.map(async (device) => {
       const logs = await this.receiveService.findByDeviceId(device.deviceId);
       logs.forEach((log) => {
         allLogs.push(log);

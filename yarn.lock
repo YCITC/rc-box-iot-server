@@ -5682,6 +5682,7 @@ __metadata:
     jest: 29.3.1
     jsonwebtoken: ^9.0.2
     mysql2: ^2.3.3
+    nestjs-typeorm-paginate: ^4.0.4
     nodemailer: ^6.9.1
     passport: ^0.6.0
     passport-google-oauth2: ^0.2.0
@@ -7943,6 +7944,16 @@ __metadata:
   version: 2.6.2
   resolution: "neo-async@npm:2.6.2"
   checksum: deac9f8d00eda7b2e5cd1b2549e26e10a0faa70adaa6fdadca701cc55f49ee9018e427f424bac0c790b7c7e2d3068db97f3093f1093975f2acb8f8818b936ed9
+  languageName: node
+  linkType: hard
+
+"nestjs-typeorm-paginate@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "nestjs-typeorm-paginate@npm:4.0.4"
+  peerDependencies:
+    "@nestjs/common": ^6.1.1 || ^5.6.2 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
+    typeorm: ^0.3.0
+  checksum: 0e2f5337a772f574e3de4ca851f2d6a65d9dc3f51e9220e84b0a728e8aed04538cdf628df26012bdb235447a8afb594b48645ed274dd8d00cd153aa843cda539
   languageName: node
   linkType: hard
 

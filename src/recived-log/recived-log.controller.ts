@@ -61,9 +61,11 @@ export default class ReceivedLogController {
     type: ReceivedLog,
   })
   add(@Body() receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
-    if (receivedLogDto.deviceId.length > 0) {
+    if (receivedLogDto.deviceId?.length > 0) {
       return this.receiveService.add(receivedLogDto);
     }
+
+    // ? Unit test example of reject exception
     return Promise.reject(
       new BadRequestException('deviceId length cannot be zero'),
     );
@@ -98,9 +100,9 @@ export default class ReceivedLogController {
       req.user.id,
       deviceId,
     );
-    if (userHasDevice === false) {
+    if (!userHasDevice)
       throw new UnauthorizedException(`You have no device ${deviceId}`);
-    }
+
     return this.receiveService.findByDeviceId(deviceId);
   }
 
@@ -147,50 +149,13 @@ export default class ReceivedLogController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
   ): Promise<ReceivedLogsInterface> {
-    return this.receiveService.getByUserId({
+    return this.receiveService.getByUser({
       userId: req.user.id,
       paginateOptions: {
         page,
         limit: limit > 100 ? 100 : limit,
       },
     });
-  }
-
-  @Get('getAllByUser/')
-  @UseGuards(JwtAuthGuard)
-  @ApiResponse({
-    status: 200,
-    description: 'Return logs of deviceId',
-    schema: {
-      example: [
-        {
-          time: '2023-01-16T16:57:49.000Z',
-          id: 5,
-          deviceId: 'macbook',
-        },
-      ],
-      type: 'object',
-      properties: {
-        time: { type: 'string' },
-        id: { type: 'number' },
-        deviceId: { type: 'string' },
-      },
-    },
-  })
-  async getAllByUser(@Req() req): Promise<ReceivedLog[]> {
-    const devices = await this.devicesService.findAllWithUserId(req.user.id);
-    const allLogs: ReceivedLog[] = [];
-
-    const logPromises = devices?.map(async (device) => {
-      const logs = await this.receiveService.findByDeviceId(device.deviceId);
-      logs.forEach((log) => {
-        allLogs.push(log);
-      });
-    });
-    await Promise.all(logPromises);
-
-    allLogs.sort((a, b) => b.id - a.id);
-    return Promise.resolve(allLogs);
   }
 
   @Delete('clean/:deviceId')
@@ -203,22 +168,20 @@ export default class ReceivedLogController {
   })
   @ApiResponse({ status: 400, description: 'Log not found' })
   async clean(@Param('deviceId') deviceId: string, @Req() req): Promise<any> {
+    if (!deviceId || deviceId.length === 0)
+      throw new BadRequestException('deviceId length cannot be zero');
+
     const userHasDevice = await this.devicesService.checkDeviceWithUser(
       req.user.id,
       deviceId,
     );
-    if (userHasDevice === false) {
+    if (!userHasDevice)
       throw new UnauthorizedException("Can not unbind other user's device");
-    }
-    if (deviceId.length > 0) {
-      await this.receiveService.clean(deviceId);
-      return Promise.resolve({
-        statusCode: 200,
-        message: `Logs has been successfully deleted using the provided deviceId ${deviceId}.`,
-      });
-    }
-    return Promise.reject(
-      new BadRequestException('deviceId length cannot be zero'),
-    );
+
+    await this.receiveService.clean(deviceId);
+    return Promise.resolve({
+      statusCode: 200,
+      message: `Logs has been successfully deleted using the provided deviceId ${deviceId}.`,
+    });
   }
 }

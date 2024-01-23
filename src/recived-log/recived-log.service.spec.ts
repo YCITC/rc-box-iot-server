@@ -1,9 +1,17 @@
+/* eslint-disable import/order */
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import ReceivedLog from './entity/recived-log.entity';
 import ReceivedLogService from './recived-log.service';
+import GetByUserDto from './dto/get-by-user.dto';
+
+jest.mock('nestjs-typeorm-paginate', () => ({
+  paginate: jest.fn(),
+}));
+// eslint-disable-next-line import/first
+import { paginate } from 'nestjs-typeorm-paginate';
 
 describe('ReceivedLogService', () => {
   let service: ReceivedLogService;
@@ -26,6 +34,12 @@ describe('ReceivedLogService', () => {
             find: jest.fn().mockResolvedValue(logArray),
             save: jest.fn().mockReturnValue(oneLog),
             delete: jest.fn().mockResolvedValue({ affected: 3 }),
+            createQueryBuilder: jest.fn(() => ({
+              innerJoin: jest.fn().mockReturnThis(),
+              where: jest.fn().mockReturnThis(),
+              andWhere: jest.fn().mockReturnThis(),
+              orderBy: jest.fn().mockReturnThis(),
+            })),
           },
         },
       ],
@@ -66,6 +80,24 @@ describe('ReceivedLogService', () => {
     });
   });
 
+  describe('getByUser', () => {
+    it('should call receivedLogRepository.createQueryBuilder', async () => {
+      // jest.mock('nestjs-typeorm-paginate', () => ({
+      //   paginate: jest.fn(),
+      // }));
+
+      const dto = {
+        userId: 1,
+        paginateOptions: {
+          page: 1,
+          limit: 10,
+        },
+      } as GetByUserDto;
+      await service.getByUser(dto);
+      expect(paginate).toBeCalled();
+    });
+  });
+
   describe('add', () => {
     it('should return an log', async () => {
       const rawLog = {
@@ -79,8 +111,8 @@ describe('ReceivedLogService', () => {
     });
   });
 
-  describe('delete', () => {
-    it('should delete logs', async () => {
+  describe('clean', () => {
+    it('should clean logs', async () => {
       const response = await service.clean('test_device_id');
       expect(response).toBeTruthy();
     });

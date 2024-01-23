@@ -1,20 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  paginate,
-  Pagination,
-  IPaginationOptions,
-  IPaginationMeta,
-} from 'nestjs-typeorm-paginate';
+import { paginate } from 'nestjs-typeorm-paginate';
 
-import {
-  ReceivedLogInterface,
-  ReceivedLogsInterface,
-} from './interface/recived-log.interface';
+import { ReceivedLogsInterface } from './interface/recived-log.interface';
 import ReceivedLogDto from './dto/recived-log.dto';
 import ReceivedLog from './entity/recived-log.entity';
-import GetByUserIdDto from './dto/get-by-user-id.dto';
+import GetByUserDto from './dto/get-by-user.dto';
 
 @Injectable()
 export default class ReceivedLogService {
@@ -22,8 +14,6 @@ export default class ReceivedLogService {
     @InjectRepository(ReceivedLog)
     private receivedLogRepository: Repository<ReceivedLog>,
   ) {}
-
-  private logs: ReceivedLogInterface[] = [];
 
   async getAll(): Promise<ReceivedLog[]> {
     return this.receivedLogRepository.find({
@@ -42,16 +32,14 @@ export default class ReceivedLogService {
     });
   }
 
-  async getByUserId(dto: GetByUserIdDto): Promise<ReceivedLogsInterface> {
+  async getByUser(dto: GetByUserDto): Promise<ReceivedLogsInterface> {
     const queryBuilder = this.receivedLogRepository
       .createQueryBuilder('received_log')
       .innerJoin('devices', 'devices')
       .where('devices.ownerUserId = :userId', { userId: dto.userId })
       .andWhere('devices.deviceId = received_log.deviceId')
       .orderBy('received_log.id', 'DESC');
-    // return queryBuilder.getMany();
-    const results = await paginate(queryBuilder, dto.paginateOptions);
-    return results;
+    return paginate(queryBuilder, dto.paginateOptions);
   }
 
   async add(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
@@ -59,15 +47,13 @@ export default class ReceivedLogService {
     return this.receivedLogRepository.save(log);
   }
 
-  async clean(deviceId: string): Promise<any> {
-    const response = await this.receivedLogRepository.delete({ deviceId });
+  async clean(deviceId: string): Promise<boolean> {
+    await this.receivedLogRepository.delete({ deviceId });
     /*
+     * receivedLogRepository.delete
      * response like this
      * DeleteResult { raw: [], affected: 1 }
      */
-    if (response.affected !== 0) {
-      return Promise.resolve(true);
-    }
-    throw new BadRequestException('User not found');
+    return Promise.resolve(true);
   }
 }

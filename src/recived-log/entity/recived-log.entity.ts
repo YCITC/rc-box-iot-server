@@ -1,10 +1,16 @@
+/* eslint-disable import/no-cycle */
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
 } from 'typeorm';
+import { JoinColumn, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import Device from '../../devices/entities/device.entity';
+
+export const typeFunctionOrTarget = () => Device;
+export const inverseSide = (device: Device) => device.receivedLogs;
 
 @Entity({
   name: 'received_log',
@@ -27,6 +33,13 @@ export default class ReceivedLog {
     length: 20,
   })
   deviceId: string;
+
+  @ManyToOne(typeFunctionOrTarget, inverseSide, {
+    nullable: false,
+    cascade: ['insert'],
+  })
+  @JoinColumn({ name: 'deviceId' })
+  device: Device;
 
   constructor(deviceId: string, time?: Date, id?: number);
   constructor(deviceId: string, time?: Date, id?: number) {

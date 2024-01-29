@@ -22,37 +22,39 @@ export default class ReceivedLogController {
     private readonly devicesService: DevicesService,
   ) {}
 
-  // @ApiOperation({
-  //   summary: "Don't use this on production environment.",
-  // })
-  // @Get('getAll')
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Return all of logs',
-  //   schema: {
-  //     example: [
-  //       {
-  //         time: '2023-01-16T16:57:49.000Z',
-  //         id: 5,
-  //         deviceId: 'macbook',
-  //       },
-  //       {
-  //         time: '2023-02-03T11:24:38.000Z',
-  //         id: 18,
-  //         deviceId: 'Postman_test',
-  //       },
-  //     ],
-  //     type: 'object',
-  //     properties: {
-  //       time: { type: 'string' },
-  //       id: { type: 'number' },
-  //       deviceId: { type: 'string' },
-  //     },
-  //   },
-  // })
-  // getAll(): Promise<ReceivedLog[]> {
-  //   return this.receiveService.getAll();
-  // }
+  /*
+  @ApiOperation({
+    summary: "Don't use this on production environment.",
+  })
+  @Get('getAll')
+  @ApiResponse({
+    status: 200,
+    description: 'Return all of logs',
+    schema: {
+      example: [
+        {
+          time: '2023-01-16T16:57:49.000Z',
+          id: 5,
+          deviceId: 'macbook',
+        },
+        {
+          time: '2023-02-03T11:24:38.000Z',
+          id: 18,
+          deviceId: 'Postman_test',
+        },
+      ],
+      type: 'object',
+      properties: {
+        time: { type: 'string' },
+        id: { type: 'number' },
+        deviceId: { type: 'string' },
+      },
+    },
+  })
+  getAll(): Promise<ReceivedLog[]> {
+    return this.receiveService.getAll();
+  }
+   */
 
   @Put('add')
   @ApiResponse({
@@ -146,8 +148,8 @@ export default class ReceivedLogController {
   @ApiQuery({ name: 'limit', type: Number, required: false })
   async getByUser(
     @Req() req,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page = 1,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit = 10,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit,
   ): Promise<ReceivedLogsInterface> {
     return this.receiveService.getByUser({
       userId: req.user.id,

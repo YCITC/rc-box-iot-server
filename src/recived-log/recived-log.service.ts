@@ -20,6 +20,7 @@ export default class ReceivedLogService {
       order: {
         id: 'DESC',
       },
+      relations: ['device', 'device.user'],
     });
   }
 
@@ -33,13 +34,37 @@ export default class ReceivedLogService {
   }
 
   async getByUser(dto: GetByUserDto): Promise<ReceivedLogsInterface> {
-    const queryBuilder = this.receivedLogRepository
-      .createQueryBuilder('received_log')
-      .innerJoin('devices', 'devices')
-      .where('devices.ownerUserId = :userId', { userId: dto.userId })
-      .andWhere('devices.deviceId = received_log.deviceId')
-      .orderBy('received_log.id', 'DESC');
-    return paginate(queryBuilder, dto.paginateOptions);
+    const result = await paginate(
+      this.receivedLogRepository,
+      dto.paginateOptions,
+      {
+        where: {
+          device: {
+            ownerUserId: dto.userId,
+          },
+        },
+        order: {
+          id: 'DESC',
+        },
+        relations: ['device', 'device.user'],
+      },
+    );
+    const logs = result.items.map((item) => {
+      return {
+        id: item.id,
+        deviceId: item.deviceId,
+        alias: item.device.alias,
+        time: item.time,
+      };
+    });
+    return { items: logs, meta: result.meta };
+    // const queryBuilder = this.receivedLogRepository
+    //   .createQueryBuilder('received_log')
+    //   .innerJoinAndSelect('devices', 'devices')
+    //   .where('devices.ownerUserId = :userId', { userId: dto.userId })
+    //   .andWhere('devices.deviceId = received_log.deviceId')
+    //   .orderBy('received_log.id', 'DESC');
+    // return paginate(queryBuilder, dto.paginateOptions);
   }
 
   async add(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {

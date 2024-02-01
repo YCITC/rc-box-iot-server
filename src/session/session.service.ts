@@ -34,7 +34,7 @@ export default class SessionService {
     return this.redis.scard('sessions_sets');
   }
 
-  async averageActive(day: number): Promise<AverageActiveSession> {
+  async activeHistory(day: number): Promise<AverageActiveSession> {
     const result = await this.activeSessionRepository.find({
       where: {
         day: Between(
@@ -51,6 +51,7 @@ export default class SessionService {
       sum += activeSession.count;
     });
     const returnObj = {
+      activeHistory: result,
       days: result.length,
       average: sum / result.length,
     };

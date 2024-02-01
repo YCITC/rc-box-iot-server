@@ -3,10 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { paginate } from 'nestjs-typeorm-paginate';
+
 import UserRegisterDto from './dto/user.register.dto';
 import UserProfileDto from './dto/user.profile.dto';
+import UserGetAllDto from './dto/user.getall.dto';
 import User from './entity/user.entity';
 import UserAction from './entity/user-action.entity';
+import { PaginateInterface } from '../common/interface';
 
 @Injectable()
 export default class UsersService {
@@ -162,5 +166,15 @@ export default class UsersService {
 
   async countAllUsers(): Promise<number> {
     return this.usersRepository.count();
+  }
+
+  async getAll(dto: UserGetAllDto): Promise<PaginateInterface<User>> {
+    const result = await paginate(this.usersRepository, dto.paginateOptions, {
+      order: {
+        id: 'DESC',
+      },
+      relations: ['userAction'],
+    });
+    return result;
   }
 }

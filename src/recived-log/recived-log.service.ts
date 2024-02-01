@@ -3,10 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { paginate } from 'nestjs-typeorm-paginate';
 
-import { ReceivedLogsInterface } from './interface/recived-log.interface';
+import { ReceivedLogInterface } from './interface/recived-log.interface';
 import ReceivedLogDto from './dto/recived-log.dto';
 import ReceivedLog from './entity/recived-log.entity';
 import GetByUserDto from './dto/get-by-user.dto';
+import { PaginateInterface } from '../common/interface';
 
 @Injectable()
 export default class ReceivedLogService {
@@ -33,7 +34,9 @@ export default class ReceivedLogService {
     });
   }
 
-  async getByUser(dto: GetByUserDto): Promise<ReceivedLogsInterface> {
+  async getByUser(
+    dto: GetByUserDto,
+  ): Promise<PaginateInterface<ReceivedLogInterface>> {
     const result = await paginate(
       this.receivedLogRepository,
       dto.paginateOptions,

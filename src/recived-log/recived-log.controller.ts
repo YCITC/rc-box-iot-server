@@ -11,7 +11,8 @@ import ReceivedLogDto from './dto/recived-log.dto';
 import ReceivedLogService from './recived-log.service';
 import DevicesService from '../devices/devices.service';
 import JwtAuthGuard from '../guards/jwt-auth.guard';
-import { ReceivedLogsInterface } from './interface/recived-log.interface';
+import { ReceivedLogInterface } from './interface/recived-log.interface';
+import { PaginateInterface } from '../common/interface';
 
 @ApiTags('Log')
 @ApiBearerAuth()
@@ -150,7 +151,7 @@ export default class ReceivedLogController {
     @Req() req,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit,
-  ): Promise<ReceivedLogsInterface> {
+  ): Promise<PaginateInterface<ReceivedLogInterface>> {
     return this.receiveService.getByUser({
       userId: req.user.id,
       paginateOptions: {

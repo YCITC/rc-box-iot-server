@@ -1,10 +1,12 @@
-import { Controller, Body, Param, Query } from '@nestjs/common';
-import { Get, Post, Put, Delete } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
+import { Get, Put, Delete } from '@nestjs/common';
+import { Body, Param, Query, Req } from '@nestjs/common';
+import { ApiResponse, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 
 import UserRegisterDto from './dto/user.register.dto';
 import User from './entity/user.entity';
 import UsersService from './users.service';
+import { PaginateInterface } from '../common/interface';
 
 @ApiTags('Users')
 @Controller('users')
@@ -43,7 +45,27 @@ export default class UsersController {
   @ApiResponse({ status: 400, description: 'Cannot find user.' })
   async findById(@Param('id') id: number): Promise<User> {
     return this.usersService.findOneById(id);
-    // return this.usersService.getUserAndUserAction(id);
+  }
+
+  @Get('getAll')
+  @ApiOperation({ summary: 'Get all of users' })
+  @ApiResponse({
+    status: 200,
+    type: User,
+  })
+  @ApiQuery({ name: 'page', type: Number, required: false })
+  @ApiQuery({ name: 'limit', type: Number, required: false })
+  async(
+    @Req() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit,
+  ): Promise<PaginateInterface<User>> {
+    return this.usersService.getAll({
+      paginateOptions: {
+        page,
+        limit: limit > 100 ? 100 : limit,
+      },
+    });
   }
 
   @Get('updateUserAction/:id')

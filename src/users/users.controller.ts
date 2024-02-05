@@ -100,7 +100,8 @@ export default class UsersController {
     });
   }
 
-  @Get('users/count')
+  @Get('count')
+  @ApiOperation({ summary: 'Total number of users who have signed up' })
   @ApiResponse({
     status: 200,
     description: 'I will return total users count.',

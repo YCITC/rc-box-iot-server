@@ -61,6 +61,10 @@ export default class ReceivedLogService {
       };
     });
     return { items: logs, meta: result.meta };
+
+    /*
+     * use queryBuilder
+     */
     // const queryBuilder = this.receivedLogRepository
     //   .createQueryBuilder('received_log')
     //   .innerJoinAndSelect('devices', 'devices')

@@ -58,47 +58,31 @@ export default class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: UserInterface; accessToken: string }> {
-    try {
-      const user = await this.authService.validateUser(userLoginDto);
-      const accessToken = this.authService.createToken({
-        id: user.id,
-        username: user.username,
-        type: TokenType.AUTH,
-      });
-      const refreshToken = this.authService.createToken({
-        id: user.id,
-        username: user.username,
-        type: TokenType.REFRESH,
-      });
-      res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
-      const oldSessionId = await this.usersService.updateUserAction(
-        user,
-        req.sessionID,
-      );
-      await this.sessionService.addSession(req.sessionID);
+    const user = await this.authService.validateUser(userLoginDto);
+    const accessToken = this.authService.createToken({
+      id: user.id,
+      username: user.username,
+      type: TokenType.AUTH,
+    });
+    const refreshToken = this.authService.createToken({
+      id: user.id,
+      username: user.username,
+      type: TokenType.REFRESH,
+    });
+    res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
+    const oldSessionId = await this.usersService.updateUserAction(
+      user,
+      req.sessionID,
+    );
+    user.avatarUrl = await this.usersService.getGravatarUrl(user.email);
 
-      if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
+    await this.sessionService.addSession(req.sessionID);
+    if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
 
-      return await new Promise((resolve) => {
-        const hash = crypto.createHash('md5').update(user.email).digest('hex');
-        https.get(
-          `https://www.gravatar.com/avatar/${hash}?d=404`,
-          (avatarRes) => {
-            if (avatarRes.statusCode === 404) {
-              user.avatarUrl = null;
-            } else {
-              user.avatarUrl = `https://www.gravatar.com/avatar/${hash}`;
-            }
-            resolve({
-              accessToken,
-              user,
-            });
-          },
-        );
-      });
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    return {
+      accessToken,
+      user,
+    };
   }
 
   @Get('logout')

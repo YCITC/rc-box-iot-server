@@ -18,7 +18,7 @@ import jwtConfig from '../src/config/jwt.config';
 import rawUser from './raw-user';
 import TokenType from '../src/auth/enum/token-type';
 
-describe('ReceivedLogController (e2e)', () => {
+const receivedLogControllerE2ETest = () => {
   let app: INestApplication;
   let repo: Repository<ReceivedLog>;
   let jwtService: JwtService;
@@ -148,4 +148,8 @@ describe('ReceivedLogController (e2e)', () => {
 
     await repo.clear();
   });
-});
+};
+
+describe('ReceivedLogController (e2e)', receivedLogControllerE2ETest);
+
+export default receivedLogControllerE2ETest;

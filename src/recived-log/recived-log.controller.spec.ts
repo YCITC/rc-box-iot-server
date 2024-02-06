@@ -252,7 +252,11 @@ describe('ReceivedLog Controller', () => {
       const page = 1;
       const limit = 101;
       await controller.getByUser({ user: jwtPayload }, page, limit);
-      const response = await controller.getByUser({ user: jwtPayload });
+      const response = await controller.getByUser(
+        { user: jwtPayload },
+        page,
+        limit,
+      );
       expect(response).toMatchObject({
         items: [
           {

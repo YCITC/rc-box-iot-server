@@ -41,15 +41,16 @@ export default class ReceivedLog {
   @JoinColumn({ name: 'deviceId' })
   device: Device;
 
-  constructor(deviceId: string, time?: Date, id?: number);
-  constructor(deviceId: string, time?: Date, id?: number) {
+  constructor(deviceId: string, time?: Date, id?: number, device?: Device);
+  constructor(deviceId: string, time?: Date, id?: number, device?: Device) {
+    this.deviceId = deviceId;
     if (time) {
       this.time = time;
     } else {
       const now = new Date();
       this.time = new Date(now.toLocaleDateString());
     }
-    this.id = id;
-    this.deviceId = deviceId;
+    if (device) this.device = device;
+    if (id) this.id = id;
   }
 }

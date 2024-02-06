@@ -1,4 +1,7 @@
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
+import axios from 'axios';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
@@ -176,5 +179,15 @@ export default class UsersService {
       relations: ['userAction'],
     });
     return result;
+  }
+
+  async getGravatarUrl(email: string): Promise<string | null> {
+    const hash = crypto.createHash('md5').update(email).digest('hex');
+    try {
+      await axios.get(`https://www.gravatar.com/avatar/${hash}?d=404`);
+      return `https://www.gravatar.com/avatar/${hash}`;
+    } catch (error) {
+      return '';
+    }
   }
 }

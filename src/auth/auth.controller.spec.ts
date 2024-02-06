@@ -97,6 +97,7 @@ describe('AuthController', () => {
             addOne: jest.fn().mockResolvedValue(testUser),
             emailVerify: jest.fn(),
             changePassword: jest.fn().mockResolvedValue(true),
+            getGravatarUrl: jest.fn(),
           },
         },
         {
@@ -155,12 +156,9 @@ describe('AuthController', () => {
 
   describe('login', () => {
     it('should get user avatarUrl as null', async () => {
-      (https.get as jest.Mock).mockImplementation((url, callback) => {
-        const mockResponse = {
-          statusCode: 404,
-        };
-        callback(mockResponse as any); // Casting to 'any' for simplicity
-      });
+      const spy = jest
+        .spyOn(usersService, 'getGravatarUrl')
+        .mockResolvedValue(null);
       const user = { email: '1@2.3', password: '1234' };
 
       const res = await controller.login(
@@ -170,14 +168,12 @@ describe('AuthController', () => {
       );
       expect(res.user.avatarUrl).toBeNull();
       expect(mockLoginResponse.cookie).toHaveBeenCalled();
+      spy.mockReset();
     });
     it('should return user and token when credentials are valid', async () => {
-      (https.get as jest.Mock).mockImplementation((url, callback) => {
-        const mockResponse = {
-          statusCode: 200,
-        };
-        callback(mockResponse as any); // Casting to 'any' for simplicity
-      });
+      const spy = jest
+        .spyOn(usersService, 'getGravatarUrl')
+        .mockResolvedValue('https://www.gravatar.com/avatar/');
       const user = { email: '1@2.3', password: '1234' };
       const res = await controller.login(
         user,
@@ -187,6 +183,7 @@ describe('AuthController', () => {
       currentUser = res;
       expect(res.accessToken).toBeDefined();
       expect(res.user.avatarUrl).toBeTruthy();
+      spy.mockReset();
     });
   });
   describe('logout', () => {

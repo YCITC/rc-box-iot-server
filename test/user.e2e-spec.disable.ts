@@ -13,7 +13,7 @@ import User from '../src/users/entity/user.entity';
 import UserAction from '../src/users/entity/user-action.entity';
 import UsersService from '../src/users/users.service';
 
-describe('UserController (e2e)', () => {
+const userControllerE2ETest = () => {
   let app: INestApplication;
   let userId: number;
   let userRepostory: Repository<User>;
@@ -86,7 +86,6 @@ describe('UserController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.use(cookieParser()); // Use cookie-parser middleware
 
-
     userRepostory = app.get<Repository<User>>(getRepositoryToken(User));
     userActionRepostory = app.get<Repository<UserAction>>(
       getRepositoryToken(UserAction),
@@ -152,4 +151,7 @@ describe('UserController (e2e)', () => {
   //     .expect(200);
   //   expect(response.body.statusCode).toBe(200);
   // });
-});
+};
+describe('UserController (e2e)', userControllerE2ETest);
+
+export default userControllerE2ETest;

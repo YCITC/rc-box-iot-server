@@ -19,7 +19,13 @@ import ActiveSession from './eneity/active-session.entity';
     RedisModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        return configService.get('REDIS');
+        const config = configService.get('REDIS');
+        return {
+          config: {
+            host: configService.get('REDIS_HOST'),
+            port: config.port,
+          }
+        };
       },
       inject: [ConfigService],
     }),
@@ -29,6 +35,7 @@ import ActiveSession from './eneity/active-session.entity';
   controllers: [SessionController],
   exports: [SessionService, TypeOrmModule],
 })
+
 export default class SessionModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(SessionMiddleware).forRoutes('*');

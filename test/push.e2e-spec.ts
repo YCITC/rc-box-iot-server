@@ -18,8 +18,9 @@ import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
 import rawUser from './raw-user';
 import TokenType from '../src/auth/enum/token-type';
+import ReceivedLog from '../src/recived-log/entity/recived-log.entity';
 
-describe('PushController (e2e)', () => {
+const pushControllerE2ETest = () => {
   let app: INestApplication;
   let chromeClientRepo: Repository<ChromeClient>;
   let IOSClientRepo: Repository<IOSClient>;
@@ -61,7 +62,7 @@ describe('PushController (e2e)', () => {
               ...configService.get('DB'),
               host: configService.get('DB_HOST'),
               database: 'rc-box-test',
-              entities: [Device, ChromeClient, IOSClient],
+              entities: [Device, ReceivedLog, ChromeClient, IOSClient],
               synchronize: true,
             };
             return dbInfo;
@@ -162,4 +163,8 @@ describe('PushController (e2e)', () => {
     expect(clients).toBeDefined();
     expect(clients.length).toBeGreaterThan(0);
   });
-});
+};
+
+describe('PushController (e2e)', pushControllerE2ETest);
+
+export default pushControllerE2ETest;

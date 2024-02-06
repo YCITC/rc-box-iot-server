@@ -1,7 +1,12 @@
+/* eslint-disable import/no-cycle */
 import { Entity, PrimaryColumn, Column, CreateDateColumn } from 'typeorm';
-// import { JoinColumn, ManyToOne } from 'typeorm';
+import { JoinColumn, OneToMany, ManyToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-// import User from '../../users/entity/user.entity';
+import ReceivedLog from '../../recived-log/entity/recived-log.entity';
+import User from '../../users/entity/user.entity';
+
+export const typeFunctionOrTarget = () => ReceivedLog;
+export const inverseSide = (receivedLog: ReceivedLog) => receivedLog.device;
 
 @Entity({
   name: 'devices',
@@ -17,7 +22,7 @@ export default class Device {
   deviceId: string;
 
   @ApiProperty({ example: 1 })
-  @Column({ unique: false, type: 'int' })
+  @Column({ unique: false, nullable: true, type: 'int' })
   ownerUserId: number;
 
   @ApiProperty({ example: 'my box' })
@@ -31,9 +36,15 @@ export default class Device {
   @CreateDateColumn({ type: 'timestamp' })
   createdTime: Date;
 
-  // @ManyToOne(() => User, (user) => user.devices)
-  // @JoinColumn({ name: 'ownerUserId' })
-  // ownerUser: User;
+  @OneToMany(typeFunctionOrTarget, inverseSide)
+  receivedLogs: ReceivedLog[];
+
+  @ManyToOne(typeFunctionOrTarget, inverseSide, {
+    nullable: true,
+    cascade: ['insert'],
+  })
+  @JoinColumn({ name: 'ownerUserId' })
+  user: User;
 
   constructor(deviceId: string, ownerUserId: number, alias: string);
   constructor(deviceId: string, ownerUserId: number, alias: string) {

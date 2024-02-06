@@ -1,9 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import ReceivedLogInterface from './interface/recived_log.interface';
+import { paginate } from 'nestjs-typeorm-paginate';
+
+import { ReceivedLogInterface } from './interface/recived-log.interface';
 import ReceivedLogDto from './dto/recived-log.dto';
 import ReceivedLog from './entity/recived-log.entity';
+import GetByUserDto from './dto/get-by-user.dto';
+import { PaginateInterface } from '../common/interface';
 
 @Injectable()
 export default class ReceivedLogService {
@@ -12,13 +16,12 @@ export default class ReceivedLogService {
     private receivedLogRepository: Repository<ReceivedLog>,
   ) {}
 
-  private logs: ReceivedLogInterface[] = [];
-
   async getAll(): Promise<ReceivedLog[]> {
     return this.receivedLogRepository.find({
       order: {
         id: 'DESC',
       },
+      relations: ['device', 'device.user'],
     });
   }
 
@@ -31,20 +34,58 @@ export default class ReceivedLogService {
     });
   }
 
+  async getByUser(
+    dto: GetByUserDto,
+  ): Promise<PaginateInterface<ReceivedLogInterface>> {
+    const result = await paginate(
+      this.receivedLogRepository,
+      dto.paginateOptions,
+      {
+        where: {
+          device: {
+            ownerUserId: dto.userId,
+          },
+        },
+        order: {
+          id: 'DESC',
+        },
+        relations: ['device', 'device.user'],
+      },
+    );
+    const logs = result.items.map((item) => {
+      return {
+        id: item.id,
+        deviceId: item.deviceId,
+        alias: item.device.alias,
+        time: item.time,
+      };
+    });
+    return { items: logs, meta: result.meta };
+
+    /*
+     * use queryBuilder
+     */
+    // const queryBuilder = this.receivedLogRepository
+    //   .createQueryBuilder('received_log')
+    //   .innerJoinAndSelect('devices', 'devices')
+    //   .where('devices.ownerUserId = :userId', { userId: dto.userId })
+    //   .andWhere('devices.deviceId = received_log.deviceId')
+    //   .orderBy('received_log.id', 'DESC');
+    // return paginate(queryBuilder, dto.paginateOptions);
+  }
+
   async add(receivedLogDto: ReceivedLogDto): Promise<ReceivedLog> {
     const log = new ReceivedLog(receivedLogDto.deviceId, new Date());
     return this.receivedLogRepository.save(log);
   }
 
-  async clean(deviceId: string): Promise<any> {
-    const response = await this.receivedLogRepository.delete({ deviceId });
+  async clean(deviceId: string): Promise<boolean> {
+    await this.receivedLogRepository.delete({ deviceId });
     /*
+     * receivedLogRepository.delete
      * response like this
      * DeleteResult { raw: [], affected: 1 }
      */
-    if (response.affected !== 0) {
-      return Promise.resolve(true);
-    }
-    throw new BadRequestException('User not found');
+    return Promise.resolve(true);
   }
 }

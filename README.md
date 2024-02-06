@@ -16,13 +16,13 @@ $ yarn install
 ## Running the app
 
 ```bash
-# development
-$ yarn start
-
-# watch mode
+# development 
 $ yarn start:dev
 
-# production mode
+# production
+$ yarn start
+
+# production base on dist folder
 $ yarn start:prod
 ```
 

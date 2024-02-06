@@ -24,7 +24,7 @@ import SessionModule from '../src/session/session.module';
 import ActiveSession from '../src/session/eneity/active-session.entity';
 import EmailService from '../src/email/email.service';
 
-describe('AuthController (e2e)', () => {
+const authControllerE2ETest = () => {
   let app: INestApplication;
   let userId: number;
   let emailVerifyToken: string;
@@ -104,8 +104,8 @@ describe('AuthController (e2e)', () => {
 
   afterAll(async () => {
     /*
-    ? 等 session.service裡面的 redis 跑完
-    */
+      ? 等 session.service裡面的 redis 跑完
+      */
     await new Promise((resolve) => {
       setTimeout(() => {
         resolve(true);
@@ -227,4 +227,8 @@ describe('AuthController (e2e)', () => {
       .expect(200);
     expect(response.body.accessToken).toBeDefined();
   });
-});
+};
+
+describe('AuthController (e2e)', authControllerE2ETest);
+
+export default authControllerE2ETest;

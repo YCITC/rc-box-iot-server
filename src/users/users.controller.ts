@@ -32,8 +32,10 @@ export default class UsersController {
     type: User,
   })
   @ApiResponse({ status: 400, description: 'Cannot find user.' })
-  findByMail(@Param('email') email: string): Promise<User> {
-    return this.usersService.findOneByMail(email);
+  async findByMail(@Param('email') email: string): Promise<User> {
+    const userObj = await this.usersService.findOneByMail(email);
+    delete userObj.password;
+    return userObj;
   }
 
   @Get('findById/:id')
@@ -44,7 +46,9 @@ export default class UsersController {
   })
   @ApiResponse({ status: 400, description: 'Cannot find user.' })
   async findById(@Param('id') id: number): Promise<User> {
-    return this.usersService.findOneById(id);
+    const userObj = await this.usersService.findOneById(id);
+    delete userObj.password;
+    return userObj;
   }
 
   @Get('getAll')

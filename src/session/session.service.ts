@@ -38,9 +38,7 @@ export default class SessionService {
     const result = await this.activeSessionRepository.find({
       where: {
         day: Between(
-          dayjs()
-            .subtract(day + 1, 'day')
-            .toDate(),
+          dayjs().subtract(day, 'day').startOf('d').toDate(),
           dayjs().toDate(),
         ),
       },

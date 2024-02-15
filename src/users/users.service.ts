@@ -173,6 +173,14 @@ export default class UsersService {
 
   async getAll(dto: UserGetAllDto): Promise<PaginateInterface<User>> {
     const result = await paginate(this.usersRepository, dto.paginateOptions, {
+      select: [
+        'id',
+        'email',
+        'username',
+        'fullName',
+        'isEmailVerified',
+        'createdTime',
+      ],
       order: {
         id: 'DESC',
       },

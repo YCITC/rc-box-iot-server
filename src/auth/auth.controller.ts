@@ -271,6 +271,7 @@ export default class AuthController {
     }
 
     const user = await this.usersService.addOne(userDto);
+    delete user.password;
     const token = this.authService.createToken({
       id: user.id,
       username: user.username,

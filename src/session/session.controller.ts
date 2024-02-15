@@ -1,4 +1,4 @@
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import SessionService from './session.service';
 import AverageActiveSession from './interface/session.interface';
@@ -14,13 +14,6 @@ export default class SessionController {
   })
   @ApiResponse({
     status: 200,
-  })
-  @ApiParam({
-    name: 'day',
-    description: 'The day parameter',
-    type: 'integer',
-    format: 'int32', // Set the format here
-    required: true,
   })
   async todayActive(): Promise<number> {
     return this.sessionService.todayActive();

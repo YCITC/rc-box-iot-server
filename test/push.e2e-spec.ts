@@ -19,6 +19,7 @@ import jwtConfig from '../src/config/jwt.config';
 import rawUser from './raw-user';
 import TokenType from '../src/auth/enum/token-type';
 import ReceivedLog from '../src/recived-log/entity/recived-log.entity';
+import RolesEnum from '../src/common/enum';
 
 const pushControllerE2ETest = () => {
   let app: INestApplication;
@@ -106,6 +107,7 @@ const pushControllerE2ETest = () => {
       id: 1,
       username: rawUser.username,
       type: TokenType.AUTH,
+      role: RolesEnum.USER,
     };
     accessToken = jwtService.sign(payload, signOptions);
   });

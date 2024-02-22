@@ -7,6 +7,8 @@ import UserRegisterDto from './dto/user.register.dto';
 import User from './entity/user.entity';
 import UsersService from './users.service';
 import { PaginateInterface } from '../common/interface';
+import { Auth, DisableRoute } from '../common/decorator';
+import RolesEnum from '../common/enum';
 
 @ApiTags('Users')
 @Controller('users')
@@ -14,6 +16,8 @@ export default class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Put('create')
+  @Auth(RolesEnum.ADMIN)
+  // @DisableRoute()
   @ApiOperation({ summary: 'Create User with out email verify ' })
   @ApiResponse({
     status: 200,
@@ -26,6 +30,7 @@ export default class UsersController {
   }
 
   @Get('findByMail/:email')
+  @Auth(RolesEnum.ADMIN)
   @ApiResponse({
     status: 200,
     description: 'User found.',
@@ -39,6 +44,7 @@ export default class UsersController {
   }
 
   @Get('findById/:id')
+  @Auth(RolesEnum.ADMIN)
   @ApiResponse({
     status: 200,
     description: 'User found.',
@@ -52,6 +58,7 @@ export default class UsersController {
   }
 
   @Get('getAll')
+  @Auth(RolesEnum.ADMIN)
   @ApiOperation({ summary: 'Get all of users' })
   @ApiResponse({
     status: 200,
@@ -73,6 +80,7 @@ export default class UsersController {
   }
 
   @Get('updateUserAction/:id')
+  @Auth(RolesEnum.ADMIN)
   @ApiResponse({
     status: 200,
     description: 'Update UserAction successed.',
@@ -89,6 +97,8 @@ export default class UsersController {
   }
 
   @Delete('delete/:id')
+  @Auth(RolesEnum.ADMIN)
+  @DisableRoute()
   @ApiOperation({ summary: 'Delete User with id ' })
   @ApiResponse({
     status: 200,
@@ -105,6 +115,7 @@ export default class UsersController {
   }
 
   @Get('count')
+  @Auth(RolesEnum.ADMIN)
   @ApiOperation({ summary: 'Total number of users who have signed up' })
   @ApiResponse({
     status: 200,

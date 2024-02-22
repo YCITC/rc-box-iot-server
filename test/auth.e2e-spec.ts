@@ -23,6 +23,7 @@ import UserAction from '../src/users/entity/user-action.entity';
 import SessionModule from '../src/session/session.module';
 import ActiveSession from '../src/session/eneity/active-session.entity';
 import EmailService from '../src/email/email.service';
+import RolesEnum from '../src/common/enum';
 
 const authControllerE2ETest = () => {
   let app: INestApplication;
@@ -190,6 +191,7 @@ const authControllerE2ETest = () => {
       id: userId,
       username: rawUser.username,
       type: TokenType.RESET_PASSWORD,
+      role: RolesEnum.USER,
     };
     const token = authService.createToken(payload);
     const response = await request(app.getHttpServer())

@@ -17,6 +17,7 @@ import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
 import rawUser from './raw-user';
 import TokenType from '../src/auth/enum/token-type';
+import RolesEnum from '../src/common/enum';
 
 const receivedLogControllerE2ETest = () => {
   let app: INestApplication;
@@ -82,6 +83,7 @@ const receivedLogControllerE2ETest = () => {
       id: 1,
       username: rawUser.username,
       type: TokenType.AUTH,
+      role: RolesEnum.ADMIN,
     };
     accessToken = jwtService.sign(payload, signOptions);
   });

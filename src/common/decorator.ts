@@ -3,10 +3,13 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiUnauthorizedResponse,
+  ApiServiceUnavailableResponse,
+  ApiExcludeEndpoint,
 } from '@nestjs/swagger';
-import JwtAuthGuard from '../guards/jwt-auth.guard';
-import RolesGuard from '../guards/roles.guard';
+import JwtAuthGuard from './guards/jwt-auth.guard';
+import RolesGuard from './guards/roles.guard';
 import RolesEnum from './enum';
+import DisableGuard from './guards/disable.guard';
 
 const Auth = (...roles: RolesEnum[]) => {
   return applyDecorators(
@@ -14,9 +17,16 @@ const Auth = (...roles: RolesEnum[]) => {
     UseGuards(JwtAuthGuard, RolesGuard),
     ApiBearerAuth(),
     ApiUnauthorizedResponse({ description: 'Unauthorized' }),
-    ApiForbiddenResponse({ description: 'Unauthorized' }),
+    ApiForbiddenResponse({ description: 'Have no permission' }),
   );
 };
 
-// eslint-disable-next-line import/prefer-default-export
-export { Auth };
+const DisableRoute = () => {
+  return applyDecorators(
+    UseGuards(DisableGuard),
+    ApiServiceUnavailableResponse({ description: 'This API is disabled' }),
+    ApiExcludeEndpoint(),
+  );
+};
+
+export { Auth, DisableRoute };

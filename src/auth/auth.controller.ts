@@ -11,7 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-import JwtAuthGuard from '../guards/jwt-auth.guard';
+import JwtAuthGuard from '../common/guards/jwt-auth.guard';
 import AuthService from './auth.service';
 import User from '../users/entity/user.entity';
 import UserRegisterDto from '../users/dto/user.register.dto';
@@ -20,11 +20,13 @@ import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import UsersService from '../users/users.service';
 import EmailService from '../email/email.service';
-import GoogleOauthGuard from '../guards/google-auth.guard';
+import GoogleOauthGuard from '../common/guards/google-auth.guard';
 import TokenType from './enum/token-type';
 import UserInterface from '../users/interface/user.interface';
 import JwtPayload from './interface/jwt-payload';
 import SessionService from '../session/session.service';
+import { Auth } from '../common/decorator';
+import RolesEnum from '../common/enum';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -110,7 +112,7 @@ export default class AuthController {
 
   @Post('changePassword')
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiResponse({
     status: 200,
     description: 'Reset password successed.',
@@ -150,7 +152,7 @@ export default class AuthController {
 
   @Post('resetPassword')
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: 'Reset password' })
   resetPassword(
     @Req() req,
@@ -162,7 +164,7 @@ export default class AuthController {
   }
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({
     summary: 'Get user profile without password',
   })
@@ -183,7 +185,7 @@ export default class AuthController {
 
   @Post('updateProfile')
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({
     summary: 'Update user profile',
   })
@@ -205,7 +207,6 @@ export default class AuthController {
   }
 
   @Get('updateToken')
-  // @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary:
       'Update jwtToken, Front-End must add "Authorization: Bearer ****token*****" in header',

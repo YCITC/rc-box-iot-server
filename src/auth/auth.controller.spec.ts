@@ -6,7 +6,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 
 import EmailService from '../email/email.service';
@@ -16,6 +15,7 @@ import SessionService from '../session/session.service';
 import AuthController from './auth.controller';
 import AuthService from './auth.service';
 import TokenType from './enum/token-type';
+import RolesEnum from '../common/enum';
 
 jest.mock('https', () => ({
   get: jest.fn(),
@@ -265,6 +265,7 @@ describe('AuthController', () => {
         id: testUser.id,
         username: testUser.username,
         type: TokenType.RESET_PASSWORD,
+        role: RolesEnum.USER,
       };
       const res = await controller.resetPassword({ user: jwtPayload }, dto);
       expect(res).toEqual(true);
@@ -274,6 +275,7 @@ describe('AuthController', () => {
         id: testUser.id,
         username: testUser.username,
         type: TokenType.AUTH,
+        role: RolesEnum.USER,
       };
 
       await expect(

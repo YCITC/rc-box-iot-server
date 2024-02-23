@@ -25,8 +25,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:help": "jest --help",
-    "test:e2e": "jest --config ./test/jest-e2e.json --runTestsByPath",
-    "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch"
+    "test:e2e": "jest --config ./test/jest-e2e.json --runTestsByPath test/index.e2e-spec.ts",
+    "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch --testPathIgnorePatterns='index.e2e.spec.ts'"
   },
   "dependencies": {
     "@liaoliaots/nestjs-redis": "^9.0.5",

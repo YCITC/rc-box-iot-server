@@ -10,9 +10,10 @@ import ReceivedLog from './entity/recived-log.entity';
 import ReceivedLogDto from './dto/recived-log.dto';
 import ReceivedLogService from './recived-log.service';
 import DevicesService from '../devices/devices.service';
-import JwtAuthGuard from '../guards/jwt-auth.guard';
 import { ReceivedLogInterface } from './interface/recived-log.interface';
 import { PaginateInterface } from '../common/interface';
+import RolesEnum from '../common/enum';
+import { Auth, DisableRoute } from '../common/decorator';
 
 @ApiTags('Log')
 @ApiBearerAuth()
@@ -23,11 +24,12 @@ export default class ReceivedLogController {
     private readonly devicesService: DevicesService,
   ) {}
 
-  /*
   @ApiOperation({
     summary: "Don't use this on production environment.",
   })
   @Get('getAll')
+  @Auth(RolesEnum.ADMIN)
+  @DisableRoute()
   @ApiResponse({
     status: 200,
     description: 'Return all of logs',
@@ -55,7 +57,6 @@ export default class ReceivedLogController {
   getAll(): Promise<ReceivedLog[]> {
     return this.receiveService.getAll();
   }
-   */
 
   @Put('add')
   @ApiResponse({
@@ -75,7 +76,7 @@ export default class ReceivedLogController {
   }
 
   @Get('get/:deviceId')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiResponse({
     status: 200,
     description: 'Return logs of deviceId',
@@ -110,7 +111,7 @@ export default class ReceivedLogController {
   }
 
   @Get('getByUser')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiResponse({
     status: 200,
     description: 'Return logs',
@@ -162,7 +163,7 @@ export default class ReceivedLogController {
   }
 
   @Delete('clean/:deviceId')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: 'Delete logs with deviceId ' })
   @ApiResponse({
     status: 200,

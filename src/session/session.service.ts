@@ -57,7 +57,10 @@ export default class SessionService {
   }
 
   // Every 00:01:00
-  @Cron('00 01 00 * * *')
+  @Cron('00 01 00 * * *', {
+    name: 'saveActiveSessions',
+    timeZone: 'America/Los_Angeles',
+  })
   async saveActiveSessions() {
     const count = await this.redis.scard('daily_active_sessions');
     this.activeSessionRepository.save({
@@ -68,7 +71,10 @@ export default class SessionService {
   }
 
   // Every 00:05:00
-  @Cron('00 05 00 * * *')
+  @Cron('00 05 00 * * *', {
+    name: 'removeExpiredSession',
+    timeZone: 'America/Los_Angeles',
+  })
   async removeExpiredSession() {
     const sessionId = await this.redis.lindex('sessions_list', 0);
     if (!sessionId) return;

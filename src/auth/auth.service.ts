@@ -10,6 +10,7 @@ import UsersService from '../users/users.service';
 import UserInterface from '../users/interface/user.interface';
 import TokenType from './enum/token-type';
 import User from '../users/entity/user.entity';
+import RolesEnum from '../common/enum';
 
 @Injectable()
 export default class AuthService {
@@ -89,6 +90,7 @@ export default class AuthService {
       secret: this.configService.get('JWT.SECRET'),
     } as JwtSignOptions;
 
+    const newPayload = { ...payload };
     switch (payload.type) {
       case TokenType.RESET_PASSWORD:
         signOptions.expiresIn = '12hr';
@@ -100,12 +102,15 @@ export default class AuthService {
         signOptions.expiresIn = '60d';
         break;
       case TokenType.AUTH:
+        signOptions.expiresIn = '1hr';
+        if (payload.id === 1) newPayload.role = RolesEnum.ADMIN;
+        break;
       default:
         signOptions.expiresIn = '1hr';
         break;
     }
 
-    const token = this.jwtService.sign(payload, signOptions);
+    const token = this.jwtService.sign(newPayload, signOptions);
     return token;
   }
 

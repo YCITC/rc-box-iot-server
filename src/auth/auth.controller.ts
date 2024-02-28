@@ -1,6 +1,4 @@
 import * as console from 'console';
-import * as crypto from 'crypto';
-import * as https from 'https';
 
 import { Controller, UseGuards } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
@@ -11,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-import JwtAuthGuard from '../common/guards/jwt-auth.guard';
 import AuthService from './auth.service';
 import User from '../users/entity/user.entity';
 import UserRegisterDto from '../users/dto/user.register.dto';
@@ -366,8 +363,36 @@ export default class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleOauthGuard)
-  async googleOAuthCallback(@Req() req): Promise<boolean> {
-    console.log(req.user);
-    return Promise.resolve(true);
+  async googleOAuthCallback(
+    @Req() req,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ user: UserInterface; accessToken: string }> {
+    if (req.user) {
+      const { user } = req;
+      const accessToken = this.authService.createToken({
+        id: user.id,
+        username: user.username,
+        type: TokenType.AUTH,
+      });
+      const refreshToken = this.authService.createToken({
+        id: user.id,
+        username: user.username,
+        type: TokenType.REFRESH,
+      });
+      res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
+      const oldSessionId = await this.usersService.updateUserAction(
+        user,
+        req.sessionID,
+      );
+
+      await this.sessionService.addSession(req.sessionID);
+      if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
+
+      return {
+        accessToken,
+        user,
+      };
+    }
+    throw new UnauthorizedException('Google OAuth failed');
   }
 }

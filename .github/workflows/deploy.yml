@@ -82,6 +82,10 @@ jobs:
         run: |
           yarn install
           yarn build
+      - name: Change Google OAuth2 Setting
+        run: |
+          sed -i 's/google_oauth2_client_id/${{ secrets.GOOGLE_OAUTH2_CLIENTID }}/g' src/config/google.config.ts
+          sed -i 's/google_oauth2_client_secret/${{ secrets.GOOGLE_OAUTH2_CLIENTSECRET }}/g' src/config/google.config.ts
       - name: Create SSH key
         run: |
           mkdir -p ~/.ssh/

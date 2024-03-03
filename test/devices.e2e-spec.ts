@@ -14,8 +14,10 @@ import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
 import rawUser from './raw-user';
 import TokenType from '../src/auth/enum/token-type';
+import ReceivedLog from '../src/recived-log/entity/recived-log.entity';
+import RolesEnum from '../src/common/enum';
 
-describe('DeviceController (e2e)', () => {
+const deviceControllerE2ETest = () => {
   let app: INestApplication;
   let repo: Repository<Device>;
   let jwtService: JwtService;
@@ -49,7 +51,7 @@ describe('DeviceController (e2e)', () => {
               ...configService.get('DB'),
               host: configService.get('DB_HOST'),
               database: 'rc-box-test',
-              entities: [Device],
+              entities: [Device, ReceivedLog],
               synchronize: true,
             };
             return dbInfo;
@@ -86,6 +88,7 @@ describe('DeviceController (e2e)', () => {
       id: 1,
       username: rawUser.username,
       type: TokenType.AUTH,
+      role: RolesEnum.USER,
     };
     accessToken = jwtService.sign(payload, signOptions);
   });
@@ -152,4 +155,8 @@ describe('DeviceController (e2e)', () => {
       .expect(200);
     expect(response.text).toBe('true');
   });
-});
+};
+
+describe('DeviceController (e2e)', deviceControllerE2ETest);
+
+export default deviceControllerE2ETest;

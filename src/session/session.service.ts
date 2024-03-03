@@ -34,13 +34,11 @@ export default class SessionService {
     return this.redis.scard('sessions_sets');
   }
 
-  async averageActive(day: number): Promise<AverageActiveSession> {
+  async activeHistory(day: number): Promise<AverageActiveSession> {
     const result = await this.activeSessionRepository.find({
       where: {
         day: Between(
-          dayjs()
-            .subtract(day + 1, 'day')
-            .toDate(),
+          dayjs().subtract(day, 'day').startOf('d').toDate(),
           dayjs().toDate(),
         ),
       },
@@ -51,6 +49,7 @@ export default class SessionService {
       sum += activeSession.count;
     });
     const returnObj = {
+      activeHistory: result,
       days: result.length,
       average: sum / result.length,
     };
@@ -58,7 +57,10 @@ export default class SessionService {
   }
 
   // Every 00:01:00
-  @Cron('* 1 0 * * *')
+  @Cron('00 01 00 * * *', {
+    name: 'saveActiveSessions',
+    timeZone: 'America/Los_Angeles',
+  })
   async saveActiveSessions() {
     const count = await this.redis.scard('daily_active_sessions');
     this.activeSessionRepository.save({
@@ -69,7 +71,10 @@ export default class SessionService {
   }
 
   // Every 00:05:00
-  @Cron('* 5 0 * * *')
+  @Cron('00 05 00 * * *', {
+    name: 'removeExpiredSession',
+    timeZone: 'America/Los_Angeles',
+  })
   async removeExpiredSession() {
     const sessionId = await this.redis.lindex('sessions_list', 0);
     if (!sessionId) return;

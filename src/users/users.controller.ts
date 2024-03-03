@@ -1,10 +1,14 @@
-import { Controller, Body, Param, Query } from '@nestjs/common';
-import { Get, Post, Put, Delete } from '@nestjs/common';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
+import { Get, Put, Delete } from '@nestjs/common';
+import { Body, Param, Query, Req } from '@nestjs/common';
+import { ApiResponse, ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 
 import UserRegisterDto from './dto/user.register.dto';
 import User from './entity/user.entity';
 import UsersService from './users.service';
+import { PaginateInterface } from '../common/interface';
+import { Auth, DisableRoute } from '../common/decorator';
+import RolesEnum from '../common/enum';
 
 @ApiTags('Users')
 @Controller('users')
@@ -12,6 +16,8 @@ export default class UsersController {
   constructor(private usersService: UsersService) {}
 
   @Put('create')
+  @Auth(RolesEnum.ADMIN)
+  // @DisableRoute()
   @ApiOperation({ summary: 'Create User with out email verify ' })
   @ApiResponse({
     status: 200,
@@ -24,17 +30,21 @@ export default class UsersController {
   }
 
   @Get('findByMail/:email')
+  @Auth(RolesEnum.ADMIN)
   @ApiResponse({
     status: 200,
     description: 'User found.',
     type: User,
   })
   @ApiResponse({ status: 400, description: 'Cannot find user.' })
-  findByMail(@Param('email') email: string): Promise<User> {
-    return this.usersService.findOneByMail(email);
+  async findByMail(@Param('email') email: string): Promise<User> {
+    const userObj = await this.usersService.findOneByMail(email);
+    delete userObj.password;
+    return userObj;
   }
 
   @Get('findById/:id')
+  @Auth(RolesEnum.ADMIN)
   @ApiResponse({
     status: 200,
     description: 'User found.',
@@ -42,11 +52,35 @@ export default class UsersController {
   })
   @ApiResponse({ status: 400, description: 'Cannot find user.' })
   async findById(@Param('id') id: number): Promise<User> {
-    return this.usersService.findOneById(id);
-    // return this.usersService.getUserAndUserAction(id);
+    const userObj = await this.usersService.findOneById(id);
+    delete userObj.password;
+    return userObj;
+  }
+
+  @Get('getAll')
+  @Auth(RolesEnum.ADMIN)
+  @ApiOperation({ summary: 'Get all of users' })
+  @ApiResponse({
+    status: 200,
+    type: User,
+  })
+  @ApiQuery({ name: 'page', type: Number, required: false })
+  @ApiQuery({ name: 'limit', type: Number, required: false })
+  async(
+    @Req() req,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit,
+  ): Promise<PaginateInterface<User>> {
+    return this.usersService.getAll({
+      paginateOptions: {
+        page,
+        limit: limit > 100 ? 100 : limit,
+      },
+    });
   }
 
   @Get('updateUserAction/:id')
+  @Auth(RolesEnum.ADMIN)
   @ApiResponse({
     status: 200,
     description: 'Update UserAction successed.',
@@ -63,6 +97,8 @@ export default class UsersController {
   }
 
   @Delete('delete/:id')
+  @Auth(RolesEnum.ADMIN)
+  @DisableRoute()
   @ApiOperation({ summary: 'Delete User with id ' })
   @ApiResponse({
     status: 200,
@@ -78,7 +114,9 @@ export default class UsersController {
     });
   }
 
-  @Get('users/count')
+  @Get('count')
+  @Auth(RolesEnum.ADMIN)
+  @ApiOperation({ summary: 'Total number of users who have signed up' })
   @ApiResponse({
     status: 200,
     description: 'I will return total users count.',

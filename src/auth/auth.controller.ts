@@ -1,6 +1,4 @@
 import * as console from 'console';
-import * as crypto from 'crypto';
-import * as https from 'https';
 
 import { Controller, UseGuards } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
@@ -11,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-import JwtAuthGuard from '../guards/jwt-auth.guard';
 import AuthService from './auth.service';
 import User from '../users/entity/user.entity';
 import UserRegisterDto from '../users/dto/user.register.dto';
@@ -20,11 +17,13 @@ import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import UsersService from '../users/users.service';
 import EmailService from '../email/email.service';
-import GoogleOauthGuard from '../guards/google-auth.guard';
+import GoogleOauthGuard from '../common/guards/google-auth.guard';
 import TokenType from './enum/token-type';
 import UserInterface from '../users/interface/user.interface';
 import JwtPayload from './interface/jwt-payload';
 import SessionService from '../session/session.service';
+import { Auth } from '../common/decorator';
+import RolesEnum from '../common/enum';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -58,47 +57,31 @@ export default class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: UserInterface; accessToken: string }> {
-    try {
-      const user = await this.authService.validateUser(userLoginDto);
-      const accessToken = this.authService.createToken({
-        id: user.id,
-        username: user.username,
-        type: TokenType.AUTH,
-      });
-      const refreshToken = this.authService.createToken({
-        id: user.id,
-        username: user.username,
-        type: TokenType.REFRESH,
-      });
-      res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
-      const oldSessionId = await this.usersService.updateUserAction(
-        user,
-        req.sessionID,
-      );
-      await this.sessionService.addSession(req.sessionID);
+    const user = await this.authService.validateUser(userLoginDto);
+    const accessToken = this.authService.createToken({
+      id: user.id,
+      username: user.username,
+      type: TokenType.AUTH,
+    });
+    const refreshToken = this.authService.createToken({
+      id: user.id,
+      username: user.username,
+      type: TokenType.REFRESH,
+    });
+    res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
+    const oldSessionId = await this.usersService.updateUserAction(
+      user,
+      req.sessionID,
+    );
+    user.avatarUrl = await this.usersService.getGravatarUrl(user.email);
 
-      if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
+    await this.sessionService.addSession(req.sessionID);
+    if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
 
-      return await new Promise((resolve) => {
-        const hash = crypto.createHash('md5').update(user.email).digest('hex');
-        https.get(
-          `https://www.gravatar.com/avatar/${hash}?d=404`,
-          (avatarRes) => {
-            if (avatarRes.statusCode === 404) {
-              user.avatarUrl = null;
-            } else {
-              user.avatarUrl = `https://www.gravatar.com/avatar/${hash}`;
-            }
-            resolve({
-              accessToken,
-              user,
-            });
-          },
-        );
-      });
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    return {
+      accessToken,
+      user,
+    };
   }
 
   @Get('logout')
@@ -126,7 +109,7 @@ export default class AuthController {
 
   @Post('changePassword')
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiResponse({
     status: 200,
     description: 'Reset password successed.',
@@ -166,7 +149,7 @@ export default class AuthController {
 
   @Post('resetPassword')
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: 'Reset password' })
   resetPassword(
     @Req() req,
@@ -178,7 +161,7 @@ export default class AuthController {
   }
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({
     summary: 'Get user profile without password',
   })
@@ -199,7 +182,7 @@ export default class AuthController {
 
   @Post('updateProfile')
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({
     summary: 'Update user profile',
   })
@@ -221,7 +204,6 @@ export default class AuthController {
   }
 
   @Get('updateToken')
-  // @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary:
       'Update jwtToken, Front-End must add "Authorization: Bearer ****token*****" in header',
@@ -287,6 +269,7 @@ export default class AuthController {
     }
 
     const user = await this.usersService.addOne(userDto);
+    delete user.password;
     const token = this.authService.createToken({
       id: user.id,
       username: user.username,
@@ -380,8 +363,36 @@ export default class AuthController {
 
   @Get('google/callback')
   @UseGuards(GoogleOauthGuard)
-  async googleOAuthCallback(@Req() req): Promise<boolean> {
-    console.log(req.user);
-    return Promise.resolve(true);
+  async googleOAuthCallback(
+    @Req() req,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ user: UserInterface; accessToken: string }> {
+    if (req.user) {
+      const { user } = req;
+      const accessToken = this.authService.createToken({
+        id: user.id,
+        username: user.username,
+        type: TokenType.AUTH,
+      });
+      const refreshToken = this.authService.createToken({
+        id: user.id,
+        username: user.username,
+        type: TokenType.REFRESH,
+      });
+      res.cookie('rtk', refreshToken, this.configService.get('SESSION.cookie'));
+      const oldSessionId = await this.usersService.updateUserAction(
+        user,
+        req.sessionID,
+      );
+
+      await this.sessionService.addSession(req.sessionID);
+      if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
+
+      return {
+        accessToken,
+        user,
+      };
+    }
+    throw new UnauthorizedException('Google OAuth failed');
   }
 }

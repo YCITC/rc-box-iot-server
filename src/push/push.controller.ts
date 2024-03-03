@@ -1,4 +1,4 @@
-import { Controller, UseGuards } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { Get, Post, Req, Param, Body } from '@nestjs/common';
 import { BadRequestException, NotAcceptableException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -10,7 +10,8 @@ import ChromeClient from './entity/chrome.client.entity';
 import iOSClient from './entity/ios.client.entity';
 import PushClientInterface from './interface/push-client.interface';
 import DevicesService from '../devices/devices.service';
-import JwtAuthGuard from '../guards/jwt-auth.guard';
+import { Auth } from '../common/decorator';
+import RolesEnum from '../common/enum';
 
 @ApiTags('PushNotification')
 @ApiBearerAuth()
@@ -22,7 +23,7 @@ export default class PushController {
   ) {}
 
   @Get('genChromeVAPID')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: 'gen VAPID for chrome' })
   @ApiResponse({
     status: 200,
@@ -44,7 +45,7 @@ export default class PushController {
   }
 
   @Post('subscribe/chrome')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   async subscribeChrome(
     @Body() registerChromeDto: RegisterChromeDto,
     @Req() req,
@@ -107,7 +108,7 @@ export default class PushController {
   }
 
   @Post('subscribe/ios')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   async subscribeIOS(
     @Body() registerIPhoneDto: RegisterIPhoneDto,
     @Req() req,

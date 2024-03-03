@@ -4,7 +4,9 @@ import * as https from 'https';
 import * as http from 'http';
 import * as session from 'express-session';
 import * as cookieParser from 'cookie-parser';
+import * as expressHttpToHttps from 'express-http-to-https';
 
+import { NestApplicationOptions } from '@nestjs/common';
 import { SwaggerModule, SwaggerDocumentOptions } from '@nestjs/swagger';
 import { DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -33,32 +35,19 @@ async function buildDocument(app) {
   return app;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function httpServer() {
-  const app = await NestFactory.create(AppModule, { cors: true });
-  const configService = app.get(ConfigService);
-  app.setGlobalPrefix('api');
-  // app.enableCors(); //enable CORS
-
-  app.use(cookieParser());
-  app.use(session(configService.get('SESSION')));
-
-  if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
-    buildDocument(app);
-  }
-  await app.listen(3000);
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function httpsServer() {
+async function nestServer() {
   const httpsOptions = {
     key: fs.readFileSync('./secrets/letsencrypt/privkey.pem'),
     cert: fs.readFileSync('./secrets/letsencrypt/cert.pem'),
   };
+  const options = {} as NestApplicationOptions;
+  if (process.env.NODE_ENV === 'development') {
+    options.cors = true;
+  } else {
+    options.httpsOptions = httpsOptions;
+  }
+  const app = await NestFactory.create(AppModule, options);
 
-  const app = await NestFactory.create(AppModule, {
-    httpsOptions,
-  });
   const configService = app.get(ConfigService);
   app.setGlobalPrefix('api');
 
@@ -68,11 +57,17 @@ async function httpsServer() {
   if (configService.get('COMMON.DOCUMENT_ENABLE') === true) {
     buildDocument(app);
   }
-  await app.listen(1443);
+
+  if (process.env.NODE_ENV === 'development') {
+    await app.listen(3000);
+  } else {
+    app.use(expressHttpToHttps.redirectToHTTPS());
+    await app.listen(443);
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function multipleServers() {
+async function expressServers() {
   const httpsOptions = {
     key: fs.readFileSync('./secrets/letsencrypt/privkey.pem'),
     cert: fs.readFileSync('./secrets/letsencrypt/cert.pem'),
@@ -98,6 +93,10 @@ async function multipleServers() {
   https.createServer(httpsOptions, server).listen(443);
 }
 
-httpServer();
-// httpsServer();
-// multipleServers();
+nestServer();
+
+/*
+ * 透過 express 同時開 http, https server
+ TODO iot模組目前call 送 log的 api 是透過http，要換成https
+ */
+// expressServers();

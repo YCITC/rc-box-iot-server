@@ -94,9 +94,9 @@ describe('SessionService', () => {
     });
   });
 
-  describe('averageActive', () => {
+  describe('activeHistory', () => {
     it('should return average with number', async () => {
-      const result = await sessionService.averageActive(7);
+      const result = await sessionService.activeHistory(7);
 
       expect(typeof result.average).toBe('number');
     });

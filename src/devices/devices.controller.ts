@@ -7,7 +7,8 @@ import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import DevicesService from './devices.service';
 import DeviceDto from './dto/device.dto';
 import Device from './entities/device.entity';
-import JwtAuthGuard from '../guards/jwt-auth.guard';
+import { Auth } from '../common/decorator';
+import RolesEnum from '../common/enum';
 
 @ApiTags('Devices')
 @ApiBearerAuth()
@@ -16,7 +17,7 @@ export default class DevicesController {
   constructor(private devicesService: DevicesService) {}
 
   @Put('bind')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: 'bind device' })
   @ApiResponse({
     status: 200,
@@ -39,7 +40,7 @@ export default class DevicesController {
   }
 
   @Patch('update')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: 'Update device' })
   @ApiResponse({
     status: 200,
@@ -57,7 +58,7 @@ export default class DevicesController {
   }
 
   @Get('findAllByUser/')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: "Find all of User's devices" })
   @ApiResponse({
     status: 200,
@@ -69,7 +70,7 @@ export default class DevicesController {
   }
 
   @Get('checkDeviceWithUser/:deviceId')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: "Find all of User's devices" })
   @ApiResponse({
     status: 200,
@@ -84,7 +85,7 @@ export default class DevicesController {
   }
 
   @Delete('unbind/:deviceId')
-  @UseGuards(JwtAuthGuard)
+  @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: 'Unbind device' })
   @ApiResponse({
     status: 200,

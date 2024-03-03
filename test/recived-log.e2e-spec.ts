@@ -17,8 +17,9 @@ import dbConfig from '../src/config/db.config';
 import jwtConfig from '../src/config/jwt.config';
 import rawUser from './raw-user';
 import TokenType from '../src/auth/enum/token-type';
+import RolesEnum from '../src/common/enum';
 
-describe('ReceivedLogController (e2e)', () => {
+const receivedLogControllerE2ETest = () => {
   let app: INestApplication;
   let repo: Repository<ReceivedLog>;
   let jwtService: JwtService;
@@ -26,7 +27,7 @@ describe('ReceivedLogController (e2e)', () => {
   const deviceId1 = 'rc-box-test-12301';
   const deviceId2 = 'rc-box-test-53104';
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         ReceivedLogModule,
@@ -82,11 +83,12 @@ describe('ReceivedLogController (e2e)', () => {
       id: 1,
       username: rawUser.username,
       type: TokenType.AUTH,
+      role: RolesEnum.ADMIN,
     };
     accessToken = jwtService.sign(payload, signOptions);
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await app.close();
   });
 
@@ -129,13 +131,14 @@ describe('ReceivedLogController (e2e)', () => {
     expect(response2.body[0].deviceId).toBe(deviceId2);
   });
 
-  it('/log/getAllByUser (GET)', async () => {
-    const response1 = await request(app.getHttpServer())
-      .get('/log/getAllByUser')
+  it('/log/getByUser (GET)', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/log/getByUser')
       .set('Authorization', `Bearer ${accessToken}`)
       .expect(200);
-    expect(response1.body[0].deviceId).toBe(deviceId2);
-    expect(response1.body[1].deviceId).toBe(deviceId1);
+    expect(response.body?.items).toHaveLength(2);
+    expect(response.body?.items[0].deviceId).toBe(deviceId2);
+    expect(response.body?.items[1].deviceId).toBe(deviceId1);
   });
 
   it('/log/clean/ (DELETE)', async () => {
@@ -147,4 +150,8 @@ describe('ReceivedLogController (e2e)', () => {
 
     await repo.clear();
   });
-});
+};
+
+describe('ReceivedLogController (e2e)', receivedLogControllerE2ETest);
+
+export default receivedLogControllerE2ETest;

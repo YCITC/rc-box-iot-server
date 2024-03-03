@@ -1,12 +1,19 @@
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
+import axios from 'axios';
+
 import { InjectRepository } from '@nestjs/typeorm';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Repository } from 'typeorm';
+import { paginate } from 'nestjs-typeorm-paginate';
+
 import UserRegisterDto from './dto/user.register.dto';
 import UserProfileDto from './dto/user.profile.dto';
+import UserGetAllDto from './dto/user.getall.dto';
 import User from './entity/user.entity';
 import UserAction from './entity/user-action.entity';
+import { PaginateInterface } from '../common/interface';
 
 @Injectable()
 export default class UsersService {
@@ -162,5 +169,33 @@ export default class UsersService {
 
   async countAllUsers(): Promise<number> {
     return this.usersRepository.count();
+  }
+
+  async getAll(dto: UserGetAllDto): Promise<PaginateInterface<User>> {
+    const result = await paginate(this.usersRepository, dto.paginateOptions, {
+      select: [
+        'id',
+        'email',
+        'username',
+        'fullName',
+        'isEmailVerified',
+        'createdTime',
+      ],
+      order: {
+        id: 'DESC',
+      },
+      relations: ['userAction'],
+    });
+    return result;
+  }
+
+  async getGravatarUrl(email: string): Promise<string | null> {
+    const hash = crypto.createHash('md5').update(email).digest('hex');
+    try {
+      await axios.get(`https://www.gravatar.com/avatar/${hash}?d=404`);
+      return `https://www.gravatar.com/avatar/${hash}`;
+    } catch (error) {
+      return '';
+    }
   }
 }

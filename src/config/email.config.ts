@@ -7,7 +7,7 @@ export default registerAs('EMAIL', () => ({
     secure: false, // true for 465, false for other ports
     auth: {
       user: 'yesseecity.co@gmail.com',
-      pass: 'doftntwtinwsgedc',
+      pass: 'gmailSMTPPassword',
     },
   },
   defaults: {

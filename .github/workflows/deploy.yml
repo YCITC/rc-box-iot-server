@@ -50,6 +50,9 @@ jobs:
       - name: Change Test DB Password
         run: |
           sed -i 's/localDBPassword/${{ secrets.DB_PASSWORD }}/g' src/config/db.config.ts
+      - name: Change Email SMTP Password
+        run: |
+          sed -i 's/gmailSMTPPassword/${{ secrets.GOOGLE_MAIL_SMTP_PASSWORD }}/g' src/config/email.config.ts
       - name: Change Redis Port
         run: sed -i 's/6379/${{ job.services.redis.ports[6379] }}/g' src/config/redis.config.ts
       - name: Start Test
@@ -91,6 +94,9 @@ jobs:
       - name: Change DB Password
         run: |
           sed -i 's/localDBPassword/${{ secrets.DB_PASSWORD }}/g' src/config/db.config.ts
+      - name: Change Email SMTP Password
+        run: |
+          sed -i 's/gmailSMTPPassword/${{ secrets.GOOGLE_MAIL_SMTP_PASSWORD }}/g' src/config/email.config.ts
       - name: Change JWT Secret
         run: |
           sed -i 's/localJWTSecret/${{ secrets.JWT_SECRET }}/g' src/config/jwt.config.ts

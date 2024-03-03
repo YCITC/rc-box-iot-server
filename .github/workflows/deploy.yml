@@ -47,6 +47,9 @@ jobs:
             ${{ runner.os }}-iot-server-yarn--
       - name: Change Test DB HOST
         run: echo DB_HOST='${{ secrets.DBIP }}' >> .development.env
+      - name: Change Test DB Password
+        run: |
+          sed -i 's/localDBPassword/${{ secrets.DB_PASSWORD }}/g' src/config/db.config.ts
       - name: Change Redis Port
         run: sed -i 's/6379/${{ job.services.redis.ports[6379] }}/g' src/config/redis.config.ts
       - name: Start Test
@@ -85,7 +88,9 @@ jobs:
       - name: Change Google OAuth2 Setting
         run: |
           sed -i 's/google_oauth2_client_id/${{ secrets.GOOGLE_OAUTH2_CLIENTID }}/g' src/config/google.config.ts
-          sed -i 's/google_oauth2_client_secret/${{ secrets.GOOGLE_OAUTH2_CLIENTSECRET }}/g' src/config/google.config.ts
+      - name: Change DB Password
+        run: |
+          sed -i 's/localDBPassword/${{ secrets.DB_PASSWORD }}/g' src/config/db.config.ts
       - name: Create SSH key
         run: |
           mkdir -p ~/.ssh/

@@ -37,7 +37,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
         JwtModule.register({
-          secret: 'iOjE2NzU2OTUyOTQsImV4cC.',
+          secret: 'localJWTSecret',
           signOptions: {
             expiresIn: '1d',
             issuer: 'YesseeCity',
@@ -52,7 +52,7 @@ describe('AuthService', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn((key: string) => {
-              if (key === 'JWT.SECRET') return 'iOjE2NzU2OTUyOTQsImV4cC.';
+              if (key === 'JWT.SECRET') return 'localJWTSecret';
               if (key === 'JWT.ISSUER') return 'YesseeCity';
               if (key === 'JWT.EXPIRATION_TIME') return '30d';
               if (key === 'SERVER_HOSTNAME') return 'localhost:3000';

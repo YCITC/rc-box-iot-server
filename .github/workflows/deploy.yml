@@ -91,6 +91,9 @@ jobs:
       - name: Change DB Password
         run: |
           sed -i 's/localDBPassword/${{ secrets.DB_PASSWORD }}/g' src/config/db.config.ts
+      - name: Change JWT Secret
+        run: |
+          sed -i 's/localJWTSecret/${{ secrets.JWT_SECRET }}/g' src/config/jwt.config.ts
       - name: Create SSH key
         run: |
           mkdir -p ~/.ssh/

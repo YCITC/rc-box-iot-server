@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import User from './entity/user.entity';
@@ -90,7 +89,7 @@ describe('UsersService', () => {
     it('should throw Exception with "Require email"', async () => {
       const userData = { ...rawUser };
       delete userData.email;
-      const process = service.addOne(userData)
+      const process = service.addOne(userData);
       await expect(process).rejects.toThrowError(
         new BadRequestException('Require email'),
       );
@@ -98,7 +97,7 @@ describe('UsersService', () => {
     it('should throw Exception with "Require username"', async () => {
       const userData = { ...rawUser };
       delete userData.username;
-      const process = service.addOne(userData)
+      const process = service.addOne(userData);
       await expect(process).rejects.toThrowError(
         new BadRequestException('Require username'),
       );

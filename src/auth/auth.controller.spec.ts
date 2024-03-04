@@ -26,8 +26,6 @@ describe('AuthController', () => {
   let usersService: UsersService;
   let authService: AuthService;
   let emailService: EmailService;
-  let sessionService: SessionService;
-  let jwtService: JwtService;
   let token: string;
 
   const rawUser = {
@@ -147,7 +145,6 @@ describe('AuthController', () => {
     emailService = module.get<EmailService>(EmailService);
     usersService = module.get<UsersService>(UsersService);
     authService = module.get<AuthService>(AuthService);
-    jwtService = module.get<JwtService>(JwtService);
   });
 
   it('should be defined', () => {

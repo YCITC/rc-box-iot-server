@@ -1,5 +1,8 @@
 import User from './user.entity';
-import UserAction, { inverseSide, typeFunctionOrTarget } from './user-action.entity';
+import UserAction, {
+  inverseSide,
+  typeFunctionOrTarget,
+} from './user-action.entity';
 
 describe('User Action Entity', () => {
   it('should make an userAction', () => {

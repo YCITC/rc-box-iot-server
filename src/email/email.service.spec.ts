@@ -58,7 +58,7 @@ describe('EmailService', () => {
   describe('sendResetPasswordEmail', () => {
     it('should send an email with subject "Reset Passwor"', async () => {
       const sendMailSpy = jest.spyOn(mailerService, 'sendMail');
-      const verificationURL = 'http://localhost'
+      const verificationURL = 'http://localhost';
 
       await service.sendResetPasswordEmail(mailTo, verificationURL);
       expect(sendMailSpy).toHaveBeenCalledWith(
@@ -72,7 +72,7 @@ describe('EmailService', () => {
   describe('sendVerificationEmail', () => {
     it('should send an email with subject "Verification Mail"', async () => {
       const sendMailSpy = jest.spyOn(mailerService, 'sendMail');
-      const verificationURL = 'http://localhost'
+      const verificationURL = 'http://localhost';
 
       await service.sendVerificationEmail(mailTo, verificationURL);
       expect(sendMailSpy).toHaveBeenCalledWith(

@@ -1,5 +1,3 @@
-import * as console from 'console';
-
 import { Controller, UseGuards } from '@nestjs/common';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { HttpCode, Get, Post, Put } from '@nestjs/common';
@@ -244,6 +242,9 @@ export default class AuthController {
   }
 
   @Put('createUser')
+  @ApiOperation({
+    summary: 'Sing up',
+  })
   @ApiResponse({
     status: 200,
     description:

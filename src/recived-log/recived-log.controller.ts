@@ -1,4 +1,4 @@
-import { Controller, Query, UseGuards } from '@nestjs/common';
+import { Controller, Query } from '@nestjs/common';
 import { Req, Body, Param } from '@nestjs/common';
 import { Get, Put, Delete } from '@nestjs/common';
 import { DefaultValuePipe, ParseIntPipe } from '@nestjs/common';

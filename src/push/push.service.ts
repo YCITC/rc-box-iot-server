@@ -8,6 +8,7 @@ import * as apn from '@parse/node-apn';
 import ChromeClient from './entity/chrome.client.entity';
 import IOSClient from './entity/ios.client.entity';
 import PushClientInterface from './interface/push-client.interface';
+import RegisterChromeDto from './dto/register-chrome.dto';
 
 @Injectable()
 export default class PushService {
@@ -27,8 +28,8 @@ export default class PushService {
     return vapidKeys;
   }
 
-  async broswerSubscribe(pushRegisterChromeDto): Promise<ChromeClient> {
-    return this.ChromeClientRepository.save(pushRegisterChromeDto);
+  async chromeSubscribe(dto: RegisterChromeDto): Promise<ChromeClient> {
+    return this.ChromeClientRepository.save(dto);
   }
 
   async iOSSubscribe(registerIPhoneDto): Promise<IOSClient> {

@@ -108,7 +108,7 @@ describe('PushService', () => {
 
   describe('broswerSubscribe', () => {
     it('should insert a chromeClient info', async () => {
-      const obj = await service.broswerSubscribe(registerChromeDto);
+      const obj = await service.chromeSubscribe(registerChromeDto);
       expect(obj).toBeDefined();
       expect(obj.deviceId).toBe(deviceId);
       expect(obj).toHaveProperty('id');

@@ -130,7 +130,7 @@ describe('PushController', () => {
     });
   });
 
-  describe('iOSSubscribe', () => {
+  describe('subscribeIOS', () => {
     it('should insert a IOSClient info', async () => {
       const obj = await controller.subscribeIOS(registerIPhoneDto, {
         user: {

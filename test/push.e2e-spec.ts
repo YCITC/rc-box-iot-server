@@ -167,6 +167,6 @@ const pushControllerE2ETest = () => {
   });
 };
 
-describe('PushController (e2e)', pushControllerE2ETest);
+describe.skip('PushController (e2e)', pushControllerE2ETest);
 
 export default pushControllerE2ETest;

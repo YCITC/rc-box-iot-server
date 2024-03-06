@@ -17,7 +17,7 @@ import User from '../users/entity/user.entity';
 import UserRegisterDto from '../users/dto/user.register.dto';
 import UserProfileDto from '../users/dto/user.profile.dto';
 import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
-import UserResetPasswrodDto from '../users/dto/user.reset-password.dto';
+import UserResetPasswordDto from '../users/dto/user.reset-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import UsersService from '../users/users.service';
 import EmailService from '../email/email.service';
@@ -43,7 +43,7 @@ export default class AuthController {
 
   @Post('login')
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'User found and login.',
     type: AuthLoginModel,
   })
@@ -77,7 +77,7 @@ export default class AuthController {
     await this.sessionService.addSession(req.sessionID);
     if (oldSessionId) await this.sessionService.removeSession(oldSessionId);
 
-    return {
+    return Promise.resolve({
       accessToken,
       user: {
         id: user.id,
@@ -85,7 +85,7 @@ export default class AuthController {
         email: user.email,
         avatarUrl,
       },
-    };
+    });
   }
 
   @Get('logout')
@@ -135,7 +135,7 @@ export default class AuthController {
   @Auth(RolesEnum.ADMIN, RolesEnum.USER)
   @ApiOperation({ summary: 'Send an email to reset password' })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Reset password successed.',
   })
   @ApiBadRequestResponse({
@@ -154,7 +154,7 @@ export default class AuthController {
     summary: 'Reset password: When users forget their passwords.',
   })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Success.',
     schema: {
       example: true,
@@ -166,7 +166,7 @@ export default class AuthController {
   })
   resetPassword(
     @Req() req,
-    @Body() dto: UserResetPasswrodDto,
+    @Body() dto: UserResetPasswordDto,
   ): Promise<boolean> {
     if (req.user.type !== TokenType.RESET_PASSWORD)
       return Promise.reject(new UnauthorizedException('Token incorrect'));
@@ -205,7 +205,7 @@ export default class AuthController {
     summary: 'Update user profile',
   })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'User profile updated',
     type: User,
   })
@@ -290,7 +290,7 @@ export default class AuthController {
       throw new BadRequestException('Require username');
     }
 
-    const user = await this.usersService.addOne(userDto);
+    const user = await this.authService.creageUser(userDto);
     delete user.password;
     const token = this.authService.createToken({
       id: user.id,

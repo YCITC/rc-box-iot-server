@@ -13,7 +13,7 @@ export default class ActiveSession {
   id: number;
 
   @ApiProperty({ example: 1 })
-  @Column({ type: 'date', nullable: false, unique: true })
+  @Column({ type: 'date', nullable: false })
   day: Date;
 
   @ApiProperty({ example: 5 })

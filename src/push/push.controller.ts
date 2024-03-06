@@ -1,7 +1,12 @@
 import { Controller } from '@nestjs/common';
 import { Get, Post, Req, Param, Body } from '@nestjs/common';
 import { BadRequestException, NotAcceptableException } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiNotAcceptableResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import PushService from './push.service';
 import RegisterChromeDto from './dto/register-chrome.dto';
@@ -46,11 +51,53 @@ export default class PushController {
 
   @Post('subscribe/chrome')
   @Auth(RolesEnum.ADMIN, RolesEnum.USER)
+  @ApiBadRequestResponse({
+    description: 'Lost key',
+  })
+  @ApiNotAcceptableResponse({
+    description: 'Current user has no device',
+  })
   async subscribeChrome(
     @Body() registerChromeDto: RegisterChromeDto,
     @Req() req,
   ): Promise<ChromeClient> {
-    const { deviceId } = registerChromeDto;
+    const {
+      deviceId,
+      browserVersion,
+      vapidPublicKey,
+      vapidPrivateKey,
+      endpoint,
+      keysAuth,
+      keysP256dh,
+    } = registerChromeDto;
+    if (!deviceId || deviceId === '') {
+      throw new BadRequestException("Have no deviceId, it's length must > 0");
+    }
+    if (!browserVersion || browserVersion === '') {
+      throw new BadRequestException(
+        "Have no browserVersion, it's length must > 0",
+      );
+    }
+    if (!vapidPublicKey || vapidPublicKey === '') {
+      throw new BadRequestException(
+        "Have no vapidPublicKey, it's length must > 0",
+      );
+    }
+    if (!vapidPrivateKey || vapidPrivateKey === '') {
+      throw new BadRequestException(
+        "Have no vapidPrivateKey, it's length must > 0",
+      );
+    }
+    if (!endpoint || endpoint === '') {
+      throw new BadRequestException("Have no endpoint, it's length must > 0");
+    }
+    if (!keysAuth || keysAuth === '') {
+      throw new BadRequestException("Have no keysAuth, it's length must > 0");
+    }
+    if (!keysP256dh || keysP256dh === '') {
+      throw new BadRequestException("Have no keysP256dh, it's length must > 0");
+    }
+
     const userHasDevice = await this.devicesService.checkDeviceWithUser(
       req.user.id,
       deviceId,
@@ -60,77 +107,34 @@ export default class PushController {
         `Incorrect. Current user (${req.user.username}) has no device ${deviceId}`,
       );
     }
-    if (deviceId === undefined || deviceId === '') {
-      return Promise.reject(
-        new BadRequestException("Have no deviceId, it's length must > 0"),
-      );
-    }
-
-    const { browserVersion } = registerChromeDto;
-    if (browserVersion === undefined || browserVersion === '') {
-      return Promise.reject(
-        new BadRequestException("Have no browserVersion, it's length must > 0"),
-      );
-    }
-    const { vapidPublicKey } = registerChromeDto;
-    if (vapidPublicKey === undefined || vapidPublicKey === '') {
-      return Promise.reject(
-        new BadRequestException("Have no vapidPublicKey, it's length must > 0"),
-      );
-    }
-    const { vapidPrivateKey } = registerChromeDto;
-    if (vapidPrivateKey === undefined || vapidPrivateKey === '') {
-      return Promise.reject(
-        new BadRequestException(
-          "Have no vapidPrivateKey, it's length must > 0",
-        ),
-      );
-    }
-    const { endpoint } = registerChromeDto;
-    if (endpoint === undefined || endpoint === '') {
-      return Promise.reject(
-        new BadRequestException("Have no endpoint, it's length must > 0"),
-      );
-    }
-    const { keysAuth } = registerChromeDto;
-    if (keysAuth === undefined || keysAuth === '') {
-      return Promise.reject(
-        new BadRequestException("Have no keysAuth, it's length must > 0"),
-      );
-    }
-    const { keysP256dh } = registerChromeDto;
-    if (keysP256dh === undefined || keysP256dh === '') {
-      return Promise.reject(
-        new BadRequestException("Have no keysP256dh, it's length must > 0"),
-      );
-    }
-    return this.pushService.broswerSubscribe(registerChromeDto);
+    return this.pushService.chromeSubscribe(registerChromeDto);
   }
 
   @Post('subscribe/ios')
   @Auth(RolesEnum.ADMIN, RolesEnum.USER)
+  @ApiNotAcceptableResponse({
+    description: 'Current user has no device',
+  })
   async subscribeIOS(
     @Body() registerIPhoneDto: RegisterIPhoneDto,
     @Req() req,
   ): Promise<iOSClient> {
     const { deviceId } = registerIPhoneDto;
-    if (deviceId === undefined || deviceId === '') {
-      return Promise.reject(
-        new BadRequestException("Have no deviceId, it's length must > 0"),
-      );
-    }
     const { appId } = registerIPhoneDto;
-    if (appId === undefined || appId === '') {
-      return Promise.reject(
-        new BadRequestException("Have no deviceId, it's length must > 0"),
-      );
-    }
     const { iPhoneToken } = registerIPhoneDto;
+
+    if (deviceId === undefined || deviceId === '') {
+      throw new BadRequestException("Have no deviceId, it's length must > 0");
+    }
+    if (appId === undefined || appId === '') {
+      throw new BadRequestException("Have no deviceId, it's length must > 0");
+    }
     if (iPhoneToken === undefined || iPhoneToken === '') {
-      return Promise.reject(
-        new BadRequestException("Have no iPhoneToken, it's length must > 0"),
+      throw new BadRequestException(
+        "Have no iPhoneToken, it's length must > 0",
       );
     }
+
     const userHasDevice = await this.devicesService.checkDeviceWithUser(
       req.user.id,
       deviceId,
@@ -140,7 +144,6 @@ export default class PushController {
         `Incorrect. Current user (${req.user.username}) has no device ${deviceId}`,
       );
     }
-    // return this.pushService.iOSSubscribe(registerIPhoneDto);
     const client = await this.pushService.iOSSubscribe(registerIPhoneDto);
     return Promise.resolve(client);
   }

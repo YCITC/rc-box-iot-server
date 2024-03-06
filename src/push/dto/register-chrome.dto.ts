@@ -1,24 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export default class RegisterChromeDto {
-  @ApiProperty({ example: 'rc-box-test-12301' })
+  @ApiProperty({ required: true, example: 'rc-box-test-12301' })
   deviceId: string;
 
-  @ApiProperty({ example: '112.0.5615.137' })
+  @ApiProperty({ required: true, example: '112.0.5615.137' })
   browserVersion: string;
 
-  @ApiProperty({ example: 'zkMhqP6jJppzJCxCXL8aLs7ZySSb' })
+  @ApiProperty({ required: true, example: 'zkMhqP6jJppzJCxCXL8aLs7ZySSb' })
   vapidPublicKey: string;
 
-  @ApiProperty({ example: 'iuQzNfJSqB_0' })
+  @ApiProperty({ required: true, example: 'iuQzNfJSqB_0' })
   vapidPrivateKey: string;
 
-  @ApiProperty({ example: 'https://fcm.googleapis.com/fcm/send/' })
+  @ApiProperty({
+    required: true,
+    example: 'https://fcm.googleapis.com/fcm/send/',
+  })
   endpoint: string;
 
-  @ApiProperty({ example: 'AAAAAlrgn' })
+  @ApiProperty({ required: true, example: 'AAAAAlrgn' })
   keysAuth: string;
 
-  @ApiProperty({ example: 'rPD4ThfKE6dBNi1k1_Ji4so' })
+  @ApiProperty({ required: true, example: 'rPD4ThfKE6dBNi1k1_Ji4so' })
   keysP256dh: string;
 }

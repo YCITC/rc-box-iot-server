@@ -170,7 +170,6 @@ export default class ReceivedLogController {
     description:
       'Logs has been successfully deleted using the provided deviceId.',
   })
-  @ApiResponse({ status: 400, description: 'Log not found' })
   async clean(@Param('deviceId') deviceId: string, @Req() req): Promise<any> {
     if (!deviceId || deviceId.length === 0)
       throw new BadRequestException('deviceId length cannot be zero');

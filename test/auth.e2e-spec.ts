@@ -152,7 +152,7 @@ const authControllerE2ETest = () => {
     const response = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ ...rawUser })
-      .expect(200);
+      .expect(201);
     const cookies = response.header['set-cookie'][0];
     reflashToken = cookies.split('; ')[0].split('=')[1] as string;
     accessToken = response.body.accessToken;
@@ -171,7 +171,7 @@ const authControllerE2ETest = () => {
       .post('/auth/changePassword')
       .send(dto)
       .set('Authorization', `Bearer ${accessToken}`)
-      .expect(200);
+      .expect(201);
     expect(response.text).toBe('true');
   });
 
@@ -198,7 +198,7 @@ const authControllerE2ETest = () => {
       .post('/auth/resetPassword')
       .send(userResetPasswrodDto)
       .set('Authorization', `Bearer ${token}`)
-      .expect(200);
+      .expect(201);
     expect(response.text).toBe('true');
   });
 
@@ -216,7 +216,7 @@ const authControllerE2ETest = () => {
       .post('/auth/updateProfile')
       .send({ ...proflie, username: 'Tim' })
       .set('Authorization', `Bearer ${accessToken}`)
-      .expect(200);
+      .expect(201);
     expect(response.body.id).toBe(userId);
     expect(response.body.username).toBe('Tim');
   });
@@ -231,6 +231,6 @@ const authControllerE2ETest = () => {
   });
 };
 
-describe('AuthController (e2e)', authControllerE2ETest);
+describe.skip('AuthController (e2e)', authControllerE2ETest);
 
 export default authControllerE2ETest;

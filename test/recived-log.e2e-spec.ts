@@ -152,6 +152,6 @@ const receivedLogControllerE2ETest = () => {
   });
 };
 
-describe('ReceivedLogController (e2e)', receivedLogControllerE2ETest);
+describe.skip('ReceivedLogController (e2e)', receivedLogControllerE2ETest);
 
 export default receivedLogControllerE2ETest;

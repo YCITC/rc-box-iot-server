@@ -1,7 +1,11 @@
-import { Controller } from '@nestjs/common';
+import { Controller, NotAcceptableException } from '@nestjs/common';
 import { Get, Put, Delete, Patch, Body, Param, Req } from '@nestjs/common';
 import { UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiNotAcceptableResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import DevicesService from './devices.service';
@@ -23,13 +27,16 @@ export default class DevicesController {
     status: 200,
     description: 'Device bound successfully',
   })
+  @ApiNotAcceptableResponse({
+    description: 'current user has no device',
+  })
   async bind(@Body() deviceDto: DeviceDto, @Req() req): Promise<Device> {
     const deviceInDB = await this.devicesService.findByOneDeviceId(
       deviceDto.deviceId,
     );
     if (deviceInDB) {
       if (deviceInDB.ownerUserId === req.user.id) {
-        throw new BadRequestException(
+        throw new NotAcceptableException(
           `The device [${deviceDto.deviceId}] has already been bound`,
         );
       } else {
@@ -46,13 +53,16 @@ export default class DevicesController {
     status: 200,
     description: 'Update device alias successfully',
   })
+  @ApiNotAcceptableResponse({
+    description: "Can not update other user's device",
+  })
   async update(@Body() deviceDto: DeviceDto, @Req() req): Promise<Device> {
     const userHasDevice = await this.devicesService.checkDeviceWithUser(
       req.user.id,
       deviceDto.deviceId,
     );
     if (userHasDevice === false) {
-      throw new UnauthorizedException("Can not update other user's device");
+      throw new NotAcceptableException("Can not update other user's device");
     }
     return this.devicesService.update(deviceDto);
   }
@@ -71,11 +81,13 @@ export default class DevicesController {
 
   @Get('checkDeviceWithUser/:deviceId')
   @Auth(RolesEnum.ADMIN, RolesEnum.USER)
-  @ApiOperation({ summary: "Find all of User's devices" })
+  @ApiOperation({ summary: 'Verify that the user has the device.' })
   @ApiResponse({
     status: 200,
     description: 'Devices found',
-    type: [Device],
+    schema: {
+      type: 'boolean',
+    },
   })
   checkDeviceWithUser(
     @Param('deviceId') deviceId: string,
@@ -91,13 +103,16 @@ export default class DevicesController {
     status: 200,
     description: 'Device unbound successfully',
   })
+  @ApiNotAcceptableResponse({
+    description: 'Can not found this device',
+  })
   async unbind(@Param('deviceId') deviceId: string, @Req() req): Promise<any> {
     const userHasDevice = await this.devicesService.checkDeviceWithUser(
       req.user.id,
       deviceId,
     );
     if (userHasDevice === false) {
-      throw new UnauthorizedException("Can not unbind other user's device");
+      throw new NotAcceptableException('Can not found this device');
     }
     return this.devicesService.unbind(deviceId);
   }

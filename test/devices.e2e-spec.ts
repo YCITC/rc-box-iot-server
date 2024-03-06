@@ -157,6 +157,6 @@ const deviceControllerE2ETest = () => {
   });
 };
 
-describe('DeviceController (e2e)', deviceControllerE2ETest);
+describe.skip('DeviceController (e2e)', deviceControllerE2ETest);
 
 export default deviceControllerE2ETest;

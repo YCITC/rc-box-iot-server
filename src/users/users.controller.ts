@@ -17,7 +17,7 @@ export default class UsersController {
 
   @Put('create')
   @Auth(RolesEnum.ADMIN)
-  // @DisableRoute()
+  @DisableRoute()
   @ApiOperation({ summary: 'Create User with out email verify ' })
   @ApiResponse({
     status: 200,

@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export default class UserChangePasswrodDto {
-  @ApiProperty({ example: 'icvjgiowddjoijidiizllewn' })
+  @ApiProperty({ required: true, example: 'icvjgiowddjoijidiizllewn' })
   newPassword: string;
 
-  @ApiProperty({ example: 'icvjgiowddjoijidiizllewn' })
+  @ApiProperty({ required: true, example: 'icvjgiowddjoijidiizllewn' })
   confirmNewPassword: string;
 
-  @ApiProperty({ example: 'abcdefghi' })
+  @ApiProperty({ required: true, example: 'abcdefghi' })
   oldPassword?: string;
 }

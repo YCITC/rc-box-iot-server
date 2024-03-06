@@ -4,13 +4,14 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
-import UserResetPasswrodDto from '../users/dto/user.reset-password.dto';
+import UserResetPasswordDto from '../users/dto/user.reset-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import JwtPayload from './interface/jwt-payload';
 import UsersService from '../users/users.service';
 import TokenType from './enum/token-type';
 import User from '../users/entity/user.entity';
 import RolesEnum from '../common/enum';
+import UserRegisterDto from '../users/dto/user.register.dto';
 
 @Injectable()
 export default class AuthService {
@@ -60,7 +61,7 @@ export default class AuthService {
 
   async resetPassword(
     userId: number,
-    dto: UserResetPasswrodDto,
+    dto: UserResetPasswordDto,
   ): Promise<boolean> {
     const passwordPolicy =
       /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*#?&]).{8,}/.test(
@@ -73,6 +74,17 @@ export default class AuthService {
       throw new BadRequestException('New password verification failed');
 
     return this.usersService.changePassword(userId, dto.newPassword);
+  }
+
+  async creageUser(dto: UserRegisterDto): Promise<User> {
+    const passwordPolicy =
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*#?&]).{8,}/.test(
+        dto.password,
+      );
+    if (passwordPolicy === false)
+      throw new BadRequestException('Password policy failed');
+
+    return this.usersService.addOne(dto);
   }
 
   async validateGoogleUser(details): Promise<User> {

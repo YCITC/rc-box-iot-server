@@ -412,10 +412,17 @@ describe('AuthController', () => {
   describe('updateProfile', () => {
     it('should call usersService.updateProfile', async () => {
       const updateProfileSpy = jest.spyOn(usersService, 'updateProfile');
-      await controller.updateProfile({
-        ...currentUser,
-        zipCode: '70445',
-      });
+      await controller.updateProfile(
+        {
+          user: {
+            id: currentUser.id,
+          },
+        },
+        {
+          ...currentUser,
+          zipCode: '70445',
+        },
+      );
       expect(updateProfileSpy).toBeCalledWith({
         ...currentUser,
         zipCode: '70445',

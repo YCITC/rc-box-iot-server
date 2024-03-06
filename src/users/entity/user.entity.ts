@@ -28,7 +28,6 @@ export default class User {
   @Column({ unique: true, type: 'text' })
   email: string;
 
-  @ApiProperty({ example: false })
   @Column({ default: false })
   isEmailVerified: boolean;
 
@@ -74,6 +73,7 @@ export default class User {
   })
   zipCode: string;
 
+  @ApiProperty()
   @CreateDateColumn({ type: 'timestamp' })
   createdTime: Date;
 

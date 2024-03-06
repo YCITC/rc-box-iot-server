@@ -41,12 +41,12 @@ $ yarn test:cov
 
 ## First time setup
 Clone this project and install nodejs package
-```
-yarn install
+```bash
+$ yarn install
 ```
 or
-```
-npm install
+```bash
+$ npm install
 ```
 ### Check database 
 TypeORM automatically creates a repository for your entity, but it cannot create `database` .
@@ -63,13 +63,13 @@ We useing three workflow
 1. create-create-cache.yml  
   When main branch pushed 'yarn.lock', this workflow will be triggered. 
 2. unit-test.yml  
-  When feature/* branch pushed, it will test the branch.
+  When a new pull request is created on the feature/* branch, it will trigger testing for the branch.
 3. deploy.yml
-  When release/* branch pushed, it will build this project and deploy to server.
+  When a new tag is pushed to the release/* branch, it will trigger the build process for this project.
 
 ## Notice for throw Expression
-* In the controller
-  using ```Promise.reject(new Expression())```
+* ~~In the controller
+  using ```Promise.reject(new Expression())```~~
 * In the service 
   using ```throw new Expression()```
 
@@ -77,11 +77,11 @@ We useing three workflow
 ## Unit Test
 Test single file  
 
-```
-yarn test [filename.spec.ts]
+```bash
+$ yarn test [filename.spec.ts]
 ```
 
 Coverage test single file
-```
-yarn test:cov [filename.spec.ts] --collectCoverageFrom="**/[filename.spec.ts]"
+```bash
+$ yarn test:cov [filename.spec.ts] --collectCoverageFrom="**/[filename.spec.ts]"
 ```

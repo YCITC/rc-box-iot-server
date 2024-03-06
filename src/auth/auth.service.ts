@@ -4,10 +4,10 @@ import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import UserChangePasswrodDto from '../users/dto/user.change-password.dto';
+import UserResetPasswrodDto from '../users/dto/user.reset-password.dto';
 import UserLoginDto from '../users/dto/user.login.dto';
 import JwtPayload from './interface/jwt-payload';
 import UsersService from '../users/users.service';
-import UserInterface from '../users/interface/user.interface';
 import TokenType from './enum/token-type';
 import User from '../users/entity/user.entity';
 import RolesEnum from '../common/enum';
@@ -20,11 +20,10 @@ export default class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async validateUser(dto: UserLoginDto): Promise<UserInterface> {
+  async validateUser(dto: UserLoginDto): Promise<User> {
     const user = await this.usersService.findOneByMail(dto.email);
     const result = await bcrypt.compare(dto.password, user.password);
     if (user && result === true) {
-      delete user.password;
       return Promise.resolve(user);
     }
     throw new UnauthorizedException('email or password incorrect');
@@ -61,7 +60,7 @@ export default class AuthService {
 
   async resetPassword(
     userId: number,
-    dto: UserChangePasswrodDto,
+    dto: UserResetPasswrodDto,
   ): Promise<boolean> {
     const passwordPolicy =
       /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*#?&]).{8,}/.test(

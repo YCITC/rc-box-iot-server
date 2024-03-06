@@ -35,6 +35,13 @@ export default class GoogleStrategy extends PassportStrategy(Strategy) {
       isEmailVerified: profile._json.email_verified,
     });
     const avatarUrl = profile.photos[0].value;
-    return { ...user, avatarUrl } || null;
+    return (
+      {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        avatarUrl,
+      } || null
+    );
   }
 }
